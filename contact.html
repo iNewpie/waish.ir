@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Waish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+
+<header class="page-head">
+  <div class="wrap">
+    <div class="kicker" id="kicker" data-type="// say hi"></div>
+    <h1 data-scramble>Contact.</h1>
+    <p>Where to find me and how to reach me.</p>
+  </div>
+</header>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <!-- PLACEHOLDER — content to be defined. Until then, the known links: -->
+    <div class="setup-grid">
+      <div class="setup-card reveal">
+        <div class="cat">content</div><h3>Aparat</h3>
+        <ul><li><span>streams & videos</span><b><a href="https://aparat.com/waish" target="_blank" rel="noopener">aparat.com/waish</a></b></li></ul>
+      </div>
+      <div class="setup-card reveal">
+        <div class="cat">minecraft</div><h3>LunaMC</h3>
+        <ul><li><span>server</span><b>Play.LunaMC.iR</b></li></ul>
+      </div>
+      <div class="setup-card reveal">
+        <div class="cat">service</div><h3>ClutchPing</h3>
+        <ul><li><span>site</span><b><a href="https://clutchping.com" target="_blank" rel="noopener">clutchping.com</a></b></li></ul>
+      </div>
+      <div class="setup-card reveal">
+        <div class="cat">more</div><h3>YouTube · Discord · Email</h3>
+        <ul><li><span>coming soon</span><b>—</b></li></ul>
+      </div>
+    </div>
+    <div class="empty reveal" style="margin-top:18px">// this page is a placeholder — tell me what should go here</div>
+  </div>
+</section>
+
+<script src="js/i18n.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/fx.js"></script>
+<script>
+  typeKicker(document.getElementById('kicker'));
+  scramble(document.querySelector('.page-head h1'));
+  observeReveals();
+</script>
+</body>
+</html>

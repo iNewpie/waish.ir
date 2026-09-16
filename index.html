@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waish — builder, server admin, content creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+
+<header class="hero" id="terminal">
+  <div class="wrap">
+    <div class="kicker" id="kicker" data-type="// hi, I'm Waish"></div>
+    <h1 id="headline">I build servers, stores, and things people actually use.</h1>
+    <div class="role"><span class="typed" id="typedRole"></span><span class="caret"></span></div>
+    <p id="heroP" data-i18n-skip>From LunaMC to ClutchPing to full WooCommerce deployments.
+Type /help below, or just talk to my assistant — English or Persian.</p>
+    <div class="hero-cta">
+      <a href="projects.html"><button class="btn btn-primary">See projects</button></a>
+      <a href="computer.html"><button class="btn btn-ghost">Open the computer →</button></a>
+    </div>
+
+    <div class="terminal reveal">
+      <div class="term-chrome">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="term-title">waish@portfolio: ~</span>
+      </div>
+      <div class="term-body" id="termBody"></div>
+      <div class="input-row">
+        <span class="prompt-sym">➜</span><span class="prompt-path">~</span>
+        <input id="cmdInput" autocomplete="off" spellcheck="false" placeholder="type /help and hit enter" dir="auto" />
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="lunamc">
+  <div class="wrap">
+    <div class="luna reveal">
+      <div>
+        <div class="kicker" data-type="// featured server"></div>
+        <h3 data-scramble>LunaMC</h3>
+        <p>Persian-language Minecraft server. Bedwars, custom plugins, and a community that shows up every night. Join with the IP below.</p>
+        <button class="ip" onclick="copyIP(this)"><b>Play.LunaMC.iR</b><small>click to copy</small></button>
+      </div>
+      <div class="luna-art"><img src="assets/luna-logo.png" alt="LunaMC logo"></div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker" data-type="// who"></div>
+      <h2 data-scramble>About</h2>
+    </div>
+    <div class="about-grid">
+      <div class="about reveal">
+        <p>I'm Waish — I run game servers and build the infrastructure behind them. LunaMC is my Persian-language Minecraft server; ClutchPing is my ping-reduction service for gamers; I build and operate WooCommerce stores, and I stream and make videos on Aparat and YouTube.</p>
+        <p>I like systems that connect: a server, a store, a channel, and now an assistant that answers computer questions offline. This site is one of those systems — the terminal above runs on my own knowledge base, in English and Persian.</p>
+      </div>
+      <div class="stack-box reveal">
+        <div class="row"><span class="k">role</span><span class="v">server admin / builder</span></div>
+        <div class="row"><span class="k">infra</span><span class="v">Linux VPS, Docker, Nginx</span></div>
+        <div class="row"><span class="k">stack</span><span class="v">WordPress, WooCommerce</span></div>
+        <div class="row"><span class="k">game</span><span class="v"><b>LunaMC</b> (Minecraft)</span></div>
+        <div class="row"><span class="k">network</span><span class="v"><b>ClutchPing</b></span></div>
+        <div class="row"><span class="k">content</span><span class="v"><b>Aparat</b> / YouTube</span></div>
+        <div class="row"><span class="k">ai</span><span class="v">offline assistant (EN / FA)</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="js/i18n.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/projects-data.js"></script>
+<script src="js/llm-db.js"></script>
+<script src="js/llm.js"></script>
+<script src="js/terminal.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
