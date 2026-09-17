@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About me — Waish's setup, texture packs & settings</title>
+<link rel="icon" type="image/png" href="assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="assets/waish.png?v=20260916b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css?v=20260916f">
+</head>
+<body>
+
+<header class="profile-hero">
+  <div class="thumb-wall placeholder" id="thumbWall" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="profile-card">
+      <a class="avatar-link" href="assets/avatar.jpg" data-caption="Waish"><img class="avatar" src="assets/avatar.jpg" alt="Waish"></a>
+      <div class="profile-meta">
+        <h3>Waish</h3>
+        <div class="handle">@waishchannel · Persian BedWars · content creator</div>
+        <div class="profile-links">
+          <a href="https://www.youtube.com/@WaishChannel" target="_blank" rel="noopener">YouTube ↗</a>
+          <a href="https://aparat.com/waish" target="_blank" rel="noopener">Aparat ↗</a>
+          <a href="https://instagram.com/asunawaish" target="_blank" rel="noopener">Instagram ↗</a>
+          <a href="https://t.me/wishingcommunity" target="_blank" rel="noopener">Telegram ↗</a>
+          <a href="https://discord.gg/8HVsMqucZ2" target="_blank" rel="noopener">Discord ↗<small>10k+ members</small></a>
+        </div>
+      </div>
+    </div>
+    <p class="profile-line"><b>I've made over 100 videos.</b> Minecraft, mostly BedWars — and everything below is what they're made with.</p>
+  </div>
+</header>
+
+<header class="page-head">
+  <div class="wrap">
+    <div class="kicker" id="kicker" data-type="// about me"></div>
+    <h1 data-scramble>Setup, packs & settings.</h1>
+    <p>What I stream and record with, the Minecraft texture packs I use, and the settings behind them.</p>
+  </div>
+</header>
+
+<section id="setup" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker" data-type="// stream / recording"></div>
+      <h2 data-scramble>PC Setup</h2>
+    </div>
+    <div class="photo-grid" data-gallery>
+      <a class="photo reveal" href="assets/pc/setup-desk.jpg"><img src="assets/pc/setup-desk.jpg" alt="Desk: Asus monitor, custom keyboard, Lamzu mouse on the Wraith pad"><span>// the desk</span></a>
+      <a class="photo reveal" href="assets/pc/setup-wide.jpg" style="transition-delay:80ms"><img src="assets/pc/setup-wide.jpg" alt="Full setup with the DxRacer chair, QuadCast S on the boom arm and the camera rig"><span>// the whole thing</span></a>
+    </div>
+    <div class="setup-grid" id="setupGrid"></div>
+  </div>
+</section>
+
+<section id="packs">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker" data-type="// minecraft"></div>
+      <h2 data-scramble>Texture Packs</h2>
+    </div>
+    <div class="projects" id="packGrid"></div>
+  </div>
+</section>
+
+<section id="settings" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker" data-type="// config"></div>
+      <h2 data-scramble>Settings</h2>
+    </div>
+    <div class="setup-grid" id="settingsGrid"></div>
+  </div>
+</section>
+
+<script src="js/i18n.js?v=20260916d"></script>
+<script src="js/layout.js?v=20260916b"></script>
+<script src="js/fx.js?v=20260916c"></script>
+<script>
+/* ============================================================
+   PC SETUP — edit freely
+   ============================================================ */
+const SETUP = [
+  { cat: 'keyboard', title: 'Waish Fully Customized Keyboard',
+    items: [['Switches', 'Akko Cream Blue'], ['Springs', 'upgraded → Glorious Panda'], ['Mod', 'fully lubed']],
+    note: 'built and tuned by hand' },
+  { cat: 'mice', title: 'Main + collection',
+    items: [['Main', 'Lamzu Atlantis Pro + 4K'], ['Wireless', 'Glorious Model O Wireless'], ['Alt', 'Endgame Gear XM2we'], ['Bloody', 'A90 · A91 · A60 · V8M · ABedless · A70']] },
+  { cat: 'audio', title: 'Headset & IEMs',
+    items: [['Headset', 'SteelSeries Arctis Pro'], ['IEM', 'Simgot EM6L'], ['IEM', 'Moondrop Aria · Aria 2'], ['IEM', 'Moondrop LAN 2 · May']] },
+  { cat: 'mousepad', title: 'Pads & deskmats',
+    items: [['Mousepad', 'Wraith Hybrid — Aim'], ['Deskmats', '3× Jadookb']] },
+  { cat: 'microphone', title: 'HyperX QuadCast S', items: [['Mic', 'HyperX QuadCast S'], ['Use', 'stream + recording']] },
+  { cat: 'monitor', title: 'Asus 165 Hz', items: [['Panel', 'Asus'], ['Refresh', '165 Hz']] },
+  { cat: 'chair', title: 'DxRacer', items: [['Chair', 'a new, random DxRacer']], note: 'it\'s a chair. it works.' },
+];
+const PC = [['CPU', 'Intel i5-9400F'], ['GPU', 'GTX 1050 Ti 6 GB'], ['RAM', '16 GB DDR4'], ['Storage', '2× SSD + 2× HDD']];
+
+/* ============================================================
+   TEXTURE PACKS — add entries here (img optional, dl = link)
+   { name: 'Pack name', desc: 'what it is', img: 'assets/packs/x.png', meta: ['16x','bedwars'], dl: 'https://…' }
+   ============================================================ */
+const PACKS = [];
+
+/* ============================================================
+   SETTINGS — add groups here
+   { title: 'Minecraft video', items: [['FPS', 'unlimited'], ['Render distance', '8']] }
+   ============================================================ */
+const SETTINGS = [];
+
+/* ---------- render ---------- */
+const sg = document.getElementById('setupGrid');
+SETUP.forEach((c, i) => {
+  const el = document.createElement('div'); el.className = 'setup-card reveal'; el.style.transitionDelay = (i * 50) + 'ms';
+  el.innerHTML = `<div class="cat">${c.cat}</div><h3>${c.title}</h3>
+    <ul>${c.items.map(([k, v]) => `<li><span>${k}</span><b>${v}</b></li>`).join('')}</ul>
+    ${c.note ? `<div class="note">// ${c.note}</div>` : ''}`;
+  sg.appendChild(el);
+});
+const pc = document.createElement('div'); pc.className = 'setup-card wide reveal';
+pc.innerHTML = `<div class="cat">pc</div><h3>The machine</h3><div class="spec-row">${PC.map(([k, v]) => `<span class="spec">${k} <b>${v}</b></span>`).join('')}</div>`;
+sg.appendChild(pc);
+
+const pg = document.getElementById('packGrid');
+if (!PACKS.length) pg.outerHTML = `<div class="empty reveal" id="packGrid">// texture packs coming soon</div>`;
+else PACKS.forEach((p, i) => {
+  const el = document.createElement('div'); el.className = 'proj pack reveal'; el.style.transitionDelay = (i * 60) + 'ms';
+  el.innerHTML = `<div class="proj-media ${p.img ? 'cover' : ''}">${p.img ? `<img src="${p.img}" alt="${p.name}">` : '<span style="font-family:var(--mono);font-size:30px;color:var(--accent)">▦</span>'}</div>
+    <div class="proj-body"><h3>${p.name}</h3><p>${p.desc || ''}</p>
+    <div class="proj-meta">${(p.meta || []).map(m => '#' + m).join(' ')}</div>
+    ${p.dl ? `<a class="btn btn-ghost dl" href="${p.dl}" target="_blank" rel="noopener">Download ↓</a>` : ''}</div>`;
+  pg.appendChild(el);
+});
+
+const stg = document.getElementById('settingsGrid');
+if (!SETTINGS.length) stg.outerHTML = `<div class="empty reveal" id="settingsGrid">// settings coming soon</div>`;
+else SETTINGS.forEach((s, i) => {
+  const el = document.createElement('div'); el.className = 'setup-card reveal'; el.style.transitionDelay = (i * 50) + 'ms';
+  el.innerHTML = `<h3>${s.title}</h3><ul>${s.items.map(([k, v]) => `<li><span>${k}</span><b>${v}</b></li>`).join('')}</ul>`;
+  stg.appendChild(el);
+});
+
+typeKicker(document.getElementById('kicker'));
+scramble(document.querySelector('.page-head h1'));
+observeReveals();
+</script>
+</body>
+</html>

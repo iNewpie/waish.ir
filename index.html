@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waish</title>
+<link rel="icon" type="image/png" href="assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="assets/waish.png?v=20260916b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css?v=20260916f">
+</head>
+<body>
+
+<header class="hero" id="terminal">
+  <div class="wrap">
+    <div class="kicker" id="kicker" data-type="// hi, I'm Waish"></div>
+    <h1 id="headline">I've made plenty of online projects and things people actually use and watch!</h1>
+    <div class="role"><span class="typed" id="typedRole"></span><span class="caret"></span></div>
+    <p id="heroP" data-i18n-skip>From playing Minecraft BedWars to creating content and leading three successful projects.
+Type /help below, or just talk to my assistant — English or Persian.</p>
+    <div class="hero-cta">
+      <a href="projects.html"><button class="btn btn-primary">See projects</button></a>
+      <a href="computer.html"><button class="btn btn-ghost">Open the computer →</button></a>
+    </div>
+
+    <div class="terminal reveal">
+      <div class="term-chrome">
+        <span class="term-title">waish@portfolio: ~</span>
+      </div>
+      <div class="term-body" id="termBody"></div>
+      <div class="input-row">
+        <span class="prompt-sym">➜</span><span class="prompt-path">~</span>
+        <input id="cmdInput" autocomplete="off" spellcheck="false" placeholder="type /help and hit enter" dir="auto" />
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="lunamc">
+  <div class="wrap">
+    <div class="luna reveal">
+      <div>
+        <div class="kicker" data-type="// featured server"></div>
+        <h3 data-scramble>LunaMC</h3>
+        <p>Persian-language Minecraft server. Bedwars, custom plugins, and a community that shows up every night. Join with the IP below.</p>
+        <button class="ip" onclick="copyIP(this)"><b>Play.LunaMC.iR</b><small>click to copy</small></button>
+      </div>
+      <div class="luna-art"><img src="assets/luna-logo.png" alt="LunaMC logo"></div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker" data-type="// who"></div>
+      <h2 data-scramble>About</h2>
+    </div>
+    <div class="profile reveal" id="profile">
+      <div class="thumb-wall placeholder" id="thumbWall" aria-hidden="true"></div>
+      <div class="profile-card">
+        <a class="avatar-link" href="assets/avatar.jpg" data-caption="Waish"><img class="avatar" src="assets/avatar.jpg" alt="Waish"></a>
+        <div class="profile-meta">
+          <h3>Waish</h3>
+          <div class="handle">@waishchannel · Persian BedWars · content creator</div>
+          <div class="profile-links">
+            <a href="https://www.youtube.com/@WaishChannel" target="_blank" rel="noopener">YouTube ↗</a>
+            <a href="https://aparat.com/waish" target="_blank" rel="noopener">Aparat ↗</a>
+            <a href="https://instagram.com/asunawaish" target="_blank" rel="noopener">Instagram ↗</a>
+            <a href="https://t.me/wishingcommunity" target="_blank" rel="noopener">Telegram ↗</a>
+            <a href="https://discord.gg/8HVsMqucZ2" target="_blank" rel="noopener">Discord ↗<small>10k+ members</small></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="about-grid">
+      <div class="about reveal">
+        <p>I've built a range of online projects that people genuinely use — communities, services and content with real reach.</p>
+        <nav class="about-nav" aria-label="site">
+          <a class="btn btn-ghost" href="computer.html">Computer</a>
+          <a class="btn btn-ghost" href="projects.html">Projects</a>
+          <a class="btn btn-ghost" href="about-me.html">About Me</a>
+          <a class="btn btn-ghost" href="contact.html">Contact</a>
+          <a class="btn btn-primary" href="https://coffeebede.com/waishchannel" target="_blank" rel="noopener">Donate ♥</a>
+        </nav>
+      </div>
+      <div class="stack-box reveal">
+        <div class="row"><span class="k">lunamc.ir</span><span class="v"><b>Owner</b> · over 100k registered members</span></div>
+        <div class="row"><span class="k">nairo.ir</span><span class="v"><b>Owner</b> · over 100,000 successful sales</span></div>
+        <div class="row"><span class="k">clutchping.com</span><span class="v"><b>Owner</b> · over 500 successful sales · <i>unique idea</i></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="js/i18n.js?v=20260916d"></script>
+<script src="js/layout.js?v=20260916b"></script>
+<script src="js/projects-data.js?v=20260916c"></script>
+<script src="js/llm-db.js?v=20260917a"></script>
+<script src="js/llm.js?v=20260917a"></script>
+<script src="js/terminal.js?v=20260916b"></script>
+<script src="js/fx.js?v=20260916c"></script>
+<script src="js/main.js?v=20260916b"></script>
+</body>
+</html>
