@@ -8,7 +8,6 @@
      <worker-url>/player?uuid=<uuid>   → api.bordic.xyz/v3/cache/hypixel  (Bordic's keyless Hypixel cache — rank + stats, always its newest snapshot)
      <worker-url>/names?uuids=a,b,c    → api.minecraftservices.com uuid → current name, up to 40 per call (Bordic's cache only if Mojang errors)
      <worker-url>/guild?uuid=<uuid>    → netherapi.com/api/v2/guild (secret NETHER_KEY) or api.hypixel.net/v2/guild (secret HYPIXEL_KEY)
-     <worker-url>/bordic?uuid=<uuid>   → bordic.xyz/api/cubelify          (anti-sniper tags, needs secret BORDIC_KEY)
    FRESHNESS — api.bordic.xyz sits behind a 24 h Cloudflare edge cache, so a plain request can hand back a day-old
    copy even when Bordic already holds newer stats. Every Bordic call here carries a per-minute `t` param that skips
    that edge copy, and our own copy of a player lives only 60 s: what you see is Bordic's latest snapshot
@@ -19,7 +18,6 @@
      1. https://dash.cloudflare.com → Workers & Pages → Create → "Hello World" worker.
      2. Replace its code with this file → Deploy.
      3. Worker → Settings → Variables and Secrets → add (all optional)
-          BORDIC_KEY  = <your bordic.xyz key>                (for the anti-sniper tags box)
           NETHER_KEY  = <key from netherapi.com>           (guild lookups; does not expire daily — preferred)
           HYPIXEL_KEY = <key from developer.hypixel.net>   (guild lookups fallback — stats always come from Bordic)
      4. Copy the worker URL (https://something.workers.dev) into PROXY_URL in apps/lookup.html.
@@ -66,7 +64,7 @@ export default {
     let uuid = (url.searchParams.get('uuid') || url.searchParams.get('player') || '').replace(/-/g, '').toLowerCase();
     const gname = (url.searchParams.get('name') || '').slice(0, 32);
     const player = (url.searchParams.get('player') || '').trim().slice(0, 36);   // /convert: an IGN or a uuid (dashed or not)
-    if (!['/mojang', '/player', '/names', '/bordic', '/guild', '/convert'].includes(url.pathname)) return json({ success: false, cause: 'Use /mojang, /player, /guild or /bordic with ?uuid=<uuid> (mojang and guild also take ?name=), /convert?player=<name|uuid>, or /names?uuids=a,b,c' }, 404, cors);
+    if (!['/mojang', '/player', '/names', '/guild', '/convert'].includes(url.pathname)) return json({ success: false, cause: 'Use /mojang, /player or /guild with ?uuid=<uuid> (mojang and guild also take ?name=), /convert?player=<name|uuid>, or /names?uuids=a,b,c' }, 404, cors);
     const byName = (url.pathname === '/guild' || url.pathname === '/mojang') && gname;
     if (url.pathname === '/convert' && !/^([A-Za-z0-9_]{1,16}|[0-9a-f]{32}|[0-9a-f-]{36})$/i.test(player)) return json({ success: false, cause: 'Pass ?player=<name or uuid>' }, 400, cors);
     if (!['/names', '/convert'].includes(url.pathname) && !byName && !/^[0-9a-f]{32}$/.test(uuid)) return json({ success: false, cause: 'Invalid UUID' }, 400, cors);
@@ -141,9 +139,6 @@ export default {
         if (!d.success && !d.cause) d.cause = d.error || `Guild API failed (${status})`;   // NetherAPI says `error`, Hypixel says `cause`
         return { status, body: JSON.stringify(d) };
       });
-    } else {
-      if (!env.BORDIC_KEY) return json({ success: false, notConfigured: true, cause: 'BORDIC_KEY secret is not set on the worker' }, 200, cors);
-      res = await cached(`/bordic/${uuid}`, TTL.tags, () => pass(new Request(`https://bordic.xyz/api/cubelify?id=${uuid}&key=${encodeURIComponent(env.BORDIC_KEY)}`, { headers: UA })));
     }
     const out = new Response(res.body, res); Object.entries(cors).forEach(([k, v]) => out.headers.set(k, v));
     return out;

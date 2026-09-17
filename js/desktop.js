@@ -35,7 +35,7 @@ window.DESKTOP = (function () {
     minicraft:  { title: 'Mini Minecraft', tile: 'minicraft', icon: '⛏️', kind: 'page', src: 'apps/minicraft.html?v=20260916b', w: .72, h: .8 },
     calculator: { title: 'Calculator', tile: 'calc', icon: '🧮', kind: 'page', src: 'apps/calculator.html?v=20260916b', w: .26, h: .74, minW: 340 },
     calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
-    userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260917f', w: .58, h: .88, minW: 520 },
+    userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260917g', w: .58, h: .88, minW: 520 },
   };
   const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'social', 'aboutme', 'music', 'snake', 'tetris', 'minicraft', 'calculator', 'calendar', 'userlookup']; // desktop icons, top-left down
   const PINNED = ['thispc'];                                                                             // taskbar
@@ -57,7 +57,7 @@ window.DESKTOP = (function () {
     { letter: 'D', name: 'Useful apps', icon: '🧰', used: .41, size: '512 GB', items: [
       { type: 'run', name: 'Calculator', icon: '🧮', app: 'calculator' },
       { type: 'run', name: 'Calendar', icon: '📅', sub: 'Persian · Gregorian', app: 'calendar' },
-      { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Seraph · Bordic', app: 'userlookup' },
+      { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Hypixel · Seraph', app: 'userlookup' },
       { type: 'run', name: 'Music', icon: '🎵', sub: 'mp3 player', app: 'music' },
       { type: 'app', name: 'Cinema 4D', icon: '🎬', sub: '3D · ~6 years' },
       { type: 'app', name: 'Blender', icon: '🧊', sub: '3D' },

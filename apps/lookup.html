@@ -160,7 +160,7 @@
   <!-- ================= USER LOOKUP ================= -->
   <div class="panel on" id="panel-user">
     <form class="search" id="form"><input id="q" placeholder="Minecraft username or UUID…" autocomplete="off" spellcheck="false" maxlength="36"><button class="abtn primary" type="submit" data-t="Look up">Look up</button></form>
-    <div class="msg" id="msg"><span data-t="Type a Minecraft username to see their 3D skin, capes, Hypixel BedWars stats, rank, UUID and whether they're on the Seraph blacklist.">Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they're blacklisted on Seraph or Bordic.</span></div>
+    <div class="msg" id="msg"><span data-t="Type a Minecraft username to see their 3D skin, capes, Hypixel BedWars stats, rank, UUID and whether they're on the Seraph blacklist.">Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they're blacklisted on Seraph.</span></div>
     <div class="result" id="result">
       <div class="top">
         <div class="viewer">
@@ -187,7 +187,6 @@
       <div class="box" id="hy"><h3>Hypixel<span class="sp"></span><span class="tag" id="hyMeta"></span></h3><div id="hyBody"></div></div>
       <div class="box"><h3 data-t="Capes">Capes</h3><div class="capes" id="capes"><span class="tag" id="capesLoading"><span class="spin"></span><span data-t="checking…">checking…</span></span></div></div>
       <div class="bl" id="bl"></div>
-      <div class="bl" id="bordic" hidden></div>
     </div>
   </div>
 
@@ -237,9 +236,6 @@
    (blacklist, safelist, bot, member, annoylist, name change). Do NOT call
    /{uuid}/safelist or /report/{uuid} from here: those endpoints *add* the player to
    the key owner's safelist / encounter log as a side effect.
-   BORDIC — https://bordic.xyz (anti-sniper blacklist, Cubelify tag feed). It needs a key and
-   sends no CORS headers, so browsers can't call it directly: deploy tools/proxy.worker.js
-   (free Cloudflare Worker), put your Bordic key there as BORDIC_KEY, and set PROXY_URL below.
    PROFILE / SKIN / CAPE — Mojang's public API (https://minecraft.wiki/w/Mojang_API) through the proxy (/mojang):
    api.mojang.com turns the name into a UUID, then https://sessionserver.mojang.com/session/minecraft/profile/<uuid> gives the skin,
    cape and model. Mojang sends no CORS headers, so without PROXY_URL the app falls back to PlayerDB (live
@@ -263,7 +259,7 @@ const PROXY_URL = (new URLSearchParams(location.search).get('proxy') || PROXY_DE
 
 const FA = { 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Look up': 'جستجو', 'Guild Lookup': 'جستجوی گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.': 'یه گیلد هایپیکسل رو با اسمش جستجو کن، یا گیلد یه بازیکن رو پیدا کن: لول، XP، اعضا و فعالیت هفتگی‌شون، رنک‌ها و بازی‌های محبوب.', 'Load': 'بارگذاری', 'copy': 'کپی', 'copied': 'کپی شد', 'model': 'مدل', 'created': 'ساخته‌شده', 'past names': 'اسم‌های قبلی', 'Capes': 'شنل‌ها', 'checking…': 'در حال بررسی…', 'auto-rotate': 'چرخش خودکار', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'still': 'ثابت', 'elytra': 'الیترا',
   'drag to rotate · scroll to zoom': 'بکش تا بچرخه · اسکرول برای زوم', 'file': 'فایل', 'front / back': 'جلو / پشت', 'auto': 'خودکار', 'classic (Steve)': 'کلاسیک (Steve)', 'slim (Alex)': 'باریک (Alex)', 'Upload skin PNG': 'آپلود اسکین PNG', 'drag to rotate · scroll to zoom · ← → keys': 'بکش تا بچرخه · اسکرول برای زوم · کلیدهای ← →', 'Download PNG': 'دانلود PNG',
-  'Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they\'re blacklisted on Seraph or Bordic.': 'یه یوزرنیم ماینکرفت بنویس تا اسکین سه‌بعدی، شنل‌ها، رنک هایپیکسل و آمار بدوارز، UUID و وضعیت بلک‌لیست Seraph و Bordic رو ببینی.',
+  'Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they\'re blacklisted on Seraph.': 'یه یوزرنیم ماینکرفت بنویس تا اسکین سه‌بعدی، شنل‌ها، رنک هایپیکسل و آمار بدوارز، UUID و وضعیت بلک‌لیست Seraph رو ببینی.',
   'Drop a skin PNG here, or use the buttons →': 'یه فایل PNG اسکین اینجا بنداز، یا از دکمه‌ها استفاده کن ←', 'Preview any skin in 3D: upload your own design, or pull a player\'s current skin. Switch between the classic (Steve) and slim (Alex) models.': 'هر اسکینی رو سه‌بعدی ببین: طرح خودت رو آپلود کن یا اسکین فعلی یه بازیکن رو بگیر. بین مدل کلاسیک (Steve) و باریک (Alex) سوییچ کن.',
   'Player not found.': 'بازیکن پیدا نشد.', 'Lookup failed — try again in a moment.': 'جستجو ناموفق بود — یه لحظه دیگه دوباره تلاش کن.', 'looking up': 'در حال جستجو', 'no capes': 'شنلی نداره', 'updated': 'به‌روزشده', 'Hypixel stats are not connected yet. Set PROXY_DEFAULT at the top of apps/lookup.html to your proxy worker.': 'آمار هایپیکسل هنوز وصل نشده. آدرس پروکسی رو توی PROXY_DEFAULT بالای فایل apps/lookup.html بذار.', 'network level': 'لول شبکه', 'first login': 'اولین ورود', 'last login': 'آخرین ورود', 'No BedWars games played.': 'بدوارز بازی نکرده.', 'Never joined Hypixel.': 'هیچ‌وقت وارد هایپیکسل نشده.', 'Bordic has no stats for this player yet.': 'Bordic هنوز آماری از این بازیکن نداره.', 'Hypixel check failed.': 'بررسی هایپیکسل ناموفق بود.', 'Hypixel data is busy — try again in a minute.': 'دادهٔ هایپیکسل شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Blacklisted on Bordic': 'توی Bordic بلک‌لیست شده', 'Not blacklisted on Bordic': 'توی Bordic بلک‌لیست نیست', 'sniper score': 'امتیاز اسنایپر', 'signals': 'نشانه‌ها', 'Bordic check failed:': 'بررسی Bordic ناموفق بود:', 'No sniper or blacklist entry on Bordic for this player.': 'هیچ ورودی اسنایپر یا بلک‌لیستی توی Bordic برای این بازیکن نیست.',
   'Bordic is an anti-sniper blacklist for Hypixel BedWars: this player has an entry there. Read the reason before judging — some entries are automatic cautions, not confirmed cheating.': 'Bordic یه بلک‌لیست ضد اسنایپر برای بدوارز هایپیکسله: این بازیکن اون‌جا یه ورودی داره. قبل از قضاوت دلیلش رو بخون — بعضی ورودی‌ها احتیاط خودکارن، نه چیت تأییدشده.', 'classic': 'کلاسیک (Steve)', 'slim': 'باریک (Alex)', 'default skin': 'اسکین پیش‌فرض', 'Download skin': 'دانلود اسکین',
@@ -390,7 +386,7 @@ async function lookup(name) {
   result.classList.remove('on'); msg.className = 'msg'; msg.innerHTML = `<span class="spin"></span>${t('looking up')} <b>${esc(name)}</b>…`; msg.hidden = false;
   try {
     const p = await profile(name, ctrl.signal);
-    show(p); capes(p); hypixel(p); blacklist(p); bordic(p);
+    show(p); capes(p); hypixel(p); blacklist(p);
   } catch (e) {
     if (e.name === 'AbortError') return;
     msg.className = 'msg err'; msg.textContent = e.message === 'notfound' ? t('Player not found.') : t('Lookup failed — try again in a moment.');
@@ -403,7 +399,7 @@ function show(p) {
   $('#histRow').style.display = p.names.length ? '' : 'none'; $('#names').textContent = p.names.join(' · ');
   // where the profile came from, so a stale skin is easy to trace (Ashcon = no worker reachable → cached, days old)
   const SRC = { mojang: 'Mojang · live', playerdb: 'PlayerDB', ashcon: 'Ashcon · cached' };
-  $('#tags').innerHTML = `<span class="tag" title="profile source">${SRC[p.source] || p.source || ''}</span>`; $('#capes').innerHTML = `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`; $('#bl').innerHTML = ''; $('#bordic').innerHTML = ''; $('#hyBody').innerHTML = ''; $('#guildLine').innerHTML = '';
+  $('#tags').innerHTML = `<span class="tag" title="profile source">${SRC[p.source] || p.source || ''}</span>`; $('#capes').innerHTML = `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`; $('#bl').innerHTML = ''; $('#hyBody').innerHTML = ''; $('#guildLine').innerHTML = '';
   $('#links').innerHTML = `<a href="https://namemc.com/profile/${p.uuid}" target="_blank" rel="noopener">NameMC ↗</a><a href="https://plancke.io/hypixel/player/stats/${p.username}" target="_blank" rel="noopener">Plancke ↗</a>` + (p.skinUrl ? `<a href="${p.skinUrl.replace(/^http:/, 'https:')}" target="_blank" rel="noopener" download>${t('Download skin')} ↓</a>` : '');
   const V = userViewer();
   if (V.ok) { V.cape(null); V.load(skinSrc(p), p.slim ? 'slim' : 'default').catch(() => V.load(`https://mc-heads.net/skin/${p.undashed}`)); setTimeout(() => V.resize(), 50); }
@@ -436,39 +432,6 @@ async function capes(p) {
 const ago = ts => { if (!ts) return ''; const d = Math.round((Date.now() - ts) / 86400000); return lang === 'fa' ? (d < 1 ? 'امروز' : d < 30 ? `${fmtN(d)} روز پیش` : d < 365 ? `${fmtN(Math.round(d / 30))} ماه پیش` : `${fmtN(Math.round(d / 365))} سال پیش`) : (d < 1 ? 'today' : d === 1 ? 'yesterday' : d < 30 ? `${d} days ago` : d < 365 ? `${Math.round(d / 30)} months ago` : `${Math.round(d / 365)} years ago`); };
 async function hypixel(p) { return HYP.run(p); }
 
-/* ---------- Bordic anti-sniper blacklist (via the proxy: bordic.xyz has no CORS and needs a key) ----------
-   Bordic's feed is a list of Cubelify tags. A blacklist entry looks like:
-     { text: "O", tooltip: "Blacklisted (Other) - Automatic (1mo3d ago)\n\nReason - \"…\"", color: … }
-   and the sniper score goes above 0. Everything else (SL safelist, ping, playtime gap, mode KDRs) is a signal. */
-async function bordic(p) {
-  const box = $('#bordic'); if (!PROXY_URL || window.PROXY_DOWN) { box.hidden = true; return; }
-  box.hidden = false; box.className = 'bl'; box.innerHTML = `<div class="title"><span class="spin"></span>Bordic…</div>`;
-  const hex = c => '#' + ((c >>> 0) & 0xffffff).toString(16).padStart(6, '0');
-  try {
-    const r = await fetch(`${PROXY_URL}/bordic?uuid=${p.undashed}`); const d = await r.json();
-    if (d && (d.notConfigured || ((r.status === 500 || r.status === 501) && /not set/i.test(d.cause || '')))) { box.hidden = true; return; }   // no BORDIC_KEY on the proxy → the tags box simply doesn't exist
-    if (!r.ok || !d || !Array.isArray(d.tags)) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${t('Bordic check failed:')} ${esc((d && d.cause) || r.status)}</div>`; return; }
-    const isBL = tg => /blacklist/i.test(tg.tooltip || '') || /^(BL|SNIPER|CHEATER|CLOSET|CAUTION|O)$/i.test(tg.text || '');
-    const bl = d.tags.filter(isBL), signals = d.tags.filter(tg => !isBL(tg)), score = (d.score && d.score.value) || 0;
-    const chip = tg => `<span class="tag" style="background:${hex(tg.color)};color:${tg.textColor ? hex(tg.textColor) : '#0b0d12'};border-color:${hex(tg.color)};font-weight:700" title="${esc(tg.tooltip || '')}">${esc(tg.text)}${tg.tooltip ? `<span style="font-weight:400;opacity:.85"> · ${esc((tg.tooltip.split('\n')[0]))}</span>` : ''}</span>`;
-    const row = (k, v) => v ? `<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
-    if (bl.length || score > 0) {
-      const tip = (bl[0] && bl[0].tooltip) || '';
-      const head = tip.split('\n')[0], m = head.match(/^Blacklisted\s*\(([^)]+)\)\s*-?\s*(.*)$/i), reason = (tip.match(/Reason\s*-\s*"?([^"]+)"?/i) || [])[1];
-      box.className = 'bl flagged';
-      box.innerHTML = `<div class="title flag-t">⚠ ${t('Blacklisted on Bordic')}${m ? ` <span class="tag bad">${esc(m[1])}</span>` : ''}${score ? ` <span class="tag warn">${t('sniper score')} ${score}</span>` : ''}</div>
-        <p>${t('Bordic is an anti-sniper blacklist for Hypixel BedWars: this player has an entry there. Read the reason before judging — some entries are automatic cautions, not confirmed cheating.')}</p>
-        ${row(t('reason'), esc(reason || ''))}${row(t('details'), esc(m ? m[2] : head))}`;
-      $('#tags').insertAdjacentHTML('afterbegin', `<span class="tag bad">⚠ ${t('Blacklisted on Bordic')}</span>`);
-    } else {
-      box.className = 'bl clean';
-      box.innerHTML = `<div class="title clean-t">✔ ${t('Not blacklisted on Bordic')}</div><p>${t('No sniper or blacklist entry on Bordic for this player.')}</p>`;
-      $('#tags').insertAdjacentHTML('afterbegin', `<span class="tag ok">✔ ${t('Not blacklisted on Bordic')}</span>`);
-    }
-    if (signals.length) box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k">${t('signals')}</span><span class="tags" style="display:inline-flex">${signals.map(chip).join('')}</span></div>`);
-    box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k" style="min-width:0">${lang === 'fa' ? 'منبع' : 'source'}</span><a class="v dim" href="https://bordic.xyz" target="_blank" rel="noopener" style="color:var(--cyan)">bordic.xyz ↗</a></div>`);
-  } catch (e) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${t('Bordic check failed:')}</div><p>${t('Lookup failed — try again in a moment.')}</p>`; }
-}
 
 /* ---------- Seraph: every tag in one read-only call ---------- */
 const TYPE_FA = { Caution: 'احتیاط', Blacklist: 'بلک‌لیست', Cheater: 'چیتر', Sniper: 'اسنایپر', Closet: 'کلوزت چیتر', Boosting: 'بوستینگ', Bot: 'بات' };
