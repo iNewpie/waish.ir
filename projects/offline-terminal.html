@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offline Terminal — Waish</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="../assets/waish.png?v=20260916b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/site.css?v=20260916f">
+</head>
+<body data-root="../">
+
+<header class="proj-hero">
+  <div class="wrap">
+    <a class="back" href="../projects.html">← all projects</a>
+    <div class="proj-hero-media"><span style="font-family:var(--mono);font-size:44px;color:var(--accent)">➜ ~</span></div>
+    <div class="proj-hero-text">
+      <div class="proj-top"><span class="proj-tag live">this site</span></div>
+      <div class="kicker" id="kicker" data-type="// assistant"></div>
+      <h1 data-scramble>Offline Terminal</h1>
+      <p class="intro">The assistant living in this site. Commands start with /, everything else goes to a local knowledge base — in English or Persian.</p>
+      
+    </div>
+  </div>
+</header>
+
+<section style="padding-top:10px">
+  <div class="wrap proj-layout">
+    <article class="prose">
+      <div class="reveal">
+        <h2>How it works</h2>
+        <p>Everything runs in the browser. Anything you type that starts with / is a command; anything else is matched against a knowledge base I maintain myself, and the answer fades in word by word. Write in Persian and it answers in Persian.</p>
+      </div>
+      <div class="reveal">
+        <h2>What it knows</h2>
+        <p>Who I am, LunaMC, ClutchPing, my content, my full PC setup, and a set of computer-science basics — TCP, UDP, HTTP, DNS, ping, RAM, processes vs threads, Big-O.</p>
+      </div>
+      <div class="reveal">
+        <h2>Next</h2>
+        <p>Placeholder — write about what you want to add: a bigger knowledge base, a real language model behind it, voice, whatever is on the roadmap.</p>
+      </div>
+    </article>
+    <aside>
+      <div class="stack-box reveal">
+        <div class="row"><span class="k">runs</span><span class="v">in the browser</span></div>
+        <div class="row"><span class="k">languages</span><span class="v">English, فارسی</span></div>
+        <div class="row"><span class="k">commands</span><span class="v">/help to list</span></div>
+        <div class="row"><span class="k">source</span><span class="v">js/llm-db.js</span></div>
+      </div>
+      <div class="link-list reveal">
+        <a href="../terminal.html">Open the terminal</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script src="../js/i18n.js?v=20260916d"></script>
+<script src="../js/layout.js?v=20260916b"></script>
+<script src="../js/fx.js?v=20260916b"></script>
+<script>
+  typeKicker(document.getElementById('kicker'));
+  scramble(document.querySelector('.proj-hero h1'));
+  observeReveals();
+  function copyIP(btn) { navigator.clipboard?.writeText('Play.LunaMC.iR'); const s = btn.querySelector('small'); s.textContent = 'copied ✔'; setTimeout(() => s.textContent = 'click to copy', 1600); }
+</script>
+</body>
+</html>

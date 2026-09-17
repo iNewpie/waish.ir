@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LunaMC — Waish</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="../assets/waish.png?v=20260916b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/site.css?v=20260916f">
+</head>
+<body data-root="../">
+
+<header class="proj-hero">
+  <div class="wrap">
+    <a class="back" href="../projects.html">← all projects</a>
+    <div class="proj-hero-media bg" style="background-image:url('../assets/luna-bg.jpg?v=20260916c')"><img src="../assets/luna-logo.png" alt="LunaMC"></div>
+    <div class="proj-hero-text">
+      <div class="proj-top"><span class="proj-tag live">live</span></div>
+      <div class="kicker" id="kicker" data-type="// minecraft server"></div>
+      <h1 data-scramble>LunaMC</h1>
+      <p class="intro">A Persian-language Minecraft server built around Bedwars, custom plugins, and a community that shows up every night.</p>
+      <button class="ip" onclick="copyIP(this)"><b>Play.LunaMC.iR</b><small>click to copy</small></button>
+    </div>
+  </div>
+</header>
+
+<section style="padding-top:10px">
+  <div class="wrap proj-layout">
+    <article class="prose">
+      <div class="reveal">
+        <h2>What it is</h2>
+        <p>LunaMC is my Minecraft server for the Persian community. The core is Bedwars, with custom plugins written for the server and a set of game modes that keep changing based on what players ask for.</p>
+      </div>
+      <div class="reveal">
+        <h2>How it runs</h2>
+        <p>The server lives on a Linux VPS that I manage myself — Java, custom plugin builds, backups, and the network layer in front of it. ClutchPing actually started here, as the answer to players complaining about ping.</p>
+      </div>
+      <div class="reveal">
+        <h2>The community</h2>
+        <p>Write about the players, the Discord, events, tournaments, whatever you want people to know. This text is a placeholder — replace it with your own story.</p>
+      </div>
+    </article>
+    <aside>
+      <div class="stack-box reveal">
+        <div class="row"><span class="k">status</span><span class="v">live</span></div>
+        <div class="row"><span class="k">ip</span><span class="v"><b>Play.LunaMC.iR</b></span></div>
+        <div class="row"><span class="k">game</span><span class="v">Minecraft (Java)</span></div>
+        <div class="row"><span class="k">modes</span><span class="v">Bedwars + more</span></div>
+        <div class="row"><span class="k">stack</span><span class="v">Java plugins, Linux VPS</span></div>
+      </div>
+      <div class="link-list reveal">
+        <a href="https://play.lunamc.ir" target="_blank" rel="noopener">Join: Play.LunaMC.iR</a>
+        <a href="clutchping.html">ClutchPing →</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script src="../js/i18n.js?v=20260916d"></script>
+<script src="../js/layout.js?v=20260916b"></script>
+<script src="../js/fx.js?v=20260916b"></script>
+<script>
+  typeKicker(document.getElementById('kicker'));
+  scramble(document.querySelector('.proj-hero h1'));
+  observeReveals();
+  function copyIP(btn) { navigator.clipboard?.writeText('Play.LunaMC.iR'); const s = btn.querySelector('small'); s.textContent = 'copied ✔'; setTimeout(() => s.textContent = 'click to copy', 1600); }
+</script>
+</body>
+</html>
