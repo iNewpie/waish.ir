@@ -28,7 +28,7 @@ window.DESKTOP = (function () {
     aboutme:    { title: 'About me', tile: 'aboutme', icon: ICONS.user, kind: 'page', src: 'about-me.html?embed=1', w: .78, h: .82 },
     thispc:     { title: 'This PC', tile: 'thispc', icon: ICONS.pc, kind: 'explorer', w: .7, h: .68 },
     bin:        { title: 'Recycle Bin', tile: 'bin', icon: '🗑️', kind: 'bin', w: .46, h: .5, minW: 420 },
-    music:      { title: 'Music', tile: 'music', icon: '🎵', kind: 'page', src: 'apps/music.html?v=20260917h', w: .4, h: .8, minW: 400 },
+    music:      { title: 'Music', tile: 'music', icon: '🎵', kind: 'page', src: 'apps/music.html?v=20260917i', w: .4, h: .8, minW: 400 },
     // games + small apps: each one is a standalone page in apps/ shown inside a window
     snake:      { title: 'Snake', tile: 'snake', icon: '🐍', kind: 'page', src: 'apps/snake.html?v=20260916b', w: .38, h: .78, minW: 380 },
     tetris:     { title: 'Tetris', tile: 'tetris', icon: '🧱', kind: 'page', src: 'apps/tetris.html?v=20260916b', w: .36, h: .84, minW: 380 },
