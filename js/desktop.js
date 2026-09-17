@@ -463,6 +463,7 @@ window.DESKTOP = (function () {
       const t = time ? time.format(d) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const j = jal ? jal.format(d).replace(/ AP$/, '') : '', g = greg ? greg.format(d) : d.toLocaleDateString();
       el.innerHTML = `${t}<span class="tz">${fa ? 'تهران' : 'IRST'}</span><small>${j ? `<span class="jal">${j}</span> · ` : ''}${g}</small>`;
+      const mt = $('.m-head .m-time'), md = $('.m-head .m-date'); if (mt) mt.textContent = t; if (md) md.textContent = `${j ? j + ' · ' : ''}${g}`;   // phone header
       el.title = (fa ? 'ساعت ایران (UTC+3:30)' : 'Iran Standard Time (UTC+3:30)') + (jalY ? '\n' + jalY.format(d).replace(/ AP$/, '') : '') + (gregY ? '\n' + gregY.format(d) : '');
     };
     tick(); setInterval(tick, 5000);
