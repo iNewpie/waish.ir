@@ -6,22 +6,39 @@
 .desktop .glow { top: auto; bottom: -30%; }
 
 /* ---------- icons ---------- */
-.icons { position: absolute; top: 18px; left: 18px; bottom: 60px; display: flex; flex-direction: column; flex-wrap: wrap; align-content: flex-start; gap: 6px; z-index: 2; }
-.icon { width: 92px; padding: 10px 6px 8px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 7px;
-  background: transparent; border: 1px solid transparent; color: var(--ink); font-family: var(--sans); font-size: 12px; cursor: pointer; transition: background .15s, border-color .15s; user-select: none; }
+/* the icon layer covers the desktop; desktop.js places every icon on a 98×102 grid and lets you drag it around */
+.icons { position: absolute; top: 18px; left: 18px; right: 18px; bottom: 60px; z-index: 2; pointer-events: none; }
+.icon { position: absolute; width: 92px; height: 96px; padding: 10px 6px 8px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 7px; pointer-events: auto; touch-action: none;
+  background: transparent; border: 1px solid transparent; color: var(--ink); font-family: var(--sans); font-size: 12px; cursor: pointer; transition: background .15s, border-color .15s, left .25s cubic-bezier(.22,.61,.36,1), top .25s cubic-bezier(.22,.61,.36,1); user-select: none; }
+.icon.dragging { transition: none; z-index: 30; opacity: .9; cursor: grabbing; background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); box-shadow: 0 20px 40px -18px rgba(0,0,0,.9); }
+.icon.dragging .tile { transform: scale(1.06); }
+.icon.drop-over { background: rgba(255,59,59,.14); border-color: rgba(255,59,59,.45); }
+.icon.drop-over .tile { transform: scale(1.12); }
+.icon .tile { transition: transform .15s; }
 .icon:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.08); }
 .icon:active { background: rgba(255,59,59,.12); border-color: rgba(255,59,59,.3); }
 .icon .tile { width: 48px; height: 48px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 18px -8px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.12); }
 .icon .tile img { width: 34px; height: 34px; object-fit: contain; }
 /* purple = the computer's own apps; his projects keep their brand look */
-.tile.term, .tile.projects, .tile.youtube, .tile.aparat, .tile.aboutme, .tile.thispc { background: linear-gradient(135deg, #8b5cf6, #4c1d95); border: 1px solid rgba(255,255,255,.08); }
+.tile.term, .tile.projects, .tile.youtube, .tile.aboutme, .tile.thispc { background: linear-gradient(135deg, #8b5cf6, #4c1d95); border: 1px solid rgba(255,255,255,.08); }
+.tile.folder { background: linear-gradient(135deg, #f7c04a, #b8760a); border: 1px solid rgba(255,255,255,.12); font-size: 26px; }
+.tile.music { background: linear-gradient(135deg, #ec4899, #7e1d54); border: 1px solid rgba(255,255,255,.12); }
+.tile.bin { background: linear-gradient(135deg, #4b5563, #1f2937); border: 1px solid rgba(255,255,255,.1); position: relative; }
+.tile.bin.full::after { content: attr(data-count); position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-family: var(--mono); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.6); }
 .tile.term { color: #fff; font-family: var(--mono); font-weight: 600; font-size: 20px; }
 .tile.lunamc { background: linear-gradient(135deg, #123544, #0a1a22); border: 1px solid rgba(46,230,255,.25); }
 .tile.clutchping { background: radial-gradient(circle at 50% 40%, rgba(46,230,255,.35), rgba(10,20,26,1) 70%); border: 1px solid rgba(46,230,255,.25); }
 .tile.nairo { background: linear-gradient(135deg, #2b2f3a, #14171f); border: 1px solid var(--line); }
+.tile.snake { background: linear-gradient(135deg, #1f6f3a, #0d3b1e); border: 1px solid rgba(63,185,80,.3); }
+.tile.tetris { background: linear-gradient(135deg, #2b4c8c, #141f3d); border: 1px solid rgba(88,166,255,.3); }
+.tile.minicraft { background: linear-gradient(180deg, #5f9f35 0 38%, #86604a 38%); border: 1px solid rgba(255,255,255,.1); }
+.tile.calc { background: linear-gradient(135deg, #3a3f4c, #1a1d26); border: 1px solid var(--line); }
+.tile.calendar { background: linear-gradient(135deg, #b42323, #5a0f0f); border: 1px solid rgba(255,59,59,.35); }
+.tile.skin { background: linear-gradient(135deg, #0f6b6b, #072a2a); border: 1px solid rgba(46,230,255,.3); }
 .icon .tile svg { width: 26px; height: 26px; fill: #fff; }
 .tile img.logo { width: 68%; height: 68%; object-fit: contain; border-radius: 22%; }
 .tile img.logo + .fb { display: none; }
+.tile img.logo.nairo { border-radius: 0; width: 62%; height: 62%; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
 .tile .fb { display: contents; }
 .icon span { text-shadow: 0 1px 3px rgba(0,0,0,.9); text-align: center; line-height: 1.2; }
 
@@ -69,6 +86,9 @@
 
 /* app card windows (external sites) */
 .app-card { padding: 30px 32px; display: flex; flex-direction: column; gap: 16px; }
+.app-card .card-cover { display: block; width: 96px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); transition: border-color .2s, transform .2s; }
+.app-card .card-cover:hover { border-color: rgba(255,255,255,.25); transform: translateY(-2px); }
+.app-card .card-cover img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
 .app-card .head { display: flex; align-items: center; gap: 16px; }
 .app-card .tile { width: 64px; height: 64px; border-radius: 16px; font-size: 32px; display: flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 12px 24px -10px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.12); }
 .app-card .tile svg { width: 34px; height: 34px; fill: #fff; }
@@ -121,18 +141,22 @@
 @media (max-width: 760px) { .ex-side { display: none; } }
 
 /* ---------- taskbar ---------- */
-.taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 0 10px;
+.taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 0 10px; overflow: hidden;
   background: rgba(10,11,14,.78); backdrop-filter: saturate(160%) blur(14px); border-top: 1px solid var(--line); }
+.taskbar > * { flex: none; }
 .start { font-family: var(--mono); font-weight: 600; font-size: 14px; color: var(--accent); background: transparent; border: 1px solid transparent; border-radius: 9px; padding: 6px 12px; cursor: pointer; transition: background .15s, border-color .15s; }
 .start:hover, .start.on { background: rgba(255,59,59,.1); border-color: rgba(255,59,59,.3); }
 .start small { color: var(--muted); font-weight: 400; }
 .pinned { display: flex; gap: 4px; padding-right: 8px; margin-right: 4px; border-right: 1px solid var(--line); }
 .pinned .task { padding: 6px 10px; position: relative; }
 .pinned .task.open::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 2px; border-radius: 1px; background: #a78bfa; }
-.tasks { flex: 1; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-.tasks::-webkit-scrollbar { display: none; }
-.task { font-family: var(--sans); font-size: 13px; color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 9px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
-.task .mini { width: 18px; height: 18px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+/* running apps: like Windows, buttons share the space and shrink (label → ellipsis → icon only) instead of scrolling */
+.tasks { flex: 1 1 0; min-width: 0; display: flex; gap: 6px; overflow: hidden; }
+.tasks .task { flex: 1 1 0; max-width: 168px; min-width: 38px; justify-content: flex-start; padding-left: 10px; padding-right: 10px; container-type: inline-size; }
+@container (max-width: 104px) { .task .lbl { display: none; } .task .mini { margin: 0 auto; } }   /* too narrow for a label → icon only */
+.task { font-family: var(--sans); font-size: 13px; color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 9px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; min-width: 0; transition: background .15s, color .15s, border-color .15s; }
+.task .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.task .mini { flex: none; width: 18px; height: 18px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
 .task .mini img { width: 14px; height: 14px; object-fit: contain; }
 .task .mini svg { width: 11px; height: 11px; fill: #fff; }
 .task:hover { background: rgba(255,255,255,.05); color: var(--ink); }
@@ -156,18 +180,36 @@ html.fa .clock small { font-family: var(--fa); }
 .start-menu .sm-ico svg { width: 13px; height: 13px; fill: #fff; }
 .start-menu hr { border: 0; border-top: 1px solid var(--line); margin: 8px 4px; }
 
-/* hint shown once */
-.desk-hint { position: absolute; right: 22px; top: 18px; z-index: 2; font-family: var(--mono); font-size: 12px; color: var(--term-dim); max-width: 34ch; text-align: right; line-height: 1.6; }
-.desk-hint b { color: var(--accent-soft); font-weight: 500; }
+/* right-click menu on desktop icons */
+.ctx { position: absolute; z-index: 40; min-width: 180px; padding: 6px; border-radius: 10px; background: rgba(15,17,22,.97); border: 1px solid var(--line); box-shadow: 0 20px 50px -18px rgba(0,0,0,.9); animation: winIn .12s ease both; }
+.ctx[hidden] { display: none; }
+.ctx button { display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: 7px; border: 0; background: transparent; color: var(--ink); font-family: var(--sans); font-size: 13px; cursor: pointer; }
+.ctx button:hover { background: rgba(255,59,59,.12); }
+html.fa .ctx button { text-align: right; font-family: var(--fa); }
+
+/* desktop folder + recycle bin windows reuse the explorer grid */
+.folder-view, .bin-view { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 18px; }
+.folder-view .ex-item .f-ico, .bin-view .ex-item .f-ico { font-size: 26px; }
+.folder-view .ex-item .f-ico img, .bin-view .ex-item .f-ico img { width: 34px; height: 34px; object-fit: contain; }
+.folder-view .ex-item .f-ico svg, .bin-view .ex-item .f-ico svg { width: 26px; height: 26px; fill: #fff; }
+.ex-crumb .sp { flex: 1; }
+/* small buttons inside the bin window (same look as the apps' .abtn, which computer.html doesn't load) */
+.bin-view .abtn { font-family: var(--mono); font-size: 12px; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--ink); cursor: pointer; transition: border-color .15s, background .15s; }
+.bin-view .abtn:hover { border-color: rgba(255,59,59,.45); background: rgba(255,59,59,.1); }
+.bin-view .ex-crumb .abtn + .abtn { margin-left: 6px; }
+.bin-item { cursor: default; }
+.bin-item:hover { background: transparent; border-color: transparent; }
+.bin-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+.bin-empty .big { font-size: 46px; opacity: .5; margin-bottom: 10px; }
+.bin-empty .dim { font-family: var(--mono); font-size: 12px; color: var(--term-dim); max-width: 44ch; margin: 8px auto 0; line-height: 1.6; }
 
 /* ---------- mobile: full-screen windows, icon grid ---------- */
 @media (max-width: 760px) {
-  .icons { top: 12px; left: 12px; right: 12px; bottom: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-  .icon { width: auto; padding: 8px 2px 6px; font-size: 11px; }
+  .icons { top: 12px; left: 12px; right: 12px; bottom: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; pointer-events: auto; }
+  .icon { position: static; width: auto; height: auto; padding: 8px 2px 6px; font-size: 11px; }
   .icon .tile { width: 44px; height: 44px; }
   .win { inset: 0 !important; width: auto !important; height: auto !important; border-radius: 0; min-width: 0; }
   .win-chrome { cursor: default; }
-  .desk-hint { display: none; }
   .clock small { display: none; }
   .app-card { padding: 22px 18px; }
 }
@@ -175,9 +217,10 @@ html.fa .clock small { font-family: var(--fa); }
 /* ---------- RTL / taskbar toggle ---------- */
 .taskbar .lang-toggle { margin: 0 6px; }
 html.fa .start-menu { left: auto; right: 10px; }
+html.fa .pinned { border-right: 0; border-left: 1px solid var(--line); padding-right: 0; padding-left: 8px; margin-right: 0; margin-left: 4px; }
+html.fa .clock { text-align: left; }
 html.fa .ex-side { border-right: 0; border-left: 1px solid var(--line); }
 html.fa .win-title { margin-left: 0; margin-right: 8px; }
-html.fa .desk-hint { font-family: var(--fa); }
 html.fa .win.terminal .term-caption { font-family: var(--fa); direction: rtl; text-align: right; }
 html.fa #cmdInput::placeholder { font-family: var(--fa); }
 html.fa .icon span, html.fa .task, html.fa .win-title { font-family: var(--fa); }

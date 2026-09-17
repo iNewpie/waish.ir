@@ -77,3 +77,103 @@ function observeReveals() {
 }
 
 const yr = document.getElementById('yr'); if (yr) yr.textContent = new Date().getFullYear();
+
+/* ---------- lightbox: image links open inside the site instead of a new tab ----------
+   Any <a href="….jpg|png|gif|webp|avif|svg"> is handled automatically.
+   Links inside the same [data-gallery] (or the same parent) become one gallery with ‹ › arrows.
+   Opt out per link with data-no-lightbox. Caption: data-caption, else the <img alt>, else the link text. */
+const IMG_RE = /\.(jpe?g|png|gif|webp|avif|svg)(\?.*)?$/i;
+function openLightbox(src, opts = {}) {
+  let lb = document.getElementById('lightbox');
+  if (!lb) {
+    lb = document.createElement('div'); lb.id = 'lightbox'; lb.hidden = true; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('data-i18n-skip', '');
+    lb.innerHTML = `<div class="lb-back"></div>
+      <figure class="lb-fig"><img alt=""><figcaption></figcaption></figure>
+      <button type="button" class="lb-x" aria-label="close" title="close (Esc)">×</button>
+      <button type="button" class="lb-nav lb-prev" aria-label="previous" title="previous (←)">‹</button>
+      <button type="button" class="lb-nav lb-next" aria-label="next" title="next (→)">›</button>
+      <div class="lb-count"></div>`;
+    document.body.appendChild(lb);
+    const img = lb.querySelector('img'), cap = lb.querySelector('figcaption'), count = lb.querySelector('.lb-count');
+    lb._show = i => {
+      const items = lb._items; if (!items.length) return;
+      lb._i = (i + items.length) % items.length; const it = items[lb._i];
+      img.classList.add('swap'); img.src = it.src; img.alt = it.caption || '';
+      img.onload = () => img.classList.remove('swap');
+      cap.textContent = it.caption || ''; cap.hidden = !it.caption;
+      count.textContent = items.length > 1 ? `${lb._i + 1} / ${items.length}` : ''; lb.classList.toggle('single', items.length < 2);
+    };
+    lb._close = () => { lb.classList.remove('on'); document.documentElement.classList.remove('lb-open'); clearTimeout(lb._t); lb._t = setTimeout(() => { lb.hidden = true; img.removeAttribute('src'); }, 240); };
+    lb.querySelector('.lb-back').addEventListener('click', lb._close); lb.querySelector('.lb-x').addEventListener('click', lb._close);
+    lb.querySelector('.lb-prev').addEventListener('click', () => lb._show(lb._i - 1)); lb.querySelector('.lb-next').addEventListener('click', () => lb._show(lb._i + 1));
+    img.addEventListener('click', () => { if (lb._items.length > 1) lb._show(lb._i + 1); });
+    document.addEventListener('keydown', e => {
+      if (lb.hidden) return;
+      if (e.key === 'Escape') lb._close(); else if (e.key === 'ArrowLeft') lb._show(lb._i - 1); else if (e.key === 'ArrowRight') lb._show(lb._i + 1); else return;
+      e.preventDefault();
+    });
+    // swipe on touch screens
+    let tx = null; lb.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 40) lb._show(lb._i + (dx < 0 ? 1 : -1)); });
+  }
+  lb._items = (opts.items && opts.items.length) ? opts.items : [{ src, caption: opts.caption || '' }];
+  const idx = opts.index != null ? opts.index : Math.max(0, lb._items.findIndex(x => x.src === src));
+  clearTimeout(lb._t); lb.hidden = false; lb._show(idx);
+  document.documentElement.classList.add('lb-open');
+  requestAnimationFrame(() => lb.classList.add('on'));
+  lb.querySelector('.lb-x').focus({ preventScroll: true });
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href]');
+  if (!a || a.hasAttribute('download') || a.hasAttribute('data-no-lightbox') || a.target === '_blank') return;
+  if (!IMG_RE.test(a.getAttribute('href')) || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+  e.preventDefault(); e.stopPropagation();
+  const caption = x => x.dataset.caption || (x.querySelector('img') && x.querySelector('img').alt) || x.textContent.trim();
+  const scope = a.closest('[data-gallery]') || a.parentElement;
+  const links = [...scope.querySelectorAll('a[href]')].filter(x => IMG_RE.test(x.getAttribute('href')) && !x.hasAttribute('data-no-lightbox'));
+  openLightbox(a.href, { items: links.map(x => ({ src: x.href, caption: caption(x) })), index: Math.max(0, links.indexOf(a)) });
+}, true);
+
+
+/* ---------- profile thumbnail wall (index About section + about-me hero) ----------
+   Drop YouTube thumbnails into assets/thumbs/ named 1.jpg, 2.jpg, 3.jpg … (png / webp work too).
+   They are found automatically, in order, stopping at the first missing number.
+   To use your own file names instead, list them here: THUMBS = ['assets/thumbs/bedwars.jpg', …] */
+const THUMBS = [];
+(async function thumbWall() {
+  const wall = document.getElementById('thumbWall'); if (!wall) return;
+  const root = document.body.dataset.root || '';
+  const ROWS = 3, PER = 7;
+  const render = list => {
+    wall.innerHTML = '';
+    for (let r = 0; r < ROWS; r++) {
+      const row = document.createElement('div'); row.className = 'thumb-row';
+      const tiles = [];
+      for (let i = 0; i < PER; i++) {
+        const src = list.length ? list[(i + r * 3) % list.length] : null;
+        tiles.push(src ? `<img src="${src}" alt="" decoding="async">` : `<span class="ph" style="--i:${(i + r * 2) % 5}"></span>`);
+      }
+      row.innerHTML = tiles.join('') + tiles.join('');   // doubled so the slow drift loops seamlessly
+      wall.appendChild(row);
+    }
+    wall.classList.toggle('placeholder', !list.length);
+  };
+  render([]);   // placeholders are built but stay invisible (no .ready) while the real thumbnails load
+  // gentle parallax on the about-me hero
+  const hero = wall.closest('.profile-hero');
+  if (hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) hero.addEventListener('pointermove', e => { const r = hero.getBoundingClientRect(); wall.style.setProperty('--px', ((e.clientX - r.left) / r.width - .5) * -24 + 'px'); wall.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5) * -14 + 'px'); });
+  const load = src => new Promise(r => { const i = new Image(); i.onload = () => r(src); i.onerror = () => r(null); i.src = src; });
+  let list = THUMBS.slice();
+  if (!list.length) for (let n = 1; n <= 60; n++) {
+    let hit = null;
+    for (const ext of ['jpg', 'png', 'webp', 'jpeg']) { hit = await load(`${root}assets/thumbs/${n}.${ext}`); if (hit) break; }
+    if (!hit) break; list.push(hit);
+  }
+  if (list.length) {
+    render(list);
+    // every tile is already in the browser cache from the probe above; wait for them to decode, then fade the wall in
+    // (capped at 5 s so a browser that never settles decode() can't keep the wall hidden forever)
+    await Promise.race([Promise.all([...wall.querySelectorAll('img')].map(img => (img.decode ? img.decode() : Promise.resolve()).catch(() => {}))), sleep(5000)]);
+  }
+  requestAnimationFrame(() => wall.classList.add('ready'));   // no thumbnails at all → the placeholders fade in instead
+})();

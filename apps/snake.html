@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="../assets/waish.png?v=20260916b">
+<link rel="stylesheet" href="../css/site.css?v=20260916b">
+<link rel="stylesheet" href="../css/apps.css?v=20260916b">
+<style>
+  .app-main { padding: 10px; }
+  canvas.game { aspect-ratio: 1; width: min(100%, calc(100vh - 70px)); height: auto; }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>🐍 Snake</b><span class="sp"></span><span class="pill" data-t="Score">Score</span> <span class="pill"><i id="score">0</i></span><span class="pill" data-t="Best">Best</span> <span class="pill"><i id="best">0</i></span></div>
+<div class="app-main">
+  <canvas class="game" id="c" width="440" height="440" tabindex="0"></canvas>
+  <div class="overlay" id="ov">
+    <h2 id="ovTitle" data-t="Snake">Snake</h2>
+    <p id="ovText"><span data-t="Arrow keys or WASD to move. Eat the apples, don't hit the walls or yourself.">Arrow keys or WASD to move. Eat the apples, don't hit the walls or yourself.</span><br><kbd>Space</kbd> <span data-t="pause">pause</span> · <kbd>R</kbd> <span data-t="restart">restart</span></p>
+    <button class="abtn primary" id="ovBtn" data-t="Play">Play</button>
+  </div>
+  <div class="pad" id="pad">
+    <button></button><button data-k="up">▲</button><button></button>
+    <button data-k="left">◀</button><button data-k="pause">❚❚</button><button data-k="right">▶</button>
+    <button></button><button data-k="down">▼</button><button></button>
+  </div>
+  <div class="hint">← ↑ → ↓ / WASD · space = pause</div>
+</div>
+<script>
+/* ---------- i18n (labels only; the game is the same in both languages) ---------- */
+const FA = { 'Score': 'امتیاز', 'Best': 'رکورد', 'Snake': 'مار', 'Play': 'بازی', 'Play again': 'دوباره', 'Resume': 'ادامه', 'Paused': 'مکث', 'Game over': 'باختی!', 'pause': 'مکث', 'restart': 'شروع دوباره',
+  'Arrow keys or WASD to move. Eat the apples, don\'t hit the walls or yourself.': 'با کلیدهای جهت‌دار یا WASD حرکت کن. سیب‌ها رو بخور، به دیوار یا خودت نخور.', 'New record!': 'رکورد جدید!' };
+let lang = 'en'; try { lang = localStorage.getItem('waish-lang') === 'fa' ? 'fa' : 'en'; } catch (e) {}
+const t = s => lang === 'fa' && FA[s] ? FA[s] : s;
+if (lang === 'fa') { document.body.classList.add('fa'); document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t)); }
+
+/* ---------- game ---------- */
+const N = 22, c = document.getElementById('c'), ctx = c.getContext('2d'), S = c.width / N;
+const ov = document.getElementById('ov'), ovTitle = document.getElementById('ovTitle'), ovText = document.getElementById('ovText'), ovBtn = document.getElementById('ovBtn');
+const scoreEl = document.getElementById('score'), bestEl = document.getElementById('best');
+let best = 0; try { best = +localStorage.getItem('waish-snake-best') || 0; } catch (e) {}
+bestEl.textContent = best;
+
+let snake, dir, nextDir, food, gold, score, alive, paused, started = false, timer = null, speed, grow;
+function reset() {
+  snake = [{ x: 8, y: 11 }, { x: 7, y: 11 }, { x: 6, y: 11 }]; dir = { x: 1, y: 0 }; nextDir = dir; score = 0; alive = true; paused = false; speed = 150; grow = 0; gold = null;
+  placeFood(); scoreEl.textContent = 0; draw();
+}
+function placeFood() {
+  do { food = { x: Math.floor(Math.random() * N), y: Math.floor(Math.random() * N) }; } while (snake.some(s => s.x === food.x && s.y === food.y));
+  if (!gold && Math.random() < .15) { do { gold = { x: Math.floor(Math.random() * N), y: Math.floor(Math.random() * N), ttl: 40 }; } while (snake.some(s => s.x === gold.x && s.y === gold.y) || (gold.x === food.x && gold.y === food.y)); }
+}
+function step() {
+  if (!alive || paused) return;
+  dir = nextDir;
+  const h = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+  if (h.x < 0 || h.y < 0 || h.x >= N || h.y >= N || snake.some((s, i) => i < snake.length - (grow ? 0 : 1) && s.x === h.x && s.y === h.y)) return die();
+  snake.unshift(h);
+  if (h.x === food.x && h.y === food.y) { score += 10; grow += 1; placeFood(); speed = Math.max(60, 150 - Math.floor(score / 30) * 8); restartTimer(); }
+  else if (gold && h.x === gold.x && h.y === gold.y) { score += 50; grow += 3; gold = null; }
+  if (grow > 0) grow--; else snake.pop();
+  if (gold && --gold.ttl <= 0) gold = null;
+  scoreEl.textContent = score;
+  draw();
+}
+function restartTimer() { clearInterval(timer); timer = setInterval(step, speed); }
+function die() {
+  alive = false; clearInterval(timer);
+  const rec = score > best; if (rec) { best = score; bestEl.textContent = best; try { localStorage.setItem('waish-snake-best', best); } catch (e) {} }
+  ovTitle.textContent = t('Game over'); ovText.innerHTML = `<span class="big">${score}</span><br>${rec ? '🏆 ' + t('New record!') : t('Best') + ': ' + best}`; ovBtn.textContent = t('Play again'); ov.hidden = false;
+  draw();
+}
+function start() { reset(); started = true; ov.hidden = true; restartTimer(); c.focus(); }
+function togglePause() {
+  if (!alive || !started) return;
+  paused = !paused;
+  if (paused) { ovTitle.textContent = t('Paused'); ovText.innerHTML = `<span class="big">${score}</span>`; ovBtn.textContent = t('Resume'); ov.hidden = false; }
+  else { ov.hidden = true; c.focus(); }
+}
+function turn(x, y) { if (dir.x === -x && dir.y === -y) return; if (snake.length > 1 && snake[0].x + x === snake[1].x && snake[0].y + y === snake[1].y) return; nextDir = { x, y }; }
+const KEYS = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] };
+addEventListener('keydown', e => {
+  if (KEYS[e.code]) { e.preventDefault(); if (!started || !alive) { if (!alive && started) start(); else if (!started) start(); } if (paused) return; turn(...KEYS[e.code]); }
+  else if (e.code === 'Space') { e.preventDefault(); if (!started || !alive) start(); else togglePause(); }
+  else if (e.code === 'KeyR') { start(); }
+});
+ovBtn.addEventListener('click', () => { if (paused) togglePause(); else start(); });
+document.getElementById('pad').addEventListener('pointerdown', e => {
+  const k = e.target.dataset.k; if (!k) return; e.preventDefault();
+  if (k === 'pause') { if (!started || !alive) start(); else togglePause(); return; }
+  if (!started || !alive) start();
+  ({ up: () => turn(0, -1), down: () => turn(0, 1), left: () => turn(-1, 0), right: () => turn(1, 0) })[k]();
+});
+// swipe on the board
+let sx, sy; c.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; c.focus(); });
+c.addEventListener('pointerup', e => { if (sx == null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null; if (Math.hypot(dx, dy) < 18) return; if (!started || !alive) start(); if (Math.abs(dx) > Math.abs(dy)) turn(Math.sign(dx), 0); else turn(0, Math.sign(dy)); });
+
+function draw() {
+  ctx.fillStyle = '#0b0d12'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = 'rgba(255,255,255,.025)';
+  for (let y = 0; y < N; y++) for (let x = (y % 2); x < N; x += 2) ctx.fillRect(x * S, y * S, S, S);
+  // apple
+  cell(food.x, food.y, '#ff3b3b', 4); ctx.fillStyle = '#3fb950'; ctx.fillRect(food.x * S + S / 2 - 1, food.y * S + 2, 2, 4);
+  if (gold) { const pulse = .7 + .3 * Math.sin(Date.now() / 120); ctx.globalAlpha = pulse; cell(gold.x, gold.y, '#e3b341', 4); ctx.globalAlpha = 1; }
+  // snake: gradient from head to tail
+  snake.forEach((s, i) => {
+    const k = i / Math.max(1, snake.length - 1);
+    const col = alive ? `hsl(${140 - k * 30}, ${70 - k * 20}%, ${52 - k * 18}%)` : `hsl(0, 0%, ${40 - k * 15}%)`;
+    cell(s.x, s.y, col, i === 0 ? 5 : 3);
+  });
+  // eyes
+  const h = snake[0], cx = h.x * S + S / 2, cy = h.y * S + S / 2, f = S * .22, side = S * .2;
+  ctx.fillStyle = '#0b0d12';
+  if (dir.x) { ctx.fillRect(cx + dir.x * f - 1.5, cy - side - 1.5, 3, 3); ctx.fillRect(cx + dir.x * f - 1.5, cy + side - 1.5, 3, 3); }
+  else { ctx.fillRect(cx - side - 1.5, cy + dir.y * f - 1.5, 3, 3); ctx.fillRect(cx + side - 1.5, cy + dir.y * f - 1.5, 3, 3); }
+}
+function cell(x, y, color, r) { ctx.fillStyle = color; rr(x * S + 1, y * S + 1, S - 2, S - 2, r); ctx.fill(); }
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+reset();
+addEventListener('load', () => { try { window.focus(); c.focus(); } catch (e) {} });
+</script>
+</body>
+</html>

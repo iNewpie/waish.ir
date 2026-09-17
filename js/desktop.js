@@ -4,7 +4,7 @@
    ============================================================ */
 window.DESKTOP = (function () {
   const ICONS = {
-    play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+    share: '<svg viewBox="0 0 24 24"><path d="M18 16a3 3 0 0 0-2.4 1.2l-7-4.1a3 3 0 0 0 0-2.2l7-4.1A3 3 0 1 0 15 5c0 .3 0 .6.1.9l-7 4.1a3 3 0 1 0 0 4l7 4.1c0 .3-.1.6-.1.9a3 3 0 1 0 3-3z"/></svg>',
     cart: '<svg viewBox="0 0 24 24"><path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM3 2v2h2l3.6 7.6L7.2 14A2 2 0 0 0 9 17h11v-2H9.4l1-2h7.5a2 2 0 0 0 1.8-1.1L23 5H6.2L5.3 3H3z"/></svg>',
     grid: '<svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg>',
     user: '<svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4 0-9 2-9 5v3h18v-3c0-3-5-5-9-5z"/></svg>',
@@ -14,24 +14,33 @@ window.DESKTOP = (function () {
   /* ---------- app definitions ---------- */
   const APPS = {
     terminal:   { title: 'Terminal', tile: 'term', icon: '➜', kind: 'terminal', w: .66, h: .72 },
-    projects:   { title: 'Projects', tile: 'projects', icon: ICONS.grid, kind: 'page', src: 'projects.html?embed=1', w: .78, h: .82 },
-    youtube:    { title: 'YouTube', tile: 'youtube', icon: ICONS.play, kind: 'card', sub: 'youtube.com · Persian BedWars', w: .46, h: .5,
-                  text: 'The Waish YouTube channel — Minecraft, mostly BedWars. Gameplay, PvP mechanics, ping & optimization, clients, and the occasional server-building video. Proper editing, thumbnails and structure.',
-                  links: [['Open YouTube ↗', '#', true]], meta: 'link coming soon' },
-    aparat:     { title: 'Aparat', tile: 'aparat', icon: '<img class="logo" src="assets/aparat-logo.png" alt="">', kind: 'card', sub: 'aparat.com/waish', w: .46, h: .5,
-                  text: 'Streams and videos for the Persian-speaking community — BedWars gameplay, tutorials, and whatever Waish is building at the time.',
-                  links: [['Open Aparat ↗', 'https://aparat.com/waish']], meta: 'external site' },
+    projects:   { title: 'All projects', tile: 'projects', icon: ICONS.grid, kind: 'page', src: 'projects.html?embed=1', w: .78, h: .82 },
+    // desktop folder holding the project icons (open it → pick one)
+    projectsFolder: { title: 'Projects', tile: 'folder', icon: '📁', kind: 'folder', items: ['lunamc', 'clutchping', 'nairo', 'projects'], w: .46, h: .46, minW: 420 },
+    social:     { title: 'Social', tile: 'youtube', icon: ICONS.share, kind: 'card', sub: 'youtube · aparat · instagram · telegram · discord', w: .46, h: .52,
+                  text: 'The Waish YouTube channel — Minecraft, mostly BedWars. Gameplay, PvP mechanics, ping & optimization, clients, and the occasional server-building video. Proper editing, thumbnails and structure. Persian streams and videos live on Aparat.',
+                  links: [['Open YouTube ↗', 'https://www.youtube.com/@WaishChannel'], ['Aparat ↗', 'https://aparat.com/waish'], ['Instagram ↗', 'https://instagram.com/asunawaish'], ['Telegram ↗', 'https://t.me/wishingcommunity'], ['Discord ↗', 'https://discord.gg/8HVsMqucZ2']], meta: 'youtube.com/@WaishChannel · 100+ videos' },
     lunamc:     { title: 'LunaMC', tile: 'lunamc', icon: '<img src="assets/luna-logo.png" alt="">', kind: 'page', src: 'projects/lunamc.html?embed=1', w: .74, h: .82 },
     clutchping: { title: 'ClutchPing', tile: 'clutchping', icon: '<img src="assets/clutchping-white.png" alt="">', kind: 'page', src: 'projects/clutchping.html?embed=1', w: .74, h: .82 },
-    // nairo: drop the real logo at assets/nairo-logo.png — the cart shows until then
-    nairo:      { title: 'NairoShop', tile: 'nairo', icon: '<img class="logo" src="assets/nairo-logo.png" alt="" onerror="this.remove()"><span class="fb">' + ICONS.cart + '</span>', kind: 'card', sub: 'digital products & services', w: .46, h: .52,
+    nairo:      { title: 'NairoShop', tile: 'nairo', icon: '<img class="logo nairo" src="assets/nairo-logo.png" alt="NairoShop" onerror="this.remove()"><span class="fb">' + ICONS.cart + '</span>', kind: 'card', sub: 'nairo.ir · digital products & services', cover: 'assets/nairo-cover.jpg', w: .46, h: .52,
                   text: 'NairoShop started from a real problem: many Iranian users can\'t buy foreign digital services and products because of international payment restrictions. NairoShop gives access to the products and services that are hard to pay for directly from Iran.',
-                  links: [['Open NairoShop ↗', '#', true]], meta: 'link coming soon' },
+                  links: [['Open NairoShop ↗', 'https://nairo.ir']], meta: 'over 100,000 successful sales' },
     aboutme:    { title: 'About me', tile: 'aboutme', icon: ICONS.user, kind: 'page', src: 'about-me.html?embed=1', w: .78, h: .82 },
     thispc:     { title: 'This PC', tile: 'thispc', icon: ICONS.pc, kind: 'explorer', w: .7, h: .68 },
+    bin:        { title: 'Recycle Bin', tile: 'bin', icon: '🗑️', kind: 'bin', w: .46, h: .5, minW: 420 },
+    music:      { title: 'Music', tile: 'music', icon: '🎵', kind: 'page', src: 'apps/music.html?v=20260917h', w: .4, h: .8, minW: 400 },
+    // games + small apps: each one is a standalone page in apps/ shown inside a window
+    snake:      { title: 'Snake', tile: 'snake', icon: '🐍', kind: 'page', src: 'apps/snake.html?v=20260916b', w: .38, h: .78, minW: 380 },
+    tetris:     { title: 'Tetris', tile: 'tetris', icon: '🧱', kind: 'page', src: 'apps/tetris.html?v=20260916b', w: .36, h: .84, minW: 380 },
+    minicraft:  { title: 'Mini Minecraft', tile: 'minicraft', icon: '⛏️', kind: 'page', src: 'apps/minicraft.html?v=20260916b', w: .72, h: .8 },
+    calculator: { title: 'Calculator', tile: 'calc', icon: '🧮', kind: 'page', src: 'apps/calculator.html?v=20260916b', w: .26, h: .74, minW: 340 },
+    calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
+    userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260916e', w: .58, h: .88, minW: 520 },
   };
-  const ORDER = ['terminal', 'projects', 'youtube', 'aparat', 'lunamc', 'clutchping', 'nairo', 'aboutme']; // desktop icons
+  const ORDER = ['thispc', 'terminal', 'projectsFolder', 'social', 'aboutme', 'music', 'snake', 'tetris', 'minicraft', 'calculator', 'calendar', 'userlookup', 'bin']; // desktop icons, top-left down
   const PINNED = ['thispc'];                                                                             // taskbar
+  // every launchable app, for the start menu and the terminal's /apps (folder contents included, no duplicates)
+  const ALL = [...new Set(ORDER.flatMap(id => APPS[id].kind === 'folder' ? [id, ...APPS[id].items] : [id]).concat(PINNED))];
 
   /* ---------- This PC: drives + files (edit freely) ----------
      item types: img (opens the picture) · link (opens a site) · app / folder (just shown) · txt (shows a note) */
@@ -40,16 +49,27 @@ window.DESKTOP = (function () {
       { type: 'img', name: 'setup-desk.jpg', src: 'assets/pc/setup-desk.jpg' },
       { type: 'img', name: 'setup-wide.jpg', src: 'assets/pc/setup-wide.jpg' },
       { type: 'img', name: 'luna-banner.jpg', src: 'assets/luna-banner.jpg' },
-      { type: 'img', name: 'luna-bg.jpg', src: 'assets/luna-bg.jpg' },
+      { type: 'img', name: 'luna-bg.jpg', src: 'assets/luna-bg.jpg?v=20260916c' },
       { type: 'img', name: 'waish.jpg', src: 'assets/avatar.jpg' },
       { type: 'img', name: 'terminal-bg.jpg', src: 'assets/terminal-bg.jpg' },
+      { type: 'img', name: 'nairo-logo.jpg', src: 'assets/nairo-cover.jpg' },
     ] },
     { letter: 'D', name: 'Useful apps', icon: '🧰', used: .41, size: '512 GB', items: [
+      { type: 'run', name: 'Calculator', icon: '🧮', app: 'calculator' },
+      { type: 'run', name: 'Calendar', icon: '📅', sub: 'Persian · Gregorian', app: 'calendar' },
+      { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Seraph · Bordic', app: 'userlookup' },
+      { type: 'run', name: 'Music', icon: '🎵', sub: 'mp3 player', app: 'music' },
       { type: 'app', name: 'Cinema 4D', icon: '🎬', sub: '3D · ~6 years' },
       { type: 'app', name: 'Blender', icon: '🧊', sub: '3D' },
       { type: 'app', name: 'Python', icon: '🐍', sub: 'scripts' },
       { type: 'app', name: 'MySQL', icon: '🗄️', sub: 'databases' },
       { type: 'txt', name: 'readme.txt', icon: '📄', text: 'Apps Waish actually uses. Add or rename them in js/desktop.js → DRIVES → D:// Useful apps.' },
+    ] },
+    { letter: 'G', name: 'Games', icon: '🎮', used: .33, size: '1 TB', items: [
+      { type: 'run', name: 'Snake', icon: '🐍', app: 'snake' },
+      { type: 'run', name: 'Tetris', icon: '🧱', app: 'tetris' },
+      { type: 'run', name: 'Mini Minecraft', icon: '⛏️', sub: 'build & mine', app: 'minicraft' },
+      { type: 'txt', name: 'readme.txt', icon: '📄', text: 'Small games made for this computer. Scores and worlds are saved in your browser.' },
     ] },
     { letter: 'F', name: 'Editing', icon: '✂️', used: .77, size: '1 TB', items: [
       { type: 'folder', name: 'Cinema 4D projects', icon: '📁' },
@@ -60,7 +80,8 @@ window.DESKTOP = (function () {
     ] },
     { letter: 'H', name: 'Videos', icon: '🎥', used: .88, size: '2 TB', items: [
       { type: 'link', name: 'Aparat channel', icon: '<img src="assets/aparat-logo.png" alt="" style="width:60%;height:60%;object-fit:contain">', href: 'https://aparat.com/waish' },
-      { type: 'app', name: 'YouTube', icon: '▶️', sub: 'link soon' },
+      { type: 'link', name: 'YouTube channel', icon: '▶️', href: 'https://www.youtube.com/@WaishChannel' },
+      { type: 'link', name: 'Discord server', icon: '💬', sub: '10k+ members', href: 'https://discord.gg/8HVsMqucZ2' },
       { type: 'folder', name: 'BedWars', icon: '📁' },
       { type: 'folder', name: 'Tutorials', icon: '📁' },
       { type: 'folder', name: 'Streams', icon: '📁' },
@@ -73,15 +94,116 @@ window.DESKTOP = (function () {
   const wins = {}; let z = 10; let focused = null;
   const isMobile = () => matchMedia('(max-width: 760px)').matches;
 
-  /* ---------- icons ---------- */
+  /* ---------- desktop icons ----------
+     Laid out on a grid (columns, top-left down; top-right in Persian). Every icon can be dragged to another cell,
+     or dropped on the Recycle Bin. Nothing is saved: a refresh puts everything back. On phones it's a plain grid. */
   const iconsEl = $('.icons');
+  const CELL = { w: 98, h: 102 };
+  const icons = {};            // id → button
+  const binned = [];           // ids sitting in the Recycle Bin
+  const rtl = () => document.documentElement.dir === 'rtl';
   ORDER.forEach(id => {
     const a = APPS[id];
     const b = document.createElement('button'); b.className = 'icon'; b.type = 'button'; b.dataset.app = id;
     b.innerHTML = `<div class="tile ${a.tile}">${a.icon}</div><span>${a.title}</span>`;
-    b.addEventListener('click', () => open(id, b));
-    iconsEl.appendChild(b);
+    b.addEventListener('click', () => { if (!b._dragged) open(id, b); });
+    b.addEventListener('contextmenu', e => { e.preventDefault(); contextMenu(id, b, e.clientX, e.clientY); });
+    iconDrag(b);
+    iconsEl.appendChild(b); icons[id] = b;
   });
+  const gridSize = () => { const R = iconsEl.getBoundingClientRect(); return { cols: Math.max(1, Math.floor(R.width / CELL.w)), rows: Math.max(1, Math.floor(R.height / CELL.h)), R }; };
+  const cellStyle = (b, c, r) => { const { cols } = gridSize(); b._cell = { c, r }; b.style.left = (rtl() ? (cols - 1 - c) : c) * CELL.w + 'px'; b.style.top = r * CELL.h + 'px'; };
+  const taken = (c, r, except) => Object.values(icons).some(x => x !== except && x.isConnected && x._cell && x._cell.c === c && x._cell.r === r);
+  function freeCell(nearC, nearR, except) {   // nearest empty cell, scanning outwards; falls back to the first empty one
+    const { cols, rows } = gridSize(); let best = null, bd = Infinity;
+    for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) { if (taken(c, r, except)) continue; const d = Math.hypot(c - nearC, r - nearR); if (d < bd) { bd = d; best = { c, r }; } }
+    return best || { c: 0, r: 0 };
+  }
+  function placeIcons() {
+    if (isMobile()) { Object.values(icons).forEach(b => { b.style.left = b.style.top = ''; b._cell = null; }); return; }
+    const { cols, rows } = gridSize(); let i = 0;
+    Object.values(icons).forEach(b => {
+      if (!b.isConnected) return;
+      if (b._cell && b._cell.c < cols && b._cell.r < rows) { cellStyle(b, b._cell.c, b._cell.r); return; }
+      const want = b._cell ? freeCell(Math.min(b._cell.c, cols - 1), Math.min(b._cell.r, rows - 1), b) : freeCell(Math.floor(i / rows), i % rows, b);   // window got smaller → nearest cell that still fits
+      cellStyle(b, want.c, want.r); i++;
+    });
+  }
+  // first layout: column-major, in ORDER
+  (function () { const { rows } = gridSize(); if (!isMobile()) ORDER.forEach((id, i) => cellStyle(icons[id], Math.floor(i / rows), i % rows)); })();
+  addEventListener('resize', placeIcons);
+  function iconDrag(b) {
+    let sx, sy, moving = false;
+    b.addEventListener('pointerdown', e => {
+      if (isMobile() || e.button !== 0) return;
+      sx = e.clientX; sy = e.clientY; moving = true; b._dragged = false;
+      try { b.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    b.addEventListener('pointermove', e => {
+      if (!moving) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!b._dragged) { if (Math.hypot(dx, dy) < 6) return; b._dragged = true; b.classList.add('dragging'); desk.classList.add('wm-busy'); }
+      b.style.transform = `translate(${dx}px, ${dy}px)`;
+      const over = dropTarget(b, e.clientX, e.clientY); Object.values(icons).forEach(x => x.classList.toggle('drop-over', x === over));
+    });
+    const stop = e => {
+      if (!moving) return; moving = false;
+      if (!b._dragged) return;
+      b.classList.remove('dragging'); desk.classList.remove('wm-busy'); b.style.transform = '';
+      const over = dropTarget(b, e.clientX, e.clientY); Object.values(icons).forEach(x => x.classList.remove('drop-over'));
+      if (over && APPS[over.dataset.app].kind === 'bin' && b.dataset.app !== 'bin') { recycle(b.dataset.app); }
+      else {
+        const { R, cols, rows } = gridSize();
+        const px = e.clientX - R.left - CELL.w / 2, py = e.clientY - R.top - CELL.h / 2;
+        let c = Math.round(px / CELL.w); if (rtl()) c = cols - 1 - c;
+        c = Math.max(0, Math.min(cols - 1, c)); const r = Math.max(0, Math.min(rows - 1, Math.round(py / CELL.h)));
+        const cell = taken(c, r, b) ? freeCell(c, r, b) : { c, r };
+        cellStyle(b, cell.c, cell.r);
+      }
+      setTimeout(() => { b._dragged = false; }, 0);   // the click that follows pointerup must not open the app
+    };
+    b.addEventListener('pointerup', stop); b.addEventListener('pointercancel', stop);
+  }
+  function dropTarget(self, x, y) {   // the (other) icon under the pointer, if any
+    return Object.values(icons).find(o => { if (o === self || !o.isConnected) return false; const r = o.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; }) || null;
+  }
+  /* recycle bin */
+  function recycle(id) {
+    const b = icons[id]; if (!b || !b.isConnected || id === 'bin') return;
+    b._home = b._cell; b.remove(); binned.push(id); binBadge(); refreshBin();
+  }
+  function restoreIcon(id) {
+    const i = binned.indexOf(id); if (i < 0) return; binned.splice(i, 1);
+    const b = icons[id]; iconsEl.appendChild(b);
+    if (!isMobile()) { const h = b._home || { c: 0, r: 0 }; const cell = taken(h.c, h.r, b) ? freeCell(h.c, h.r, b) : h; cellStyle(b, cell.c, cell.r); }
+    binBadge(); refreshBin();
+  }
+  function binBadge() { const t = icons.bin && icons.bin.querySelector('.tile'); if (t) { t.dataset.count = binned.length || ''; t.classList.toggle('full', binned.length > 0); } }
+  function refreshBin() { const w = wins.bin; if (w) binView(w.querySelector('.win-body')); }
+  function binView(body) {
+    body.innerHTML = `<div class="bin-view"><div class="ex-crumb"><b>Recycle Bin</b> <span>· ${binned.length} ${T('items')}</span><span class="sp"></span>${binned.length ? `<button type="button" class="abtn sm restore-all">${T('Restore all')}</button><button type="button" class="abtn sm empty">${T('Empty Recycle Bin')}</button>` : ''}</div>
+      ${binned.length ? `<div class="ex-grid"></div>` : `<div class="bin-empty"><div class="big">🗑️</div><p>${T('Recycle Bin is empty.')}</p><p class="dim">${T('Drag a desktop icon onto the bin, or right-click it, to put it here. Refreshing the page brings everything back.')}</p></div>`}</div>`;
+    const grid = body.querySelector('.ex-grid');
+    if (grid) binned.forEach(id => {
+      const a = APPS[id]; const el = document.createElement('div'); el.className = 'ex-item bin-item';
+      el.innerHTML = `<span class="f-ico tile ${a.tile}">${a.icon}</span><span class="f-name">${a.title}</span><button type="button" class="abtn sm">${T('Restore')}</button>`;
+      el.querySelector('button').addEventListener('click', () => restoreIcon(id)); grid.appendChild(el);
+    });
+    const ra = body.querySelector('.restore-all'); if (ra) ra.addEventListener('click', () => binned.slice().forEach(restoreIcon));
+    const em = body.querySelector('.empty'); if (em) em.addEventListener('click', () => { binned.length = 0; binBadge(); refreshBin(); });
+  }
+  /* right-click menu on icons */
+  const ctx = document.createElement('div'); ctx.className = 'ctx'; ctx.hidden = true; desk.appendChild(ctx);
+  function contextMenu(id, b, x, y) {
+    const items = [[T('Open'), () => open(id, b)]];
+    if (id === 'bin') { if (binned.length) items.push([T('Empty Recycle Bin'), () => { binned.length = 0; binBadge(); refreshBin(); }]); }
+    else items.push([T('Move to Recycle Bin'), () => recycle(id)]);
+    ctx.innerHTML = ''; items.forEach(([label, fn]) => { const m = document.createElement('button'); m.type = 'button'; m.textContent = label; m.addEventListener('click', () => { ctx.hidden = true; fn(); }); ctx.appendChild(m); });
+    const R = desk.getBoundingClientRect(); ctx.hidden = false;
+    ctx.style.left = Math.min(x - R.left, R.width - 190) + 'px'; ctx.style.top = Math.min(y - R.top, R.height - 100) + 'px';
+  }
+  document.addEventListener('pointerdown', e => { if (!ctx.hidden && !ctx.contains(e.target)) ctx.hidden = true; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') ctx.hidden = true; });
 
   /* ---------- window animations ----------
      open / restore grow out of the icon or taskbar button that was clicked; minimize / close shrink back into it. */
@@ -107,7 +229,9 @@ window.DESKTOP = (function () {
   }
 
   /* ---------- windows ---------- */
+  const ALIAS = { youtube: 'social', aparat: 'social', folder: 'projectsFolder', recycle: 'bin', trash: 'bin' };   // old / alternative ids used in links and terminal commands
   function open(id, from) {
+    id = ALIAS[id] || id;
     const a = APPS[id]; if (!a) return false;
     if (wins[id]) { restore(id, from); return true; }
     const w = document.createElement('div'); w.className = 'win ' + (a.kind === 'terminal' ? 'terminal' : ''); w.dataset.app = id;
@@ -119,15 +243,18 @@ window.DESKTOP = (function () {
     if (a.kind === 'terminal') body.appendChild($('#terminalTemplate').content.cloneNode(true));
     else if (a.kind === 'page') body.innerHTML = `<iframe src="${a.src}" title="${a.title}" loading="lazy"></iframe>`;
     else if (a.kind === 'explorer') explorer(body);
+    else if (a.kind === 'folder') folderView(body, a);
+    else if (a.kind === 'bin') binView(body);
     else body.innerHTML = `<div class="app-card">
         <div class="head"><div class="tile ${a.tile}">${a.icon}</div><div><h2>${a.title}</h2><div class="sub">${a.sub || ''}</div></div></div>
+        ${a.cover ? `<a class="card-cover" href="${a.cover}" data-caption="${a.title}"><img src="${a.cover}" alt="${a.title}"></a>` : ''}
         <p>${a.text}</p>
         <div class="actions">${a.links.map(([t, h, dis]) => `<a class="btn btn-primary${dis ? ' disabled' : ''}" href="${h}" target="_blank" rel="noopener">${t}</a>`).join('')}</div>
         <div class="meta">// ${a.meta || ''}</div></div>`;
 
     // size + position (cascade a little for each new window)
     const R = layer.getBoundingClientRect(); const n = Object.keys(wins).length;
-    const W = Math.min(R.width - 40, Math.max(420, R.width * a.w)), H = Math.min(R.height - 30, Math.max(260, R.height * a.h));
+    const W = Math.min(R.width - 40, Math.max(a.minW || 420, R.width * a.w)), H = Math.min(R.height - 30, Math.max(260, R.height * a.h));
     const x = Math.max(120, (R.width - W) / 2 + n * 24), y = Math.max(10, (R.height - H) / 2 + n * 18);
     Object.assign(w.style, { width: W + 'px', height: H + 'px', left: Math.min(x, R.width - W - 10) + 'px', top: Math.min(y, R.height - H - 10) + 'px' });
 
@@ -150,6 +277,7 @@ window.DESKTOP = (function () {
     Object.values(wins).forEach(x => x.classList.remove('focus'));
     w.classList.add('focus'); w.style.zIndex = ++z; focused = id;
     if (APPS[id].kind === 'terminal') { const i = w.querySelector('#cmdInput'); if (i && !isMobile()) i.focus(); }
+    else if (APPS[id].kind === 'page') { const f = w.querySelector('iframe'); if (f) { try { f.contentWindow.focus(); } catch (e) {} } }
     renderTasks();
   }
   function minimize(id) {
@@ -255,6 +383,17 @@ window.DESKTOP = (function () {
     });
   }
 
+  /* ---------- desktop folder (kind: 'folder') ---------- */
+  function folderView(body, a) {
+    body.innerHTML = `<div class="folder-view"><div class="ex-crumb"><b>${a.title}</b> <span>· ${a.items.length} ${T('items')}</span></div><div class="ex-grid"></div></div>`;
+    const grid = body.querySelector('.ex-grid');
+    a.items.forEach(id => {
+      const x = APPS[id]; const el = document.createElement('button'); el.type = 'button'; el.className = 'ex-item';
+      el.innerHTML = `<span class="f-ico tile ${x.tile}">${x.icon}</span><span class="f-name">${x.title}</span>`;
+      el.addEventListener('click', () => open(id, el)); grid.appendChild(el);
+    });
+  }
+
   /* ---------- This PC ---------- */
   function explorer(body) {
     body.innerHTML = `<div class="explorer"><div class="ex-side"><div class="ex-head">drives</div></div><div class="ex-main"></div></div>`;
@@ -273,17 +412,18 @@ window.DESKTOP = (function () {
     }
     function show(d) {
       side.querySelectorAll('.ex-drive').forEach(x => x.classList.toggle('on', x.dataset.letter === d.letter));
-      main.innerHTML = `<div class="ex-crumb"><button type="button" class="home">This PC</button> › <b>${d.letter}://${d.name}</b> <span>· ${d.items.length} ${T('items')}</span></div><div class="ex-grid"></div><div class="ex-note" hidden></div>`;
+      main.innerHTML = `<div class="ex-crumb"><button type="button" class="home">This PC</button> › <b>${d.letter}://${d.name}</b> <span>· ${d.items.length} ${T('items')}</span></div><div class="ex-grid" data-gallery></div><div class="ex-note" hidden></div>`;
       main.querySelector('.home').addEventListener('click', home);
       const grid = main.querySelector('.ex-grid'), note = main.querySelector('.ex-note');
       d.items.forEach(it => {
         const el = document.createElement(it.type === 'img' || it.type === 'link' ? 'a' : 'button');
         el.className = 'ex-item';
-        if (it.type === 'img') { el.href = it.src; el.target = '_blank'; el.rel = 'noopener'; }
+        if (it.type === 'img') { el.href = it.src; el.dataset.caption = it.name; }   // opens in the site's image viewer (fx.js)
         else if (it.type === 'link') { el.href = it.href; el.target = '_blank'; el.rel = 'noopener'; }
         else el.type = 'button';
         el.innerHTML = `<span class="f-ico">${it.type === 'img' ? `<img src="${it.src}" alt="" loading="lazy">` : it.icon}</span><span class="f-name">${it.name}</span>${it.sub ? `<span class="f-sub">${it.sub}</span>` : ''}`;
         if (it.type === 'txt') el.addEventListener('click', () => { note.textContent = it.text; note.hidden = false; });
+        if (it.type === 'run') el.addEventListener('click', () => open(it.app, el));
         grid.appendChild(el);
       });
     }
@@ -292,7 +432,7 @@ window.DESKTOP = (function () {
 
   /* ---------- taskbar ---------- */
   const pinnedEl = $('.pinned');
-  if (pinnedEl) PINNED.forEach(id => { const a = APPS[id]; const b = document.createElement('button'); b.type = 'button'; b.className = 'task'; b.dataset.app = id; b.title = a.title; b.innerHTML = `<span class="mini tile ${a.tile}">${a.icon}</span>${a.title}`; b.addEventListener('click', () => toggle(id, b)); pinnedEl.appendChild(b); });
+  if (pinnedEl) PINNED.forEach(id => { const a = APPS[id]; const b = document.createElement('button'); b.type = 'button'; b.className = 'task'; b.dataset.app = id; b.title = a.title; b.innerHTML = `<span class="mini tile ${a.tile}">${a.icon}</span><span class="lbl">${a.title}</span>`; b.addEventListener('click', () => toggle(id, b)); pinnedEl.appendChild(b); });
   function addTask() { renderTasks(); }
   function renderTasks() {
     // pinned buttons double as the running indicator (lit when open, dim when minimized)
@@ -302,7 +442,7 @@ window.DESKTOP = (function () {
       const a = APPS[id], w = wins[id];
       const b = document.createElement('button'); b.type = 'button'; b.dataset.app = id;
       b.className = 'task' + (focused === id ? ' on' : '') + (w.classList.contains('min') ? ' min' : '');
-      b.innerHTML = `<span class="mini tile ${a.tile}">${a.icon}</span>${a.title}`;
+      b.innerHTML = `<span class="mini tile ${a.tile}">${a.icon}</span><span class="lbl">${a.title}</span>`; b.title = a.title;
       b.addEventListener('click', () => toggle(id, b));
       tasks.appendChild(b);
     });
@@ -331,13 +471,13 @@ window.DESKTOP = (function () {
   /* ---------- start menu ---------- */
   const startBtn = $('.start'), menu = $('.start-menu');
   if (startBtn && menu) {
-    ORDER.concat(PINNED).forEach(id => { const a = APPS[id]; const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `<span class="sm-ico tile ${a.tile}">${a.icon}</span>${a.title}`; b.addEventListener('click', () => { open(id); menu.hidden = true; startBtn.classList.remove('on'); }); menu.querySelector('.sm-apps').appendChild(b); });
+    ALL.forEach(id => { const a = APPS[id]; const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `<span class="sm-ico tile ${a.tile}">${a.icon}</span>${a.title}`; b.addEventListener('click', () => { open(id); menu.hidden = true; startBtn.classList.remove('on'); }); menu.querySelector('.sm-apps').appendChild(b); });
     startBtn.addEventListener('click', e => { e.stopPropagation(); menu.hidden = !menu.hidden; startBtn.classList.toggle('on', !menu.hidden); });
     document.addEventListener('pointerdown', e => { if (!menu.hidden && !menu.contains(e.target) && e.target !== startBtn) { menu.hidden = true; startBtn.classList.remove('on'); } });
   }
 
   // clicking the empty desktop unfocuses
-  desk.addEventListener('pointerdown', e => { if (e.target === desk || e.target.classList.contains('wallpaper')) { Object.values(wins).forEach(x => x.classList.remove('focus')); focused = null; renderTasks(); } });
+  desk.addEventListener('pointerdown', e => { if (e.target === desk || e.target === iconsEl || e.target.classList.contains('wallpaper')) { Object.values(wins).forEach(x => x.classList.remove('focus')); focused = null; renderTasks(); } });
 
-  return { open, close, minimize, restore, focus, toggle, apps: () => ORDER.concat(PINNED).map(id => [id, APPS[id].title]) };
+  return { open, close, minimize, restore, focus, toggle, recycle, apps: () => ALL.map(id => [id, APPS[id].title]) };
 })();

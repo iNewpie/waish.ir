@@ -14,18 +14,17 @@ window.I18N = (function () {
     /* nav / shared */
     'Computer': 'کامپیوتر', 'Projects': 'پروژه‌ها', 'About Me': 'درباره من', 'About me': 'درباره من', 'Contact': 'تماس',
     'aparat': 'آپارات', 'youtube': 'یوتیوب', 'lunamc': 'لونا ام‌سی', 'clutchping': 'کلاچ‌پینگ', 'contact': 'تماس',
-    'Waish — built and hosted by me.': 'ویش — ساخته و میزبانی‌شده توسط خودم.',
+    'Waish.ir — Built and hosted by Hossein Danesh.': 'Waish.ir — ساخته و میزبانی‌شده توسط حسین دانش.', 'donate': 'حمایت', 'Donate ♥': 'حمایت ♥', 'nairoshop': 'نایروشاپ',
     'Home': 'خانه', 'Projects page': 'صفحهٔ پروژه‌ها', 'About me page': 'صفحهٔ درباره من',
     'EN': 'EN', 'FA': 'فا',
 
     /* index */
-    'Waish — builder, server admin, content creator': 'ویش — سازنده، سرور ادمین، کانتنت کریتور',
     "// hi, I'm Waish": '// سلام، من ویش هستم',
-    'I build servers, stores, and things people actually use.': 'من سرور، فروشگاه و چیزهایی می‌سازم که آدم‌ها واقعاً استفاده می‌کنن.',
-    'From LunaMC to ClutchPing to full WooCommerce deployments.': 'از لونا ام‌سی تا کلاچ‌پینگ تا راه‌اندازی کامل فروشگاه‌های ووکامرس.',
+    "I've made plenty of online projects and things people actually use and watch!": 'پروژه‌های آنلاین زیادی ساخته‌م و چیزهایی که آدم‌ها واقعاً استفاده می‌کنن و تماشا می‌کنن!',
+    'From playing Minecraft BedWars to creating content and leading three successful projects.': 'از بازی کردن بدوارز ماینکرفت تا تولید محتوا و رهبری سه پروژهٔ موفق.',
     'Type /help below, or just talk to my assistant — English or Persian.': 'پایین /help رو بزن، یا همین‌طوری با دستیارم حرف بزن — انگلیسی یا فارسی.',
     'See projects': 'دیدن پروژه‌ها', 'Open the computer →': 'باز کردن کامپیوتر ←',
-    'server admin': 'سرور ادمین', 'LunaMC owner': 'صاحب لونا ام‌سی', 'ClutchPing founder': 'بنیان‌گذار کلاچ‌پینگ', 'WooCommerce builder': 'سازندهٔ ووکامرس',
+    'server admin': 'سرور ادمین', 'LunaMC owner': 'صاحب لونا ام‌سی', 'ClutchPing founder': 'بنیان‌گذار کلاچ‌پینگ', 'SEO expert': 'متخصص سئو', 'LunaMC founder': 'بنیان‌گذار لونا ام‌سی', 'NairoShop founder': 'بنیان‌گذار نایروشاپ', '3D artist': 'هنرمند سه‌بعدی', 'WooCommerce builder': 'سازندهٔ ووکامرس',
     'content creator': 'کانتنت کریتور', 'streamer': 'استریمر', 'offline-AI tinkerer': 'اهل ور رفتن با هوش مصنوعی آفلاین',
     'type /help and hit enter': 'بنویس /help و اینتر بزن',
     '// featured server': '// سرور ویژه',
@@ -34,6 +33,19 @@ window.I18N = (function () {
     '// who': '// کی', 'About': 'درباره',
     "I'm Waish — I run game servers and build the infrastructure behind them. LunaMC is my Persian-language Minecraft server; ClutchPing is my ping-reduction service for gamers; I build and operate WooCommerce stores, and I stream and make videos on Aparat and YouTube.": 'من ویش‌ام — سرورهای بازی رو مدیریت می‌کنم و زیرساخت پشتشون رو می‌سازم. لونا ام‌سی سرور ماینکرفت فارسی‌زبان منه؛ کلاچ‌پینگ سرویس کاهش پینگ من برای گیمرهاست؛ فروشگاه‌های ووکامرس می‌سازم و مدیریت می‌کنم، و توی آپارات و یوتیوب استریم می‌کنم و ویدیو می‌سازم.',
     'I like systems that connect: a server, a store, a channel, and now an assistant that answers computer questions offline. This site is one of those systems — the terminal above runs on my own knowledge base, in English and Persian.': 'سیستم‌هایی رو دوست دارم که به هم وصل می‌شن: یه سرور، یه فروشگاه، یه کانال، و حالا یه دستیار که سؤال‌های کامپیوتری رو آفلاین جواب می‌ده. این سایت یکی از همون سیستم‌هاست — ترمینال بالا روی پایگاه دانش خودم کار می‌کنه، به انگلیسی و فارسی.',
+    "I've built a range of online projects that people genuinely use — communities, services and content with real reach.": 'مجموعه‌ای از پروژه‌های آنلاین ساخته‌م که آدم‌ها واقعاً ازشون استفاده می‌کنن — کامیونیتی‌ها، سرویس‌ها و محتوایی با مخاطب واقعی.',
+    'Donate.': 'حمایت.', '// support': '// حمایت', 'If my projects or videos helped you, you can support the work here.': 'اگه پروژه‌ها یا ویدیوهام بهت کمک کردن، می‌تونی اینجا از کار حمایت کنی.', '// Donation links are coming soon.': '// لینک‌های حمایت به‌زودی.', 'Buy me a coffee — every cup goes back into the servers, the videos and the tools on this site.': 'یه قهوه مهمونم کن — هر فنجون برمی‌گرده به سرورها، ویدیوها و ابزارهای این سایت.', '☕ Support on Coffeebede ↗': '☕ حمایت در کافی‌بده ↗', '// coffee': '// قهوه', '// also': '// همچنین', 'Not in a position to donate? Joining the community and sharing the videos helps just as much.': 'نمی‌تونی حمایت مالی کنی؟ پیوستن به کامیونیتی و به اشتراک گذاشتن ویدیوها همون‌قدر کمک می‌کنه.',
+    'Until then, the best support is joining the community and sharing the videos.': 'تا اون موقع، بهترین حمایت پیوستن به کامیونیتی و به اشتراک گذاشتن ویدیوهاست.', 'Join Discord ↗': 'عضویت در دیسکورد ↗',
+    'Telegram ↗': 'تلگرام ↗', 'Discord ↗': 'دیسکورد ↗', '10k+ members': '+۱۰ هزار عضو', "I've made over 100 videos.": 'بیش از ۱۰۰ ویدیو ساخته‌م.',
+    "Minecraft, mostly BedWars — and everything below is what they're made with.": 'ماینکرفت، بیشتر بدوارز — و هر چیزی که پایین می‌بینی همون چیزهاییه که با اون‌ها ساخته می‌شن.',
+    '// best way': '// بهترین راه', 'The fastest way to reach me is a ticket on the Discord server. Instagram DMs work too.': 'سریع‌ترین راه برای رسیدن به من، زدن تیکت توی سرور دیسکورده. دایرکت اینستاگرام هم جواب می‌ده.',
+    'chat': 'چت', 'dm': 'دایرکت', 'community': 'کامیونیتی', 'shop': 'فروشگاه', 'server · 10k+ members': 'سرور · +۱۰ هزار عضو', 'support': 'پشتیبانی', 'open a ticket': 'تیکت بزن', 'DM me': 'بهم دایرکت بده', 'channel': 'کانال',
+    'youtube.com/@WaishChannel · 100+ videos': 'youtube.com/@WaishChannel · +۱۰۰ ویدیو', 'nairo.ir · digital products & services': 'nairo.ir · محصولات و سرویس‌های دیجیتال', 'over 100,000 successful sales': 'بیش از ۱۰۰٬۰۰۰ فروش موفق', 'Instagram ↗': 'اینستاگرام ↗', 'YouTube channel': 'کانال یوتیوب', 'Discord server': 'سرور دیسکورد',
+    '@waishchannel · Persian BedWars · content creator': '@waishchannel · بدوارز فارسی · تولیدکنندهٔ محتوا', 'Aparat ↗': 'آپارات ↗', 'YouTube ↗': 'یوتیوب ↗',
+    'Offline LLM Terminal': 'ترمینال LLM آفلاین', '6+ years of Cinema 4D experience': '+۶ سال تجربهٔ Cinema 4D', 'Newbie coder (Python · C#)': 'کدنویس تازه‌کار (Python · C#)',
+    'Content creator (YouTube · Aparat · Instagram)': 'تولیدکنندهٔ محتوا (یوتیوب · آپارات · اینستاگرام)', 'Algorithm SEO designer': 'طراح الگوریتم سئو', 'Editor (2D and 3D)': 'ادیتور (دوبعدی و سه‌بعدی)',
+    'Professional game designer': 'طراح حرفه‌ای بازی', 'Seraph.io Council': 'عضو شورای Seraph.io',
+    'Owner': 'مالک', '· over 100k registered members': '· بیش از ۱۰۰ هزار عضو ثبت‌نام‌شده', '· over 100,000 successful sales': '· بیش از ۱۰۰٬۰۰۰ فروش موفق', '· over 500 successful sales ·': '· بیش از ۵۰۰ فروش موفق ·', 'unique idea': 'ایدهٔ منحصربه‌فرد',
     'role': 'نقش', 'server admin / builder': 'سرور ادمین / سازنده', 'infra': 'زیرساخت', 'stack': 'استک', 'game': 'بازی', 'network': 'شبکه', 'content': 'محتوا', 'ai': 'هوش مصنوعی',
     '/ YouTube': '/ یوتیوب', 'offline assistant (EN / FA)': 'دستیار آفلاین (انگلیسی / فارسی)',
     'Type': 'بنویس', 'for commands, or just ask me something — English or فارسی.': 'برای دستورها، یا همین‌طوری یه چیزی بپرس — انگلیسی یا فارسی.',
@@ -109,7 +121,8 @@ window.I18N = (function () {
     '// drag windows by their title bar · resize from the edges / corner ·': '// پنجره‌ها رو از نوار عنوان بکش · از لبه‌ها / گوشه تغییر اندازه بده ·',
     '// drag windows by their title bar · drag one to the': '// پنجره‌ها رو از نوار عنوان بکش · یکی رو تا', 'top edge': 'لبهٔ بالا',
     'for fullscreen, pull it back down to restore · resize from the edges / corner ·': 'بکش تا تمام‌صفحه شه، دوباره پایین بکش تا به اندازهٔ قبل برگرده · از لبه‌ها / گوشه تغییر اندازه بده ·',
-    'green': 'سبز', 'dot maximizes': 'نقطهٔ سبز بزرگ می‌کنه', 'apps': 'برنامه‌ها', 'Terminal': 'ترمینال', 'YouTube': 'یوتیوب', 'Aparat': 'آپارات', 'LunaMC': 'لونا ام‌سی', 'ClutchPing': 'کلاچ‌پینگ', 'NairoShop': 'نایروشاپ', 'This PC': 'این کامپیوتر',
+    'green': 'سبز', 'dot maximizes': 'نقطهٔ سبز بزرگ می‌کنه', 'apps': 'برنامه‌ها', 'close': 'بستن', 'minimize': 'کوچک کردن', 'maximize': 'بزرگ کردن', 'Terminal': 'ترمینال', 'YouTube': 'یوتیوب', 'Social': 'شبکه‌های اجتماعی', 'youtube · instagram · telegram · discord': 'یوتیوب · اینستاگرام · تلگرام · دیسکورد', 'Aparat': 'آپارات', 'LunaMC': 'لونا ام‌سی', 'ClutchPing': 'کلاچ‌پینگ', 'NairoShop': 'نایروشاپ', 'This PC': 'این کامپیوتر', 'Snake': 'مار', 'Tetris': 'تتریس', 'Mini Minecraft': 'مینی ماینکرفت', 'Calculator': 'ماشین‌حساب', 'Calendar': 'تقویم', 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Minecraft · Seraph · Bordic': 'ماینکرفت · Seraph · Bordic', 'Games': 'بازی‌ها', 'build & mine': 'بساز و حفاری کن', 'Persian · Gregorian': 'شمسی · میلادی',
+    'Small games made for this computer. Scores and worlds are saved in your browser.': 'بازی‌های کوچکی که برای این کامپیوتر ساخته شدن. امتیازها و دنیاها توی مرورگرت ذخیره می‌شن.',
     'youtube.com · Persian BedWars': 'youtube.com · بدوارز فارسی',
     'The Waish YouTube channel — Minecraft, mostly BedWars. Gameplay, PvP mechanics, ping & optimization, clients, and the occasional server-building video. Proper editing, thumbnails and structure.': 'کانال یوتیوب ویش — ماینکرفت، بیشتر بدوارز. گیم‌پلی، مکانیک‌های PvP، پینگ و آپتیمایز، کلاینت‌ها و گاهی ویدیوی ساخت سرور. تدوین، تامبنیل و ساختار حرفه‌ای.',
     'Open YouTube ↗': 'باز کردن یوتیوب ↗', 'link coming soon': 'لینک به‌زودی', 'external site': 'سایت خارجی',
@@ -134,11 +147,13 @@ window.I18N = (function () {
     'the full Waish story (/story fa for Persian)': 'داستان کامل ویش (/story fa برای فارسی)', 'PC / stream setup': 'ستاپ کامپیوتر / استریم', 'open the About Me page (setup, packs, settings)': 'باز کردن صفحهٔ درباره من (ستاپ، پک‌ها، تنظیمات)',
     'where to find Waish': 'ویش رو کجا پیدا کنی', 'how to reach him': 'چطور بهش برسی', 'clear the screen': 'پاک کردن صفحه', 'open an app window (see /apps)': 'باز کردن پنجرهٔ برنامه (/apps رو ببین)',
     'list the apps on this computer': 'لیست برنامه‌های این کامپیوتر', 'back to the main site': 'برگشت به سایت اصلی', 'set terminal wallpaper opacity': 'شفافیت والپیپر ترمینال', 'open the computer (desktop + full terminal)': 'باز کردن کامپیوتر (دسکتاپ + ترمینال کامل)',
+    'Recycle Bin': 'سطل بازیافت', 'Music': 'موزیک', 'All projects': 'همهٔ پروژه‌ها', 'Restore': 'بازگردانی', 'Restore all': 'بازگردانی همه', 'Empty Recycle Bin': 'خالی کردن سطل', 'Move to Recycle Bin': 'انتقال به سطل بازیافت', 'Open': 'باز کردن', 'Recycle Bin is empty.': 'سطل بازیافت خالیه.', 'Drag a desktop icon onto the bin, or right-click it, to put it here. Refreshing the page brings everything back.': 'یه آیکون دسکتاپ رو بکش روی سطل، یا روش راست‌کلیک کن، تا بیاد اینجا. با رفرش صفحه همه‌چیز برمی‌گرده.',
     'Example:': 'مثال:', 'Apps on this computer:': 'برنامه‌های این کامپیوتر:', 'Open one with': 'یکی رو باز کن با', 'opened': 'باز شد', 'Full page:': 'صفحهٔ کامل:', 'Stream / recording setup': 'ستاپ استریم / ضبط',
   };
 
-  // keep /commands reading left-to-right inside Persian sentences (LRM marks around them)
-  Object.keys(FA).forEach(k => { if (/[\u0600-\u06FF]/.test(FA[k])) FA[k] = FA[k].replace(/(\/[a-z]+)/g, '\u200E$1\u200E'); });
+  // keep /commands and @handles reading left-to-right inside Persian sentences (LRM marks around them —
+  // otherwise the bidi algorithm pushes the leading / or @ to the other side: "waishchannel@")
+  Object.keys(FA).forEach(k => { if (/[\u0600-\u06FF]/.test(FA[k])) FA[k] = FA[k].replace(/(\/[a-z]+|@[A-Za-z0-9_.]+)/g, '\u200E$1\u200E'); });
 
   let lang = 'en';
   try { lang = localStorage.getItem('waish-lang') === 'fa' ? 'fa' : 'en'; } catch (e) {}

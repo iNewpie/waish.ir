@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>waish@computer</title>
+<link rel="icon" type="image/png" href="assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="assets/waish.png?v=20260916b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
-<link rel="stylesheet" href="css/desktop.css">
+<link rel="stylesheet" href="css/site.css?v=20260916f">
+<link rel="stylesheet" href="css/desktop.css?v=20260917a">
 <style>
-  /* terminal wallpaper opacity: 10–30%. Change here or with /bg <n> inside the terminal. */
-  :root { --bg-opacity: .3; }
+  /* terminal wallpaper opacity — fixed at 12% */
+  :root { --bg-opacity: .12; }
   body { background: var(--bg); }
 </style>
 </head>
@@ -22,7 +24,6 @@
   <div class="glow"></div>
 
   <div class="icons"></div>
-  <div class="desk-hint">// drag windows by their title bar · drag one to the <b>top edge</b> for fullscreen, pull it back down to restore · resize from the edges / corner · <b>green</b> dot maximizes</div>
   <div class="windows"></div>
 
   <div class="taskbar">
@@ -54,16 +55,14 @@
   <p class="term-caption">// This terminal is handmade and its been developing overtime in here, feel free to use it and know more about <b>waish</b>.</p>
 </template>
 
-<script src="js/i18n.js"></script>
+<script src="js/i18n.js?v=20260916d"></script>
 <script>document.querySelector('.taskbar').insertBefore(I18N.button(), document.querySelector('.clock'));</script>
-<script src="js/fx.js"></script>
-<script src="js/projects-data.js"></script>
-<script src="js/llm-db.js"></script>
-<script src="js/llm.js"></script>
-<script src="js/terminal.js"></script>
+<script src="js/fx.js?v=20260916b"></script>
+<script src="js/projects-data.js?v=20260916c"></script>
+<script src="js/llm-db.js?v=20260917a"></script>
+<script src="js/llm.js?v=20260917a"></script>
+<script src="js/terminal.js?v=20260916b"></script>
 <script>
-  // remember /bg setting
-  try { const o = localStorage.getItem('waish-bg-opacity'); if (o) document.documentElement.style.setProperty('--bg-opacity', o / 100); } catch (e) {}
 
   // called by desktop.js when the terminal window is created
   window.bootTerminal = function (win) {
@@ -78,7 +77,6 @@
         [`<span class="out-green">✔</span> ${T('assistant online')}`, 200],
         ['', 120],
         [`${T('Welcome. Commands start with')} <span class="out-red">/</span> ${T('— try')} <span class="out-blue">/help</span>${T('. Anything else is a question for me.')}`, 0],
-        I18N.lang === 'fa' ? ['<span class="out-dim">Welcome. Commands start with / — try /help. Anything else is a question for me.</span>', 80] : ['<span class="out-dim">خوش اومدی. دستورها با / شروع می‌شن — هر چیز دیگه‌ای بنویسی، جواب می‌دم.</span>', 80, 'fa'],
         [`<span class="out-dim">${T('Tip:')} <span class="out-blue">/open projects</span> ${T('opens an app window ·')} <span class="out-blue">/apps</span> ${T('lists them.')}</span>`, 120],
         ['', 0],
       ];
@@ -88,7 +86,7 @@
     win.querySelector('.win-body').addEventListener('click', () => { if (!window.getSelection().toString()) input.focus(); });
   };
 </script>
-<script src="js/desktop.js"></script>
+<script src="js/desktop.js?v=20260917a"></script>
 <script>
   DESKTOP.open('terminal');
   // deep link: computer.html#projects opens that app too

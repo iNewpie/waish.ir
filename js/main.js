@@ -2,7 +2,7 @@
    INDEX PAGE — project data, hero animations, mini terminal
    ============================================================ */
 const T = window.I18N ? I18N.t : s => s;
-const ROLES = ["server admin", "LunaMC owner", "ClutchPing founder", "WooCommerce builder", "content creator", "streamer", "offline-AI tinkerer"].map(T);
+const ROLES = ["content creator", "LunaMC founder", "ClutchPing founder", "NairoShop founder", "SEO expert", "streamer", "3D artist", "offline-AI tinkerer"].map(T);
 
 /* ---------- hero text animations ---------- */
 // headline word rise + shimmer
@@ -47,3 +47,4 @@ term.print(`${T('Type')} <span class="out-blue">/help</span> ${T('for commands, 
 function copyIP(btn) { navigator.clipboard?.writeText('Play.LunaMC.iR'); const s = btn.querySelector('small'); s.textContent = 'copied ✔'; setTimeout(() => s.textContent = 'click to copy', 1600); }
 
 observeReveals();
+

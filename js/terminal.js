@@ -62,7 +62,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         ['/contact', 'how to reach him'],
         ['/clear', 'clear the screen'],
       ];
-      if (mode === 'full') rows.push(['/open <app>', 'open an app window (see /apps)'], ['/apps', 'list the apps on this computer'], ['/home', 'back to the main site'], ['/bg <10-30>', 'set terminal wallpaper opacity']);
+      if (mode === 'full') rows.push(['/open <app>', 'open an app window (see /apps)'], ['/apps', 'list the apps on this computer'], ['/home', 'back to the main site']);
       else rows.push(['/computer', 'open the computer (desktop + full terminal)']);
       rows.forEach(([c, d]) => print(`  <span class="out-blue">${c.padEnd(14)}</span> ${T(d)}`));
       print(`\n${T('Example:')} <span class="out-yellow">what mouse do you use?</span>  ·  <span class="out-yellow">ستاپت چیه؟</span>  ·  <span class="out-yellow">how does tcp work</span>`, 'out-dim');
@@ -114,27 +114,29 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       if (!window.DESKTOP) { print(`Apps live on the computer — type <span class="out-blue">/computer</span>`, 'out-dim'); return; }
       const id = (arg || '').toLowerCase().replace(/[^a-z]/g, '');
       if (!id) { print(`Usage: <span class="out-yellow">/open &lt;app&gt;</span> — see <span class="out-blue">/apps</span>`, 'out-dim'); return; }
-      if (window.DESKTOP.open(id)) print(`<span class="out-green">✔</span> opened <span class="out-blue">${esc(id)}</span>`);
+      const alias = { youtube: 'social', socials: 'social', skin: 'userlookup', lookup: 'userlookup', skinlookup: 'userlookup', user: 'userlookup', hypixel: 'userlookup', calc: 'calculator', mc: 'minicraft', minecraft: 'minicraft', games: 'snake' }[id] || id;
+      if (window.DESKTOP.open(alias)) print(`<span class="out-green">✔</span> opened <span class="out-blue">${esc(alias)}</span>`);
       else print(`no app called <span class="out-red">${esc(id)}</span> — see <span class="out-blue">/apps</span>`);
     },
     socials() {
-      print(`aparat     <span class="out-blue">→ aparat.com/waish</span>`);
-      print(`youtube    <span class="out-dim">→ (link coming soon)</span>`);
-      print(`lunamc     <span class="out-blue">→ play.lunamc.ir</span>`);
-      print(`clutchping <span class="out-blue">→ clutchping.com</span>`);
+      const L = (t, u) => `<a class="out-blue" href="${u}" target="_blank" rel="noopener">→ ${t}</a>`;
+      print(`youtube    ${L('youtube.com/@WaishChannel', 'https://www.youtube.com/@WaishChannel')}`);
+      print(`aparat     ${L('aparat.com/waish', 'https://aparat.com/waish')}`);
+      print(`instagram  ${L('instagram.com/asunawaish', 'https://instagram.com/asunawaish')}`);
+      print(`telegram   ${L('t.me/wishingcommunity', 'https://t.me/wishingcommunity')}`);
+      print(`discord    ${L('discord.gg/8HVsMqucZ2', 'https://discord.gg/8HVsMqucZ2')} <span class="out-dim">(10k+ members)</span>`);
+      print(`lunamc     ${L('play.lunamc.ir', 'https://play.lunamc.ir')}`);
+      print(`clutchping ${L('clutchping.com', 'https://clutchping.com')}`);
+      print(`nairoshop  ${L('nairo.ir', 'https://nairo.ir')}`);
     },
-    contact() { COMMANDS.socials(); print(`discord / email: <span class="out-dim">coming soon</span>`); },
+    contact() {
+      print(`Best way is to create a ticket in Discord — <a class="out-blue" href="https://discord.gg/8HVsMqucZ2" target="_blank" rel="noopener">discord.gg/8HVsMqucZ2</a> — but you can DM him on Instagram too: <a class="out-blue" href="https://instagram.com/asunawaish" target="_blank" rel="noopener">instagram.com/asunawaish</a>`);
+      print(`all links: <span class="out-blue">/socials</span>`, 'out-dim');
+    },
     clear() { body.innerHTML = ''; },
     computer() { print(`booting the computer…`, 'out-dim'); setTimeout(() => location.href = 'computer.html', 350); },
     terminal() { COMMANDS.computer(); },
     home() { print(`going home…`, 'out-dim'); setTimeout(() => location.href = 'index.html', 350); },
-    bg(arg) {
-      const n = parseInt(arg, 10);
-      if (isNaN(n) || n < 10 || n > 30) { print(`Usage: <span class="out-yellow">/bg 10</span> … <span class="out-yellow">/bg 30</span> (background opacity %)`, 'out-dim'); return; }
-      document.documentElement.style.setProperty('--bg-opacity', n / 100);
-      try { localStorage.setItem('waish-bg-opacity', n); } catch (e) {}
-      print(`<span class="out-green">✔</span> terminal wallpaper opacity set to ${n}%`);
-    },
   };
 
   async function ask(question) {

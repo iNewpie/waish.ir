@@ -1,0 +1,5 @@
+# uploads kept next to the site but not published
+*.zip
+# API keys for tools/site-server.py (BORDIC_KEY=…, HYPIXEL_KEY=…)
+tools/proxy.env
+debug*.png

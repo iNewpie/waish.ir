@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Projects — Waish</title>
+<link rel="icon" type="image/png" href="assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="assets/waish.png?v=20260916b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/site.css?v=20260916f">
 </head>
 <body>
 
@@ -25,14 +27,15 @@
   </div>
 </section>
 
-<script src="js/i18n.js"></script>
-<script src="js/layout.js"></script>
-<script src="js/fx.js"></script>
-<script src="js/projects-data.js"></script>
+<script src="js/i18n.js?v=20260916d"></script>
+<script src="js/layout.js?v=20260916b"></script>
+<script src="js/fx.js?v=20260916b"></script>
+<script src="js/projects-data.js?v=20260916c"></script>
 <script>
 const grid = document.getElementById('projGrid');
 PROJECTS.forEach((p, i) => {
   const el = document.createElement('a'); el.href = `projects/${p.slug}.html`; el.className = 'proj reveal'; el.style.transitionDelay = (i * 60) + 'ms';
+  const name = I18N.t(p.name);
   let media;
   if (p.media === 'term') media = `<div class="proj-media"><span style="font-family:var(--mono);font-size:34px;color:var(--accent)">➜ ~</span></div>`;
   else if (p.video) media = `<div class="proj-media cover"><video autoplay muted loop playsinline poster="${p.img}"><source src="${p.video}" type="video/mp4"></video></div>`;
@@ -40,11 +43,12 @@ PROJECTS.forEach((p, i) => {
   el.innerHTML = media + `
     <div class="proj-body">
       <div class="proj-top"><span class="proj-tag ${p.tag}">${p.tagText}</span><span class="proj-more">read more →</span></div>
-      <h3 data-split>${p.name}</h3>
+      <h3 dir="auto">${name}</h3>
       <p>${p.desc}</p>
-      <div class="proj-meta">${p.meta.map(m => '#' + m).join(' ')}</div>
+      <div class="proj-meta">${p.meta.map(m => `<span dir="ltr">#${m}</span>`).join('')}</div>
     </div>`;
-  splitLetters(el.querySelector('h3'));
+  // Latin titles get the per-letter hover split; Persian titles stay whole so the letters keep joining
+  if (!/[\u0600-\u06FF]/.test(name)) splitLetters(el.querySelector('h3'));
   grid.appendChild(el);
 });
 typeKicker(document.getElementById('kicker'));

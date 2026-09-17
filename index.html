@@ -3,20 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Waish — builder, server admin, content creator</title>
+<title>Waish</title>
+<link rel="icon" type="image/png" href="assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="assets/waish.png?v=20260916b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/site.css?v=20260916f">
 </head>
 <body>
 
 <header class="hero" id="terminal">
   <div class="wrap">
     <div class="kicker" id="kicker" data-type="// hi, I'm Waish"></div>
-    <h1 id="headline">I build servers, stores, and things people actually use.</h1>
+    <h1 id="headline">I've made plenty of online projects and things people actually use and watch!</h1>
     <div class="role"><span class="typed" id="typedRole"></span><span class="caret"></span></div>
-    <p id="heroP" data-i18n-skip>From LunaMC to ClutchPing to full WooCommerce deployments.
+    <p id="heroP" data-i18n-skip>From playing Minecraft BedWars to creating content and leading three successful projects.
 Type /help below, or just talk to my assistant — English or Persian.</p>
     <div class="hero-cta">
       <a href="projects.html"><button class="btn btn-primary">See projects</button></a>
@@ -25,7 +27,6 @@ Type /help below, or just talk to my assistant — English or Persian.</p>
 
     <div class="terminal reveal">
       <div class="term-chrome">
-        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
         <span class="term-title">waish@portfolio: ~</span>
       </div>
       <div class="term-body" id="termBody"></div>
@@ -57,31 +58,50 @@ Type /help below, or just talk to my assistant — English or Persian.</p>
       <div class="kicker" data-type="// who"></div>
       <h2 data-scramble>About</h2>
     </div>
+    <div class="profile reveal" id="profile">
+      <div class="thumb-wall placeholder" id="thumbWall" aria-hidden="true"></div>
+      <div class="profile-card">
+        <a class="avatar-link" href="assets/avatar.jpg" data-caption="Waish"><img class="avatar" src="assets/avatar.jpg" alt="Waish"></a>
+        <div class="profile-meta">
+          <h3>Waish</h3>
+          <div class="handle">@waishchannel · Persian BedWars · content creator</div>
+          <div class="profile-links">
+            <a href="https://www.youtube.com/@WaishChannel" target="_blank" rel="noopener">YouTube ↗</a>
+            <a href="https://aparat.com/waish" target="_blank" rel="noopener">Aparat ↗</a>
+            <a href="https://instagram.com/asunawaish" target="_blank" rel="noopener">Instagram ↗</a>
+            <a href="https://t.me/wishingcommunity" target="_blank" rel="noopener">Telegram ↗</a>
+            <a href="https://discord.gg/8HVsMqucZ2" target="_blank" rel="noopener">Discord ↗<small>10k+ members</small></a>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="about-grid">
       <div class="about reveal">
-        <p>I'm Waish — I run game servers and build the infrastructure behind them. LunaMC is my Persian-language Minecraft server; ClutchPing is my ping-reduction service for gamers; I build and operate WooCommerce stores, and I stream and make videos on Aparat and YouTube.</p>
-        <p>I like systems that connect: a server, a store, a channel, and now an assistant that answers computer questions offline. This site is one of those systems — the terminal above runs on my own knowledge base, in English and Persian.</p>
+        <p>I've built a range of online projects that people genuinely use — communities, services and content with real reach.</p>
+        <nav class="about-nav" aria-label="site">
+          <a class="btn btn-ghost" href="computer.html">Computer</a>
+          <a class="btn btn-ghost" href="projects.html">Projects</a>
+          <a class="btn btn-ghost" href="about-me.html">About Me</a>
+          <a class="btn btn-ghost" href="contact.html">Contact</a>
+          <a class="btn btn-primary" href="https://coffeebede.com/waishchannel" target="_blank" rel="noopener">Donate ♥</a>
+        </nav>
       </div>
       <div class="stack-box reveal">
-        <div class="row"><span class="k">role</span><span class="v">server admin / builder</span></div>
-        <div class="row"><span class="k">infra</span><span class="v">Linux VPS, Docker, Nginx</span></div>
-        <div class="row"><span class="k">stack</span><span class="v">WordPress, WooCommerce</span></div>
-        <div class="row"><span class="k">game</span><span class="v"><b>LunaMC</b> (Minecraft)</span></div>
-        <div class="row"><span class="k">network</span><span class="v"><b>ClutchPing</b></span></div>
-        <div class="row"><span class="k">content</span><span class="v"><b>Aparat</b> / YouTube</span></div>
-        <div class="row"><span class="k">ai</span><span class="v">offline assistant (EN / FA)</span></div>
+        <div class="row"><span class="k">lunamc.ir</span><span class="v"><b>Owner</b> · over 100k registered members</span></div>
+        <div class="row"><span class="k">nairo.ir</span><span class="v"><b>Owner</b> · over 100,000 successful sales</span></div>
+        <div class="row"><span class="k">clutchping.com</span><span class="v"><b>Owner</b> · over 500 successful sales · <i>unique idea</i></span></div>
       </div>
     </div>
   </div>
 </section>
 
-<script src="js/i18n.js"></script>
-<script src="js/layout.js"></script>
-<script src="js/projects-data.js"></script>
-<script src="js/llm-db.js"></script>
-<script src="js/llm.js"></script>
-<script src="js/terminal.js"></script>
-<script src="js/fx.js"></script>
-<script src="js/main.js"></script>
+<script src="js/i18n.js?v=20260916d"></script>
+<script src="js/layout.js?v=20260916b"></script>
+<script src="js/projects-data.js?v=20260916c"></script>
+<script src="js/llm-db.js?v=20260917a"></script>
+<script src="js/llm.js?v=20260917a"></script>
+<script src="js/terminal.js?v=20260916b"></script>
+<script src="js/fx.js?v=20260916c"></script>
+<script src="js/main.js?v=20260916b"></script>
 </body>
 </html>
