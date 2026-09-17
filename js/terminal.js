@@ -147,7 +147,8 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         get(`${PROXY}/urchin?uuid=${uuid}`),
       ]);
       const line = (name, html) => print(`<span class="out-blue">${name.padEnd(8)}</span> ${html}`);
-      const clean = s => String(s || '').replace(/\(\s*upgraded\s*\)/gi, '').replace(/\s{2,}/g, ' ').trim();   // Seraph's migration marker, noise for the reader
+      const clean = s => String(s || '').replace(/\(\s*upgraded\s*\)/gi, '').replace(/^\s*legacy\s*-\s*/i, '').replace(/\s{2,}/g, ' ').trim();   // Seraph's migration markers, noise for the reader
+      const title = s => String(s || 'tag').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());   // confirmed_cheater → Confirmed Cheater
       const why = s => { s = clean(s); if (s) print(`         <span class="out-dim">${esc(s)}</span>`); };
       const fail = (r, host) => `<span class="out-yellow">?</span> ${T('check failed')} <span class="out-dim">(${r.timeout ? host + ' timed out' : r.status === 429 ? 'rate limited' : (r.d && (r.d.cause || r.d.error)) || r.status || 'network'})</span>`;
       // Seraph: GET /{uuid}/blacklist → data.blacklist.tagged / report_type / reason
@@ -163,8 +164,8 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         const tags = ur.d.tags;
         if (!tags.length) line('urchin', `<span class="out-green">✔ ${T('not blacklisted')}</span>`);
         else {
-          line('urchin', `<span class="out-red">⚠ ${T('BLACKLISTED')}</span> ${tags.map(x => `<span class="out-yellow">${esc(String(x.tag_type || 'tag').replace(/_/g, ' '))}</span>`).join(' · ')}`);
-          tags.forEach(x => { if (clean(x.reason)) print(`         <span class="out-dim">${esc(String(x.tag_type || '').replace(/_/g, ' '))}: ${esc(clean(x.reason))}</span>`); });
+          line('urchin', `<span class="out-red">⚠ ${T('BLACKLISTED')}</span> ${tags.map(x => `<span class="out-yellow">${esc(title(x.tag_type))}</span>`).join(' · ')}`);
+          tags.forEach(x => { if (clean(x.reason)) print(`         <span class="out-dim">${esc(title(x.tag_type))}: ${esc(clean(x.reason))}</span>`); });
         }
       } else line('urchin', fail(ur, 'api.urchin.gg'));
       if (window.DESKTOP) print(`${T('Full profile:')} <span class="out-yellow">/open lookup</span>`, 'out-dim');
