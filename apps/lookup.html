@@ -131,6 +131,7 @@
   body.fa .bl .title { font-family: var(--fa); }
   .bl .clean-t { color: #3fb950; } .bl .flag-t { color: var(--accent-soft); } .bl .lock-t { color: var(--term-yellow); }
   .bl p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .bl .v .dim { color: var(--muted); }
   .keyrow { display: flex; gap: 8px; flex-wrap: wrap; }
   .keyrow input { flex: 1; min-width: 160px; font-family: var(--mono); font-size: 12px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); outline: none; direction: ltr; }
   .links { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -160,7 +161,7 @@
   <!-- ================= USER LOOKUP ================= -->
   <div class="panel on" id="panel-user">
     <form class="search" id="form"><input id="q" placeholder="Minecraft username or UUID…" autocomplete="off" spellcheck="false" maxlength="36"><button class="abtn primary" type="submit" data-t="Look up">Look up</button></form>
-    <div class="msg" id="msg"><span data-t="Type a Minecraft username to see their 3D skin, capes, Hypixel BedWars stats, rank, UUID and whether they're on the Seraph blacklist.">Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they're blacklisted on Seraph.</span></div>
+    <div class="msg" id="msg"><span data-t="Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they're blacklisted on Seraph or Urchin.">Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they're blacklisted on Seraph or Urchin.</span></div>
     <div class="result" id="result">
       <div class="top">
         <div class="viewer">
@@ -187,6 +188,7 @@
       <div class="box" id="hy"><h3>Hypixel<span class="sp"></span><span class="tag" id="hyMeta"></span></h3><div id="hyBody"></div></div>
       <div class="box"><h3 data-t="Capes">Capes</h3><div class="capes" id="capes"><span class="tag" id="capesLoading"><span class="spin"></span><span data-t="checking…">checking…</span></span></div></div>
       <div class="bl" id="bl"></div>
+      <div class="bl" id="ur"></div>
     </div>
   </div>
 
@@ -236,6 +238,9 @@
    (blacklist, safelist, bot, member, annoylist, name change). Do NOT call
    /{uuid}/safelist or /report/{uuid} from here: those endpoints *add* the player to
    the key owner's safelist / encounter log as a side effect.
+   URCHIN — https://api.urchin.gg (docs at its root; header: X-API-Key). GET /v3/player/tags lists every active
+   blacklist tag on the player; an empty list means clean. Urchin sends no CORS headers, so the browser can't call
+   it: the proxy's /urchin route does, with the URCHIN_KEY secret (tools/proxy.env locally, a worker secret on Cloudflare).
    PROFILE / SKIN / CAPE — Mojang's public API (https://minecraft.wiki/w/Mojang_API) through the proxy (/mojang):
    api.mojang.com turns the name into a UUID, then https://sessionserver.mojang.com/session/minecraft/profile/<uuid> gives the skin,
    cape and model. Mojang sends no CORS headers, so without PROXY_URL the app falls back to PlayerDB (live
@@ -259,12 +264,13 @@ const PROXY_URL = (new URLSearchParams(location.search).get('proxy') || PROXY_DE
 
 const FA = { 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Look up': 'جستجو', 'Guild Lookup': 'جستجوی گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.': 'یه گیلد هایپیکسل رو با اسمش جستجو کن، یا گیلد یه بازیکن رو پیدا کن: لول، XP، اعضا و فعالیت هفتگی‌شون، رنک‌ها و بازی‌های محبوب.', 'Load': 'بارگذاری', 'copy': 'کپی', 'copied': 'کپی شد', 'model': 'مدل', 'created': 'ساخته‌شده', 'past names': 'اسم‌های قبلی', 'Capes': 'شنل‌ها', 'checking…': 'در حال بررسی…', 'auto-rotate': 'چرخش خودکار', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'still': 'ثابت', 'elytra': 'الیترا',
   'drag to rotate · scroll to zoom': 'بکش تا بچرخه · اسکرول برای زوم', 'file': 'فایل', 'front / back': 'جلو / پشت', 'auto': 'خودکار', 'classic (Steve)': 'کلاسیک (Steve)', 'slim (Alex)': 'باریک (Alex)', 'Upload skin PNG': 'آپلود اسکین PNG', 'drag to rotate · scroll to zoom · ← → keys': 'بکش تا بچرخه · اسکرول برای زوم · کلیدهای ← →', 'Download PNG': 'دانلود PNG',
-  'Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they\'re blacklisted on Seraph.': 'یه یوزرنیم ماینکرفت بنویس تا اسکین سه‌بعدی، شنل‌ها، رنک هایپیکسل و آمار بدوارز، UUID و وضعیت بلک‌لیست Seraph رو ببینی.',
+  'Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they\'re blacklisted on Seraph or Urchin.': 'یه یوزرنیم ماینکرفت بنویس تا اسکین سه‌بعدی، شنل‌ها، رنک هایپیکسل و آمار بدوارز، UUID و وضعیت بلک‌لیست Seraph و Urchin رو ببینی.',
   'Drop a skin PNG here, or use the buttons →': 'یه فایل PNG اسکین اینجا بنداز، یا از دکمه‌ها استفاده کن ←', 'Preview any skin in 3D: upload your own design, or pull a player\'s current skin. Switch between the classic (Steve) and slim (Alex) models.': 'هر اسکینی رو سه‌بعدی ببین: طرح خودت رو آپلود کن یا اسکین فعلی یه بازیکن رو بگیر. بین مدل کلاسیک (Steve) و باریک (Alex) سوییچ کن.',
   'Player not found.': 'بازیکن پیدا نشد.', 'Lookup failed — try again in a moment.': 'جستجو ناموفق بود — یه لحظه دیگه دوباره تلاش کن.', 'looking up': 'در حال جستجو', 'no capes': 'شنلی نداره', 'updated': 'به‌روزشده', 'Hypixel stats are not connected yet. Set PROXY_DEFAULT at the top of apps/lookup.html to your proxy worker.': 'آمار هایپیکسل هنوز وصل نشده. آدرس پروکسی رو توی PROXY_DEFAULT بالای فایل apps/lookup.html بذار.', 'network level': 'لول شبکه', 'first login': 'اولین ورود', 'last login': 'آخرین ورود', 'No BedWars games played.': 'بدوارز بازی نکرده.', 'Never joined Hypixel.': 'هیچ‌وقت وارد هایپیکسل نشده.', 'Bordic has no stats for this player yet.': 'Bordic هنوز آماری از این بازیکن نداره.', 'Hypixel check failed.': 'بررسی هایپیکسل ناموفق بود.', 'Hypixel data is busy — try again in a minute.': 'دادهٔ هایپیکسل شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Blacklisted on Bordic': 'توی Bordic بلک‌لیست شده', 'Not blacklisted on Bordic': 'توی Bordic بلک‌لیست نیست', 'sniper score': 'امتیاز اسنایپر', 'signals': 'نشانه‌ها', 'Bordic check failed:': 'بررسی Bordic ناموفق بود:', 'No sniper or blacklist entry on Bordic for this player.': 'هیچ ورودی اسنایپر یا بلک‌لیستی توی Bordic برای این بازیکن نیست.',
   'Bordic is an anti-sniper blacklist for Hypixel BedWars: this player has an entry there. Read the reason before judging — some entries are automatic cautions, not confirmed cheating.': 'Bordic یه بلک‌لیست ضد اسنایپر برای بدوارز هایپیکسله: این بازیکن اون‌جا یه ورودی داره. قبل از قضاوت دلیلش رو بخون — بعضی ورودی‌ها احتیاط خودکارن، نه چیت تأییدشده.', 'classic': 'کلاسیک (Steve)', 'slim': 'باریک (Alex)', 'default skin': 'اسکین پیش‌فرض', 'Download skin': 'دانلود اسکین',
   'Not blacklisted on Seraph': 'توی Seraph بلک‌لیست نیست', 'Blacklisted on Seraph': 'توی Seraph بلک‌لیست شده', 'Seraph safelisted': 'توی سیف‌لیست Seraph',
   'Save key': 'ذخیرهٔ کلید', 'Remove key': 'حذف کلید', 'Invalid or locked API key.': 'کلید API نامعتبر یا قفل‌شده.', 'Seraph check failed:': 'بررسی Seraph ناموفق بود:',
+  'Not blacklisted on Urchin': 'توی Urchin بلک‌لیست نیست', 'Blacklisted on Urchin': 'توی Urchin بلک‌لیست شده', 'Urchin check failed:': 'بررسی Urchin ناموفق بود:', 'Urchin is busy — try again in a minute.': 'Urchin شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Urchin is not responding (api.urchin.gg timed out).': 'Urchin جواب نمی‌ده (api.urchin.gg تایم‌اوت شد).', 'The Urchin API is down or very slow right now — the rest of the lookup is unaffected.': 'API آرچین الان پایینه یا خیلی کنده — بقیهٔ جستجو مشکلی نداره.', 'Urchin is not configured on this proxy (URCHIN_KEY missing).': 'Urchin روی این پروکسی تنظیم نشده (URCHIN_KEY نیست).', 'No proxy reachable, so the Urchin blacklist can\'t be checked from here.': 'پروکسی در دسترس نیست، پس بلک‌لیست Urchin از اینجا قابل بررسی نیست.', 'No active tags for this UUID — Urchin has nothing against this player.': 'تگ فعالی برای این UUID نیست — Urchin چیزی علیه این بازیکن نداره.', 'This player is tagged on the Urchin blacklist. Treat them as a confirmed threat in your lobbies.': 'این بازیکن توی بلک‌لیست Urchin تگ شده. توی لابی‌هات به‌عنوان یه تهدید تأییدشده در نظرش بگیر.', 'Urchin has this player tagged — the tags below are what its community reported.': 'Urchin این بازیکن رو تگ کرده — تگ‌های پایین چیزیه که کامیونیتی‌ش گزارش داده.', 'expires': 'انقضا', 'tag': 'تگ', 'tags': 'تگ‌ها', 'hidden reporter': 'گزارش‌دهندهٔ مخفی',
   'reason': 'دلیل', 'details': 'جزئیات', 'reported': 'گزارش‌شده', 'verified': 'تأییدشده', 'unverified': 'تأییدنشده', 'safelisted': 'سیف‌لیست', 'bot': 'بات', 'Seraph member': 'عضو Seraph', 'recent name change': 'تغییر اسم اخیر', 'safelist': 'سیف‌لیست', 'added by': 'اضافه‌شده توسط', 'member': 'عضویت', 'name change': 'تغییر اسم', 'annoy list': 'لیست مزاحم', 'encounters': 'برخوردها', 'Seraph is busy — try again in a minute.': 'Seraph شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Seraph is not responding (api.seraph.si timed out).': 'Seraph جواب نمی‌ده (api.seraph.si تایم‌اوت شد).', 'The Seraph API is down or very slow right now — the rest of the lookup is unaffected.': 'API سراف الان پایینه یا خیلی کنده — بقیهٔ جستجو مشکلی نداره.',
   'Seraph flags this player as a caution: play against them carefully — the report is not a confirmed cheater tag.': 'Seraph این بازیکن رو با برچسب احتیاط علامت زده: با دقت مقابلش بازی کن — این گزارش تگ چیتر تأییدشده نیست.', 'This player is on the Seraph blacklist. Treat them as a confirmed threat in your lobbies.': 'این بازیکن توی بلک‌لیست Seraph هست. توی لابی‌هات به‌عنوان یه تهدید تأییدشده در نظرش بگیر.', 'Flagged as a bot account by Seraph': 'توسط Seraph به‌عنوان اکانت بات علامت‌گذاری شده', 'No blacklist reports for this UUID — Seraph has nothing against this player.': 'گزارش بلک‌لیستی برای این UUID نیست — Seraph چیزی علیه این بازیکن نداره.',
   'Not a valid skin (need a 64×64 or 64×32 PNG).': 'اسکین معتبر نیست (PNG با ابعاد ۶۴×۶۴ یا ۶۴×۳۲ لازمه).' };
@@ -386,7 +392,7 @@ async function lookup(name) {
   result.classList.remove('on'); msg.className = 'msg'; msg.innerHTML = `<span class="spin"></span>${t('looking up')} <b>${esc(name)}</b>…`; msg.hidden = false;
   try {
     const p = await profile(name, ctrl.signal);
-    show(p); capes(p); hypixel(p); blacklist(p);
+    show(p); capes(p); hypixel(p); blacklist(p); urchin(p);
   } catch (e) {
     if (e.name === 'AbortError') return;
     msg.className = 'msg err'; msg.textContent = e.message === 'notfound' ? t('Player not found.') : t('Lookup failed — try again in a moment.');
@@ -399,7 +405,7 @@ function show(p) {
   $('#histRow').style.display = p.names.length ? '' : 'none'; $('#names').textContent = p.names.join(' · ');
   // where the profile came from, so a stale skin is easy to trace (Ashcon = no worker reachable → cached, days old)
   const SRC = { mojang: 'Mojang · live', playerdb: 'PlayerDB', ashcon: 'Ashcon · cached' };
-  $('#tags').innerHTML = `<span class="tag" title="profile source">${SRC[p.source] || p.source || ''}</span>`; $('#capes').innerHTML = `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`; $('#bl').innerHTML = ''; $('#hyBody').innerHTML = ''; $('#guildLine').innerHTML = '';
+  $('#tags').innerHTML = `<span class="tag" title="profile source">${SRC[p.source] || p.source || ''}</span>`; $('#capes').innerHTML = `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`; $('#bl').innerHTML = ''; $('#ur').innerHTML = ''; $('#hyBody').innerHTML = ''; $('#guildLine').innerHTML = '';
   $('#links').innerHTML = `<a href="https://namemc.com/profile/${p.uuid}" target="_blank" rel="noopener">NameMC ↗</a><a href="https://plancke.io/hypixel/player/stats/${p.username}" target="_blank" rel="noopener">Plancke ↗</a>` + (p.skinUrl ? `<a href="${p.skinUrl.replace(/^http:/, 'https:')}" target="_blank" rel="noopener" download>${t('Download skin')} ↓</a>` : '');
   const V = userViewer();
   if (V.ok) { V.cape(null); V.load(skinSrc(p), p.slim ? 'slim' : 'default').catch(() => V.load(`https://mc-heads.net/skin/${p.undashed}`)); setTimeout(() => V.resize(), 50); }
@@ -429,7 +435,9 @@ async function capes(p) {
 }
 
 /* ---------- Hypixel: see hypixel-stats.js (HYP.run) ---------- */
-const ago = ts => { if (!ts) return ''; const d = Math.round((Date.now() - ts) / 86400000); return lang === 'fa' ? (d < 1 ? 'امروز' : d < 30 ? `${fmtN(d)} روز پیش` : d < 365 ? `${fmtN(Math.round(d / 30))} ماه پیش` : `${fmtN(Math.round(d / 365))} سال پیش`) : (d < 1 ? 'today' : d === 1 ? 'yesterday' : d < 30 ? `${d} days ago` : d < 365 ? `${Math.round(d / 30)} months ago` : `${Math.round(d / 365)} years ago`); };
+const ago = ts => { if (!ts) return ''; const d = Math.round((Date.now() - ts) / 86400000); if (d < 0) return until(ts); const m = Math.round(d / 30), y = Math.round(d / 365); return lang === 'fa' ? (d < 1 ? 'امروز' : d < 30 ? `${fmtN(d)} روز پیش` : d < 365 ? `${fmtN(m)} ماه پیش` : `${fmtN(y)} سال پیش`) : (d < 1 ? 'today' : d === 1 ? 'yesterday' : d < 30 ? `${d} days ago` : d < 365 ? `${m} month${m === 1 ? '' : 's'} ago` : `${y} year${y === 1 ? '' : 's'} ago`); };
+// the same for a date still ahead (e.g. when a blacklist tag expires)
+const until = ts => { const d = Math.round((ts - Date.now()) / 86400000), m = Math.round(d / 30), y = Math.round(d / 365); return lang === 'fa' ? (d < 1 ? 'امروز' : d < 30 ? `${fmtN(d)} روز دیگه` : d < 365 ? `${fmtN(m)} ماه دیگه` : `${fmtN(y)} سال دیگه`) : (d < 1 ? 'today' : d === 1 ? 'tomorrow' : d < 30 ? `in ${d} days` : d < 365 ? `in ${m} month${m === 1 ? '' : 's'}` : `in ${y} year${y === 1 ? '' : 's'}`); };
 async function hypixel(p) { return HYP.run(p); }
 
 
@@ -479,6 +487,46 @@ async function blacklist(p) {
   } catch (e) {
     box.className = 'bl locked';
     box.innerHTML = `<div class="title lock-t">${t(e.name === 'AbortError' ? 'Seraph is not responding (api.seraph.si timed out).' : 'Seraph check failed:')}</div><p>${t(e.name === 'AbortError' ? 'The Seraph API is down or very slow right now — the rest of the lookup is unaffected.' : 'Lookup failed — try again in a moment.')}</p>`;
+  } finally { clearTimeout(timer); }
+}
+
+/* ---------- Urchin: every active blacklist tag, through the proxy (api.urchin.gg has no CORS) ---------- */
+const UR_TYPE_FA = { confirmed_cheater: 'چیتر تأییدشده', cheater: 'چیتر', blatant: 'چیت آشکار', closet: 'کلوزت چیتر', sniper: 'اسنایپر', caution: 'احتیاط', suspicious: 'مشکوک', alt: 'اکانت دوم', bot: 'بات', boosting: 'بوستینگ' };
+const urType = k => { const key = String(k || 'tag').toLowerCase(); if (lang === 'fa' && UR_TYPE_FA[key]) return UR_TYPE_FA[key]; return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); };
+async function urchin(p) {
+  const box = $('#ur'); box.className = 'bl'; box.innerHTML = `<div class="title"><span class="spin"></span>Urchin…</div>`;
+  const tags = $('#tags');
+  const fail = (title, body) => { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${title}</div>${body ? `<p>${body}</p>` : ''}`; };
+  if (!PROXY_URL) { fail(t('Urchin check failed:'), t('No proxy reachable, so the Urchin blacklist can\'t be checked from here.')); return; }
+  const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const r = await fetch(`${PROXY_URL}/urchin?uuid=${p.undashed}`, { signal: ctrl.signal });
+    let d = null; try { d = await r.json(); } catch (e) {}
+    if (d && d.notConfigured) { fail(t('Urchin check failed:'), t('Urchin is not configured on this proxy (URCHIN_KEY missing).')); return; }
+    if (r.status === 429) { fail(`⏳ ${t('Urchin is busy — try again in a minute.')}`); return; }
+    if (!r.ok || !d || !d.success || !Array.isArray(d.tags)) { fail(`${t('Urchin check failed:')} ${r.status}`, esc((d && d.cause) || '')); return; }
+    const list = d.tags, bad = list.length > 0;
+    const first = bad ? list[0] : null;
+    tags.insertAdjacentHTML('afterbegin', bad ? `<span class="tag bad">⚠ ${t('Blacklisted on Urchin')} · ${esc(urType(first.tag_type))}</span>` : `<span class="tag ok">✔ ${t('Not blacklisted on Urchin')}</span>`);
+    const when = ts => ts ? `${new Date(ts).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · ${ago(ts)}` : '';
+    const row = (k, v) => v ? `<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
+    if (bad) {
+      const confirmed = list.some(x => /confirmed/i.test(x.tag_type || ''));
+      box.className = 'bl flagged';
+      box.innerHTML = `<div class="title flag-t">⚠ ${t('Blacklisted on Urchin')} ${list.map(x => `<span class="tag bad">${esc(urType(x.tag_type))}</span>`).join(' ')}</div>
+        <p>${t(confirmed ? 'This player is tagged on the Urchin blacklist. Treat them as a confirmed threat in your lobbies.' : 'Urchin has this player tagged — the tags below are what its community reported.')}</p>`;
+      list.forEach(x => {
+        const by = x.hide_username ? t('hidden reporter') : (x.added_by_username || '');
+        box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k">${esc(urType(x.tag_type))}</span><span class="v">${esc(x.reason || '')}${by ? ` <span class="dim">· ${t('added by')} ${esc(by)}</span>` : ''}</span></div>` +
+          row(t('reported'), when(x.added_on)) + (x.expires_at ? row(t('expires'), when(x.expires_at)) : ''));
+      });
+    } else {
+      box.className = 'bl clean';
+      box.innerHTML = `<div class="title clean-t">✔ ${t('Not blacklisted on Urchin')}</div><p>${t('No active tags for this UUID — Urchin has nothing against this player.')}</p>`;
+    }
+    box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k" style="min-width:0">${lang === 'fa' ? 'منبع' : 'source'}</span><a class="v dim" href="https://urchin.gg" target="_blank" rel="noopener" style="color:var(--cyan)">urchin.gg ↗</a></div>`);
+  } catch (e) {
+    fail(t(e.name === 'AbortError' ? 'Urchin is not responding (api.urchin.gg timed out).' : 'Urchin check failed:'), t(e.name === 'AbortError' ? 'The Urchin API is down or very slow right now — the rest of the lookup is unaffected.' : 'Lookup failed — try again in a moment.'));
   } finally { clearTimeout(timer); }
 }
 

@@ -57,7 +57,7 @@ window.DESKTOP = (function () {
     { letter: 'D', name: 'Useful apps', icon: '🧰', used: .41, size: '512 GB', items: [
       { type: 'run', name: 'Calculator', icon: '🧮', app: 'calculator' },
       { type: 'run', name: 'Calendar', icon: '📅', sub: 'Persian · Gregorian', app: 'calendar' },
-      { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Hypixel · Seraph', app: 'userlookup' },
+      { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Hypixel · Seraph · Urchin', app: 'userlookup' },
       { type: 'run', name: 'Music', icon: '🎵', sub: 'mp3 player', app: 'music' },
       { type: 'app', name: 'Cinema 4D', icon: '🎬', sub: '3D · ~6 years' },
       { type: 'app', name: 'Blender', icon: '🧊', sub: '3D' },

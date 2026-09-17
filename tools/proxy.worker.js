@@ -8,6 +8,7 @@
      <worker-url>/player?uuid=<uuid>   → api.bordic.xyz/v3/cache/hypixel  (Bordic's keyless Hypixel cache — rank + stats, always its newest snapshot)
      <worker-url>/names?uuids=a,b,c    → api.minecraftservices.com uuid → current name, up to 40 per call (Bordic's cache only if Mojang errors)
      <worker-url>/guild?uuid=<uuid>    → netherapi.com/api/v2/guild (secret NETHER_KEY) or api.hypixel.net/v2/guild (secret HYPIXEL_KEY)
+     <worker-url>/urchin?uuid=<uuid>   → api.urchin.gg/v3/player/tags (secret URCHIN_KEY) — the Urchin cheater blacklist, no CORS upstream
    FRESHNESS — api.bordic.xyz sits behind a 24 h Cloudflare edge cache, so a plain request can hand back a day-old
    copy even when Bordic already holds newer stats. Every Bordic call here carries a per-minute `t` param that skips
    that edge copy, and our own copy of a player lives only 60 s: what you see is Bordic's latest snapshot
@@ -20,12 +21,13 @@
      3. Worker → Settings → Variables and Secrets → add (all optional)
           NETHER_KEY  = <key from netherapi.com>           (guild lookups; does not expire daily — preferred)
           HYPIXEL_KEY = <key from developer.hypixel.net>   (guild lookups fallback — stats always come from Bordic)
+          URCHIN_KEY  = <developer key from urchin.gg>       (Urchin blacklist box; without it the box says "not configured")
      4. Copy the worker URL (https://something.workers.dev) into PROXY_URL in apps/lookup.html.
    Free tier: 100,000 requests/day.
    ============================================================ */
 const ALLOWED = ['https://waish.ir', 'https://www.waish.ir', 'https://inewpie.github.io', 'http://155.117.127.81', 'http://localhost', 'http://127.0.0.1', 'null'];
 const UA = { 'User-Agent': 'waish.ir lookup' };
-const TTL = { mojang: 60, player: 60, guild: 600, tags: 3600, name: 86400, convert: 3600 };   // seconds
+const TTL = { mojang: 60, player: 60, guild: 600, tags: 3600, name: 86400, convert: 3600, urchin: 300 };   // seconds
 // Bordic's Hypixel cache. The `t` param changes every minute so Cloudflare's edge copy of api.bordic.xyz is bypassed.
 const bordic = uuid => new Request(`https://api.bordic.xyz/v3/cache/hypixel?uuid=${uuid}&t=${Math.floor(Date.now() / 60000)}`, { headers: UA });
 // PlayerDB relays Mojang's live session-server profile (same signed `properties` textures blob). Used when Mojang itself
@@ -64,7 +66,7 @@ export default {
     let uuid = (url.searchParams.get('uuid') || url.searchParams.get('player') || '').replace(/-/g, '').toLowerCase();
     const gname = (url.searchParams.get('name') || '').slice(0, 32);
     const player = (url.searchParams.get('player') || '').trim().slice(0, 36);   // /convert: an IGN or a uuid (dashed or not)
-    if (!['/mojang', '/player', '/names', '/guild', '/convert'].includes(url.pathname)) return json({ success: false, cause: 'Use /mojang, /player or /guild with ?uuid=<uuid> (mojang and guild also take ?name=), /convert?player=<name|uuid>, or /names?uuids=a,b,c' }, 404, cors);
+    if (!['/mojang', '/player', '/names', '/guild', '/convert', '/urchin'].includes(url.pathname)) return json({ success: false, cause: 'Use /mojang, /player, /guild or /urchin with ?uuid=<uuid> (mojang and guild also take ?name=), /convert?player=<name|uuid>, or /names?uuids=a,b,c' }, 404, cors);
     const byName = (url.pathname === '/guild' || url.pathname === '/mojang') && gname;
     if (url.pathname === '/convert' && !/^([A-Za-z0-9_]{1,16}|[0-9a-f]{32}|[0-9a-f-]{36})$/i.test(player)) return json({ success: false, cause: 'Pass ?player=<name or uuid>' }, 400, cors);
     if (!['/names', '/convert'].includes(url.pathname) && !byName && !/^[0-9a-f]{32}$/.test(uuid)) return json({ success: false, cause: 'Invalid UUID' }, 400, cors);
@@ -138,6 +140,14 @@ export default {
         if (!d) return { status: 502, body: JSON.stringify({ success: false, cause: `Guild API failed (${status})` }) };
         if (!d.success && !d.cause) d.cause = d.error || `Guild API failed (${status})`;   // NetherAPI says `error`, Hypixel says `cause`
         return { status, body: JSON.stringify(d) };
+      });
+    } else if (url.pathname === '/urchin') {   // Urchin blacklist (https://api.urchin.gg): every active tag on the player, empty list = clean
+      if (!env.URCHIN_KEY) return json({ success: false, notConfigured: true, cause: 'URCHIN_KEY secret is not set on the worker' }, 200, cors);
+      res = await cached(`/urchin/${uuid}`, TTL.urchin, async () => {
+        const { status, body } = await pass(new Request(`https://api.urchin.gg/v3/player/tags?player=${uuid}`, { headers: { ...UA, 'X-API-Key': env.URCHIN_KEY } }));
+        let d = null; try { d = JSON.parse(body); } catch (e) {}
+        if (status === 200 && d && Array.isArray(d.tags)) return { status: 200, body: JSON.stringify({ success: true, uuid: d.uuid, displayname: d.displayname || null, tags: d.tags }) };
+        return { status: status === 200 ? 502 : status, body: JSON.stringify({ success: false, cause: (d && d.error) || `Urchin API failed (${status})` }) };
       });
     }
     const out = new Response(res.body, res); Object.entries(cors).forEach(([k, v]) => out.headers.set(k, v));

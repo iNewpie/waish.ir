@@ -15,6 +15,7 @@ same routes as tools/proxy.worker.js under /api so the User Lookup app works wit
     /api/names?uuids=a,b,c    → api.minecraftservices.com uuid → current name, up to 40 (Bordic's cache only if Mojang errors)
     /api/guild?uuid=|name=    → netherapi.com/api/v2/guild (NETHER_KEY) or api.hypixel.net/v2/guild (HYPIXEL_KEY)
     /api/bordic?uuid=<uuid>   → bordic.xyz/api/cubelify                 (anti-sniper tags, needs BORDIC_KEY)
+    /api/urchin?uuid=<uuid>   → api.urchin.gg/v3/player/tags            (Urchin cheater blacklist, needs URCHIN_KEY)
 
 Keys come from tools/proxy.env (lines like HYPIXEL_KEY=…), re-read whenever that file changes — no restart needed.
 Pages, scripts and styles are sent with `Cache-Control: no-cache` so a browser always revalidates them
@@ -29,7 +30,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = 'waish.ir lookup'
-TTL = {'mojang': 60, 'player': 60, 'guild': 600, 'tags': 3600, 'name': 86400, 'convert': 3600}   # seconds
+TTL = {'mojang': 60, 'player': 60, 'guild': 600, 'tags': 3600, 'name': 86400, 'convert': 3600, 'urchin': 300}   # seconds
 HIDDEN = re.compile(r'^/(\.git|\.claude|tools|node_modules)(/|$)|\.(zip|env|py|log)$')
 NO_CACHE = ('.html', '.js', '.css', '.json')
 UUID32 = re.compile(r'^[0-9a-f]{32}$')
@@ -149,7 +150,7 @@ def route_names(q):
 
 _env_state = {'mtime': 0, 'vals': {}}
 def secret(name):
-    """HYPIXEL_KEY / BORDIC_KEY: the environment, else tools/proxy.env — re-read whenever that file changes,
+    """HYPIXEL_KEY / BORDIC_KEY / URCHIN_KEY: the environment, else tools/proxy.env — re-read whenever that file changes,
     so a key pasted into it works on the next lookup without restarting the server."""
     if os.environ.get(name): return os.environ[name]
     path = os.path.join(ROOT, 'tools', 'proxy.env')
@@ -191,7 +192,22 @@ def route_bordic(q):
     if not UUID32.match(uuid): return out(400, {'success': False, 'cause': 'Invalid UUID'})
     return cached('/bordic/' + uuid, TTL['tags'], lambda: http_get(f'https://bordic.xyz/api/cubelify?id={uuid}&key={urllib.parse.quote(key)}'))
 
-ROUTES = {'mojang': route_mojang, 'convert': route_convert, 'player': route_player, 'names': route_names, 'guild': route_guild, 'bordic': route_bordic}
+def route_urchin(q):
+    # Urchin blacklist (https://api.urchin.gg, docs at its root): every active tag on the player; an empty list means clean.
+    # No CORS upstream, so the browser can only reach it through here. Answers {success, uuid, displayname, tags}.
+    key = secret('URCHIN_KEY')
+    if not key: return out(200, {'success': False, 'notConfigured': True, 'cause': 'URCHIN_KEY secret is not set (tools/proxy.env)'})
+    uuid = q.get('uuid', '').replace('-', '').lower()
+    if not UUID32.match(uuid): return out(400, {'success': False, 'cause': 'Invalid UUID'})
+    def make():
+        st, body = http_get(f'https://api.urchin.gg/v3/player/tags?player={uuid}', {'X-API-Key': key}); d = jl(body)
+        if st == 200 and isinstance(d, dict) and isinstance(d.get('tags'), list):
+            return out(200, {'success': True, 'uuid': d.get('uuid'), 'displayname': d.get('displayname'), 'tags': d['tags']})
+        cause = d.get('error') if isinstance(d, dict) else None
+        return out(502 if st == 200 else st, {'success': False, 'cause': cause or f'Urchin API failed ({st})'})
+    return cached('/urchin/' + uuid, TTL['urchin'], make)
+
+ROUTES = {'mojang': route_mojang, 'convert': route_convert, 'player': route_player, 'names': route_names, 'guild': route_guild, 'bordic': route_bordic, 'urchin': route_urchin}
 
 # ---------- handler ----------
 class Handler(SimpleHTTPRequestHandler):
@@ -207,7 +223,7 @@ class Handler(SimpleHTTPRequestHandler):
         if u.path.startswith('/api/'):
             fn = ROUTES.get(u.path[5:].strip('/'))
             q = {k: v[0] for k, v in urllib.parse.parse_qs(u.query).items()}
-            if not fn: status, body = out(404, {'success': False, 'cause': 'Use /api/mojang, /api/convert, /api/player, /api/names, /api/guild or /api/bordic'})
+            if not fn: status, body = out(404, {'success': False, 'cause': 'Use /api/mojang, /api/convert, /api/player, /api/names, /api/guild, /api/bordic or /api/urchin'})
             else:
                 try: status, body = fn(q)
                 except Exception as e: status, body = out(500, {'success': False, 'cause': f'proxy error: {e.__class__.__name__}'})
