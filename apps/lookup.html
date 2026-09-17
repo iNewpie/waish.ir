@@ -228,7 +228,7 @@
 
 <script src="../js/vendor/skinview3d.bundle.js?v=20260916c"></script>
 <script src="hypixel-stats.js?v=20260917a" defer></script>
-<script src="guild-lookup.js?v=20260917a" defer></script>
+<script src="guild-lookup.js?v=20260917b" defer></script>
 <script>addEventListener('DOMContentLoaded', () => { if (window.GUILD) GUILD.init(); });</script>
 <script>
 /* ============================================================
@@ -253,7 +253,11 @@
    they come from the worker's /guild (official Hypixel API, HYPIXEL_KEY secret).
    ============================================================ */
 const SERAPH_API_KEY = 'cac7921b-ef85-498f-81c6-7675300a3cd6';
-const PROXY_DEFAULT = '/api';   // same-origin proxy: tools/site-server.py serves the site and /api together. On static hosting point this at your deployed tools/proxy.worker.js, e.g. 'https://waish-proxy.<you>.workers.dev'
+// The proxy. '/api' = tools/site-server.py serving the site and the proxy together (the dev server). On static hosting
+// (GitHub Pages, Cloudflare Pages, Netlify, or the site opened from a folder) there is no /api, so point this at your
+// deployed tools/proxy.worker.js, e.g. 'https://waish-proxy.<you>.workers.dev' — until then those hosts run without a proxy.
+const STATIC_HOST = location.protocol === 'file:' || /\.(github\.io|pages\.dev|netlify\.app|vercel\.app)$/.test(location.hostname);
+const PROXY_DEFAULT = STATIC_HOST ? '' : '/api';
 const PROXY_URL = (new URLSearchParams(location.search).get('proxy') || PROXY_DEFAULT).replace(/\/$/, '');
 
 const FA = { 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Look up': 'جستجو', 'Guild Lookup': 'جستجوی گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.': 'یه گیلد هایپیکسل رو با اسمش جستجو کن، یا گیلد یه بازیکن رو پیدا کن: لول، XP، اعضا و فعالیت هفتگی‌شون، رنک‌ها و بازی‌های محبوب.', 'Load': 'بارگذاری', 'copy': 'کپی', 'copied': 'کپی شد', 'model': 'مدل', 'created': 'ساخته‌شده', 'past names': 'اسم‌های قبلی', 'Capes': 'شنل‌ها', 'checking…': 'در حال بررسی…', 'auto-rotate': 'چرخش خودکار', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'still': 'ثابت', 'elytra': 'الیترا',

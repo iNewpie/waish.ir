@@ -43,7 +43,9 @@ window.GUILD = (() => {
   /* ---------- fetching ---------- */
   async function fetchGuild(params) {   // worker /guild → official Hypixel API (needs the HYPIXEL_KEY secret on the worker)
     if (!PROXY_URL) return null;
-    const r = await fetch(`${PROXY_URL}/guild?${params}`); return { r, d: await r.json().catch(() => null) };
+    const r = await fetch(`${PROXY_URL}/guild?${params}`); const d = await r.json().catch(() => null);
+    if (!d && !/json/i.test(r.headers.get('content-type') || '')) window.PROXY_DOWN = true;   // static hosting: no proxy here
+    return { r, d };
   }
 
   /* ---------- state + render ---------- */
@@ -91,6 +93,7 @@ window.GUILD = (() => {
       let params;
       if (byPlayer) { const p = await profile(q); params = `player=${p.undashed}`; } else params = `name=${encodeURIComponent(q)}`;
       const res = await fetchGuild(params);
+      if (window.PROXY_DOWN) { msg().className = 'msg'; msg().textContent = T.notConnected; msg().hidden = false; return; }
       if (!res || !res.d || !res.d.success) throw new Error((res && res.d && (res.d.cause || res.d.error)) || 'failed');
       if (!res.d.guild) { msg().className = 'msg err'; msg().textContent = byPlayer ? T.noGuild : T.notFound; return; }
       ST.g = res.d.guild; ST.shown = 40; msg().hidden = true; render();
