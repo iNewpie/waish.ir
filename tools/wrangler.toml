@@ -1,0 +1,5 @@
+# Cloudflare Worker config for tools/proxy.worker.js — deploy with:  npx wrangler deploy -c tools/wrangler.toml
+name = "waish-proxy"
+main = "proxy.worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = true

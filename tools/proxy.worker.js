@@ -25,7 +25,7 @@
      4. Copy the worker URL (https://something.workers.dev) into PROXY_URL in apps/lookup.html.
    Free tier: 100,000 requests/day.
    ============================================================ */
-const ALLOWED = ['https://waish.ir', 'https://www.waish.ir', 'http://localhost', 'http://127.0.0.1', 'null'];
+const ALLOWED = ['https://waish.ir', 'https://www.waish.ir', 'https://inewpie.github.io', 'http://155.117.127.81', 'http://localhost', 'http://127.0.0.1', 'null'];
 const UA = { 'User-Agent': 'waish.ir lookup' };
 const TTL = { mojang: 60, player: 60, guild: 600, tags: 3600, name: 86400, convert: 3600 };   // seconds
 // Bordic's Hypixel cache. The `t` param changes every minute so Cloudflare's edge copy of api.bordic.xyz is bypassed.
