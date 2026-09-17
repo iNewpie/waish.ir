@@ -33,6 +33,10 @@
   .colorrow { display: flex; align-items: center; gap: 8px; }
   .colorrow input[type=color] { width: 44px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: transparent; cursor: pointer; }
   .colorrow input[type=text] { flex: 1; min-width: 0; font-family: var(--mono); font-size: 12px; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); outline: none; direction: ltr; }
+  .colorrow .copy { font-family: var(--mono); font-size: 10.5px; padding: 6px 7px; border-radius: 7px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .colorrow .copy:hover { border-color: rgba(255,59,59,.45); color: var(--ink); }
+  .colorrow .copy.done { border-color: rgba(63,185,80,.5); color: #3fb950; }
+  body.fa .colorrow .copy { font-family: var(--fa); }
   .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
   .sw { aspect-ratio: 1; border-radius: 5px; border: 1px solid rgba(255,255,255,.12); cursor: pointer; padding: 0; background-clip: padding-box; }
   .sw.on { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -95,7 +99,7 @@
     </div>
     <div>
       <h4 data-t="color">color</h4>
-      <div class="colorrow"><input type="color" id="color" value="#c47a4a"><input type="text" id="hex" value="#c47a4a" maxlength="7" spellcheck="false"></div>
+      <div class="colorrow"><input type="color" id="color" value="#c47a4a"><input type="text" id="hex" value="#c47a4a" maxlength="7" spellcheck="false" title="HEX colour code"><button class="copy" id="copyHex" data-t="copy" title="copy the HEX code">copy</button></div>
       <div class="swatches" id="palette" style="margin-top:8px"></div>
       <h4 style="margin-top:10px" data-t="recent">recent</h4>
       <div class="swatches" id="recent"></div>
@@ -137,7 +141,7 @@ const WORKER = 'https://waish-proxy.danesh2242.workers.dev';
 const PROXY_URL = (location.protocol !== 'file:' && /^(localhost|127\.0\.0\.1|155\.117\.127\.81)$/.test(location.hostname)) ? '/api' : WORKER;
 
 const FA = { 'Skin Editor': 'ویرایشگر اسکین', 'Upload PNG': 'آپلود PNG', 'Load': 'بارگذاری', 'New': 'جدید', 'classic (Steve)': 'کلاسیک (Steve)', 'slim (Alex)': 'باریک (Alex)', 'Download PNG': 'دانلود PNG',
-  'tool': 'ابزار', 'pencil': 'مداد', 'eraser': 'پاک‌کن', 'fill': 'سطل رنگ', 'pick': 'قطره‌چکان', 'size': 'اندازه', 'color': 'رنگ', 'recent': 'اخیر', 'view': 'نمایش', 'pixel grid': 'شبکهٔ پیکسلی', 'part outlines': 'خط دور قسمت‌ها', 'show layer 2 in 3D': 'نمایش لایهٔ ۲ در سه‌بعدی',
+  'copy': 'کپی', 'copied': 'کپی شد', 'picked': 'برداشته شد', 'tool': 'ابزار', 'pencil': 'مداد', 'eraser': 'پاک‌کن', 'fill': 'سطل رنگ', 'pick': 'قطره‌چکان', 'size': 'اندازه', 'color': 'رنگ', 'recent': 'اخیر', 'view': 'نمایش', 'pixel grid': 'شبکهٔ پیکسلی', 'part outlines': 'خط دور قسمت‌ها', 'show layer 2 in 3D': 'نمایش لایهٔ ۲ در سه‌بعدی',
   'click / drag to paint · right-click picks a color · drop a skin PNG anywhere · B E G I switch tools · Ctrl+Z undo': 'کلیک / بکش تا رنگ کنی · راست‌کلیک رنگ رو برمی‌داره · یه PNG اسکین هرجا بنداز · B E G I ابزار رو عوض می‌کنه · Ctrl+Z برگشت',
   'auto-rotate': 'چرخش خودکار', 'still': 'ثابت', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'drag to rotate · scroll to zoom': 'بکش تا بچرخه · اسکرول برای زوم',
   'Not a valid skin (need a 64×64 or 64×32 PNG).': 'اسکین معتبر نیست (PNG با ابعاد ۶۴×۶۴ یا ۶۴×۳۲ لازمه).', 'Player not found.': 'بازیکن پیدا نشد.', 'Lookup failed — try again in a moment.': 'جستجو ناموفق بود — یه لحظه دیگه دوباره تلاش کن.', 'looking up': 'در حال جستجوی',
@@ -289,7 +293,7 @@ let painting = false, last = null;
 const pos = e => { const r = ed.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / r.width * 64), Math.floor((e.clientY - r.top) / r.height * 64)]; };
 function useColor(c) { color = c; $('#color').value = c; $('#hex').value = c; document.querySelectorAll('.sw').forEach(s => s.classList.toggle('on', s.dataset.c === c)); }
 function apply(x, y, which) {
-  if (which === 'picker') { const c = pixelAt(x, y); if (c) { useColor(c); remember(c); } return; }
+  if (which === 'picker') { const c = pixelAt(x, y); if (c) { useColor(c); remember(c); message(`${t('picked')} ${c}`); } return; }
   if (which === 'fill') { flood(x, y, tool === 'eraser' ? null : color); return; }
   stamp(x, y, which === 'eraser' ? null : color);
 }
@@ -321,6 +325,12 @@ function setTool(name) { tool = name; document.querySelectorAll('#tools .tb').fo
 $('#tools').addEventListener('click', e => { const b = e.target.closest('.tb'); if (b) setTool(b.dataset.tool); });
 $('#sizes').addEventListener('click', e => { const b = e.target.closest('.tb'); if (!b) return; size = +b.dataset.size; document.querySelectorAll('#sizes .tb').forEach(x => x.classList.toggle('on', x === b)); });
 $('#color').addEventListener('input', e => useColor(e.target.value));
+$('#hex').addEventListener('focus', e => e.target.select());   // click into the box → the whole code is selected, ready to copy
+$('#copyHex').addEventListener('click', () => {
+  const b = $('#copyHex'), done = () => { b.textContent = t('copied'); b.classList.add('done'); setTimeout(() => { b.textContent = t('copy'); b.classList.remove('done'); }, 1200); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(color).then(done, () => { $('#hex').select(); });
+  else { $('#hex').select(); try { document.execCommand('copy'); done(); } catch (e) {} }
+});
 $('#hex').addEventListener('change', e => { const v = e.target.value.trim(); if (/^#[0-9a-f]{6}$/i.test(v)) useColor(v.toLowerCase()); else e.target.value = color; });
 const PALETTE = ['#f9dcc4', '#e0ac69', '#c68642', '#8d5524', '#5c3a1e', '#3b2414', '#000000', '#1c1c1c', '#4a4a4a', '#8a8a8a', '#c8c8c8', '#ffffff',
   '#c0392b', '#ff3b3b', '#f39c12', '#f1c40f', '#27ae60', '#2ecc71', '#16a085', '#2ee6ff', '#2980b9', '#3b5bdb', '#8b5cf6', '#ff5ea8'];
