@@ -227,8 +227,8 @@
 </div>
 
 <script src="../js/vendor/skinview3d.bundle.js?v=20260916c"></script>
-<script src="hypixel-stats.js?v=20260916f" defer></script>
-<script src="guild-lookup.js?v=20260916f" defer></script>
+<script src="hypixel-stats.js?v=20260917a" defer></script>
+<script src="guild-lookup.js?v=20260917a" defer></script>
 <script>addEventListener('DOMContentLoaded', () => { if (window.GUILD) GUILD.init(); });</script>
 <script>
 /* ============================================================
@@ -330,9 +330,14 @@ const dash = id => id.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-
 const fromTextures = (name, id, tx, extra) => { const skin = tx.SKIN || null, cape = tx.CAPE || null; return { username: name, uuid: dash(id), undashed: id, created: null, slim: !!(skin && skin.metadata && skin.metadata.model === 'slim'), custom: !!skin, skinData: null, skinUrl: skin && skin.url, mojangCape: cape && cape.url, names: [], ...extra }; };
 const isUUID = s => /^([0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(s);
 const isQuery = s => /^[A-Za-z0-9_]{1,16}$/.test(s) || isUUID(s);   // an IGN or a uuid, dashed or not
+// true once the proxy answered with something that isn't ours (static hosting such as GitHub Pages has no /api):
+// the Hypixel / guild / Bordic boxes then say "not connected" instead of pretending the player has no data
+window.PROXY_DOWN = false;
 async function mojang(name, signal) {
   // the proxy turns the name into a uuid with api.mojang.com, then reads the session-server profile (skin, cape, model)
   const r = await fetch(`${PROXY_URL}/mojang?${isUUID(name) ? 'uuid=' + name.replace(/-/g, '').toLowerCase() : 'name=' + encodeURIComponent(name)}`, { signal });
+  const json = /json/i.test(r.headers.get('content-type') || '');
+  if (!json) { window.PROXY_DOWN = true; throw new Error('http'); }   // not our proxy → fall back to PlayerDB / Ashcon
   if (r.status === 404) throw new Error('notfound');
   const d = await r.json();
   if (!r.ok || !d.success || !d.id) throw new Error('http');
@@ -428,7 +433,7 @@ async function hypixel(p) { return HYP.run(p); }
      { text: "O", tooltip: "Blacklisted (Other) - Automatic (1mo3d ago)\n\nReason - \"…\"", color: … }
    and the sniper score goes above 0. Everything else (SL safelist, ping, playtime gap, mode KDRs) is a signal. */
 async function bordic(p) {
-  const box = $('#bordic'); if (!PROXY_URL) { box.hidden = true; return; }
+  const box = $('#bordic'); if (!PROXY_URL || window.PROXY_DOWN) { box.hidden = true; return; }
   box.hidden = false; box.className = 'bl'; box.innerHTML = `<div class="title"><span class="spin"></span>Bordic…</div>`;
   const hex = c => '#' + ((c >>> 0) & 0xffffff).toString(16).padStart(6, '0');
   try {

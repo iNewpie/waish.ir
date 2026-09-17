@@ -252,7 +252,7 @@ window.HYP = (() => {
   async function run(p) {
     const box = $('#hy'), body = $('#hyBody'), meta = $('#hyMeta'); box.hidden = false; meta.textContent = '';
     ST.p = p; ST.player = null; ST.guild = undefined; ST.tab = 'overview'; ST.mode = {};
-    if (!PROXY_URL) { body.innerHTML = `<div class="row" style="color:var(--muted)"><span>${t('Hypixel stats are not connected yet. Set PROXY_DEFAULT at the top of apps/lookup.html to your proxy worker.')}</span></div>`; return; }
+    if (!PROXY_URL || window.PROXY_DOWN) { body.innerHTML = `<div class="row" style="color:var(--muted)"><span>${t('Hypixel stats are not connected yet. Set PROXY_DEFAULT at the top of apps/lookup.html to your proxy worker.')}</span></div>`; return; }
     body.innerHTML = `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`;
     try {
       // Bordic's Hypixel cache through the proxy (api.bordic.xyz/v3/cache/hypixel). `no-store` so the browser never

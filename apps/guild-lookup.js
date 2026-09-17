@@ -85,7 +85,7 @@ window.GUILD = (() => {
   async function search(q, byPlayer) {
     q = (q || '').trim(); if (!q) return;
     ST.byPlayer = !!byPlayer; out().classList.remove('on'); out().innerHTML = '';
-    if (!PROXY_URL) { msg().className = 'msg'; msg().textContent = T.notConnected; msg().hidden = false; return; }
+    if (!PROXY_URL || window.PROXY_DOWN) { msg().className = 'msg'; msg().textContent = T.notConnected; msg().hidden = false; return; }
     msg().className = 'msg'; msg().innerHTML = `<span class="spin"></span>${T.looking} <b>${esc(q)}</b>…`; msg().hidden = false;
     try {
       let params;

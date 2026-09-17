@@ -139,7 +139,7 @@ document.addEventListener('click', e => {
    Drop YouTube thumbnails into assets/thumbs/ named 1.jpg, 2.jpg, 3.jpg … (png / webp work too).
    They are found automatically, in order, stopping at the first missing number.
    To use your own file names instead, list them here: THUMBS = ['assets/thumbs/bedwars.jpg', …] */
-const THUMBS = [];
+const THUMBS = ['assets/thumbs/1.jpg', 'assets/thumbs/2.jpg', 'assets/thumbs/3.jpg', 'assets/thumbs/4.jpg', 'assets/thumbs/5.jpg', 'assets/thumbs/6.jpg', 'assets/thumbs/7.jpg', 'assets/thumbs/8.jpg', 'assets/thumbs/9.jpg', 'assets/thumbs/10.jpg'];   // add new ones here (an empty list turns the 1.jpg, 2.jpg… auto-discovery back on)
 (async function thumbWall() {
   const wall = document.getElementById('thumbWall'); if (!wall) return;
   const root = document.body.dataset.root || '';
@@ -163,7 +163,7 @@ const THUMBS = [];
   const hero = wall.closest('.profile-hero');
   if (hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) hero.addEventListener('pointermove', e => { const r = hero.getBoundingClientRect(); wall.style.setProperty('--px', ((e.clientX - r.left) / r.width - .5) * -24 + 'px'); wall.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5) * -14 + 'px'); });
   const load = src => new Promise(r => { const i = new Image(); i.onload = () => r(src); i.onerror = () => r(null); i.src = src; });
-  let list = THUMBS.slice();
+  let list = THUMBS.map(t => root + t);
   if (!list.length) for (let n = 1; n <= 60; n++) {
     let hit = null;
     for (const ext of ['jpg', 'png', 'webp', 'jpeg']) { hit = await load(`${root}assets/thumbs/${n}.${ext}`); if (hit) break; }
