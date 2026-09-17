@@ -18,16 +18,18 @@
   .pform input:focus { border-color: rgba(255,59,59,.5); }
   .app-main { align-items: stretch; justify-content: flex-start; padding: 0; overflow: auto; gap: 0; flex-wrap: wrap; }
   /* three columns: tools · pixel editor · 3D preview */
-  .tools { flex: none; width: 188px; padding: 12px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; direction: ltr; }
+  .tools { flex: none; width: 196px; padding: 12px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; direction: ltr; }
+  .tools > div { min-width: 0; }
   body.fa .tools { border-right: 0; border-left: 1px solid var(--line); }
   .tools h4 { font-family: var(--mono); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--term-dim); margin: 0 0 6px; }
   body.fa .tools h4 { font-family: var(--fa); letter-spacing: 0; text-transform: none; }
-  .tgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
-  .tb { font-family: var(--mono); font-size: 11.5px; padding: 8px 6px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: border-color .15s, background .15s, color .15s; }
+  .tgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  .tb { min-width: 0; font-family: var(--mono); font-size: 11px; padding: 8px 4px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: border-color .15s, background .15s, color .15s; }
   body.fa .tb { font-family: var(--fa); }
   .tb:hover { border-color: rgba(255,59,59,.45); color: var(--ink); }
   .tb.on { background: rgba(255,59,59,.16); border-color: rgba(255,59,59,.6); color: var(--ink); }
-  .tb .ic { font-size: 14px; }
+  .tb .ic { font-size: 13px; flex: none; }
+  .tb span:not(.ic) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sizes { display: flex; gap: 5px; }
   .sizes .tb { flex: 1; padding: 6px 0; }
   .colorrow { display: flex; align-items: center; gap: 6px; }
@@ -37,7 +39,7 @@
   .colorrow .copy:hover { border-color: rgba(255,59,59,.45); color: var(--ink); }
   .colorrow .copy.done { border-color: rgba(63,185,80,.5); color: #3fb950; }
   body.fa .colorrow .copy { font-family: var(--fa); }
-  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
   .sw { aspect-ratio: 1; border-radius: 5px; border: 1px solid rgba(255,255,255,.12); cursor: pointer; padding: 0; background-clip: padding-box; }
   .sw.on { outline: 2px solid var(--accent); outline-offset: 1px; }
   .sw.empty { background: repeating-conic-gradient(#3a3f4c 0 25%, #262a33 0 50%) 0 0 / 8px 8px; }
@@ -46,11 +48,11 @@
   .chk input { accent-color: var(--accent); }
   .info { font-family: var(--mono); font-size: 11px; color: var(--term-dim); min-height: 30px; line-height: 1.5; direction: ltr; }
   .editor { flex: 1; min-width: 300px; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px; background: radial-gradient(ellipse at 50% 20%, rgba(255,59,59,.06), transparent 60%); position: relative; }
-  .editor .wrap { position: relative; touch-action: none; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px -22px rgba(0,0,0,.9); max-width: 100%; }
+  .editor .canvas-wrap { position: relative; touch-action: none; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px -22px rgba(0,0,0,.9); max-width: 100%; }
   .editor canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
   .editor #ov { position: absolute; inset: 0; pointer-events: none; }
   .editor .hint { font-family: var(--mono); font-size: 10.5px; color: var(--term-dim); margin-top: 8px; text-align: center; line-height: 1.6; }
-  .editor.over .wrap { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,59,59,.25); }
+  .editor.over .canvas-wrap { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,59,59,.25); }
   .msg { font-family: var(--mono); font-size: 12px; color: var(--accent-soft); margin-top: 8px; min-height: 16px; text-align: center; }
   .msg.ok { color: var(--muted); }
   .viewer { flex: none; width: 300px; max-width: 100%; padding: 14px; border-left: 1px solid var(--line); display: flex; flex-direction: column; }
@@ -113,7 +115,7 @@
     </div>
   </div>
   <div class="editor" id="editor">
-    <div class="wrap" id="wrap"><canvas id="ed" width="512" height="512"></canvas><canvas id="ov" width="512" height="512"></canvas></div>
+    <div class="canvas-wrap" id="wrap"><canvas id="ed" width="512" height="512"></canvas><canvas id="ov" width="512" height="512"></canvas></div>
     <div class="msg ok" id="msg"></div>
     <div class="hint" data-t="click / drag to paint · right-click picks a color · drop a skin PNG anywhere · B E G I switch tools · Ctrl+Z undo">click / drag to paint · right-click picks a color · drop a skin PNG anywhere · B E G I switch tools · Ctrl+Z undo</div>
   </div>

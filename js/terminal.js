@@ -147,12 +147,14 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         get(`${PROXY}/urchin?uuid=${uuid}`),
       ]);
       const line = (name, html) => print(`<span class="out-blue">${name.padEnd(8)}</span> ${html}`);
+      const clean = s => String(s || '').replace(/\(\s*upgraded\s*\)/gi, '').replace(/\s{2,}/g, ' ').trim();   // Seraph's migration marker, noise for the reader
+      const why = s => { s = clean(s); if (s) print(`         <span class="out-dim">${esc(s)}</span>`); };
       const fail = (r, host) => `<span class="out-yellow">?</span> ${T('check failed')} <span class="out-dim">(${r.timeout ? host + ' timed out' : r.status === 429 ? 'rate limited' : (r.d && (r.d.cause || r.d.error)) || r.status || 'network'})</span>`;
       // Seraph: GET /{uuid}/blacklist → data.blacklist.tagged / report_type / reason
       if (se.status === 200 && se.d && se.d.success && se.d.data) {
         const bl = se.d.data.blacklist || {}, bot = se.d.data.bot || {};
-        if (bl.tagged) line('seraph', `<span class="out-red">⚠ ${T('BLACKLISTED')}</span> <span class="out-yellow">${esc(bl.report_type || 'Blacklist')}</span>${bl.verified ? ` <span class="out-green">${T('verified')}</span>` : ''}${bl.reason ? ` <span class="out-dim">— ${esc(bl.reason)}</span>` : ''}`);
-        else if (bot.tagged) line('seraph', `<span class="out-yellow">🤖 ${T('bot account')}</span>${bot.reason ? ` <span class="out-dim">— ${esc(bot.reason)}</span>` : ''}`);
+        if (bl.tagged) { line('seraph', `<span class="out-red">⚠ ${T('BLACKLISTED')}</span> <span class="out-yellow">${esc(bl.report_type || 'Blacklist')}</span>${bl.verified ? ` <span class="out-green">${T('verified')}</span>` : ''}`); why(bl.reason || bl.tooltip); }
+        else if (bot.tagged) { line('seraph', `<span class="out-yellow">🤖 ${T('bot account')}</span>`); why(bot.reason || bot.tooltip); }
         else line('seraph', `<span class="out-green">✔ ${T('not blacklisted')}</span>`);
       } else line('seraph', fail(se, 'api.seraph.si'));
       // Urchin: proxy /urchin → {success, tags:[{tag_type, reason}]}; an empty list is clean
@@ -162,7 +164,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         if (!tags.length) line('urchin', `<span class="out-green">✔ ${T('not blacklisted')}</span>`);
         else {
           line('urchin', `<span class="out-red">⚠ ${T('BLACKLISTED')}</span> ${tags.map(x => `<span class="out-yellow">${esc(String(x.tag_type || 'tag').replace(/_/g, ' '))}</span>`).join(' · ')}`);
-          tags.forEach(x => { if (x.reason) print(`         <span class="out-dim">${esc(String(x.tag_type || '').replace(/_/g, ' '))}: ${esc(x.reason)}</span>`); });
+          tags.forEach(x => { if (clean(x.reason)) print(`         <span class="out-dim">${esc(String(x.tag_type || '').replace(/_/g, ' '))}: ${esc(clean(x.reason))}</span>`); });
         }
       } else line('urchin', fail(ur, 'api.urchin.gg'));
       if (window.DESKTOP) print(`${T('Full profile:')} <span class="out-yellow">/open lookup</span>`, 'out-dim');

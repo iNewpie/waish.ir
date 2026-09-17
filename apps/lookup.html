@@ -245,6 +245,8 @@ if (lang === 'fa') { document.body.classList.add('fa'); document.documentElement
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 const fmtN = n => (n == null ? '—' : Number(n).toLocaleString(lang === 'fa' ? 'fa-IR' : 'en-US'));
+// blacklist report texts carry a "( Upgraded )" marker from Seraph's migration — noise for the reader, so it is stripped everywhere
+const cleanReport = s => String(s || '').replace(/\(\s*upgraded\s*\)/gi, '').replace(/\s{2,}/g, ' ').trim();
 
 /* ---------- tabs ---------- */
 $('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'user' && VU) VU.resize(); });
@@ -434,9 +436,9 @@ async function blacklist(p) {
       box.className = 'bl flagged';
       box.innerHTML = `<div class="title flag-t">⚠ ${t('Blacklisted on Seraph')} <span class="tag bad">${esc(lang === 'fa' ? (TYPE_FA[type] || type) : type)}</span> ${bl.verified ? `<span class="tag ok">${t('verified')}</span>` : `<span class="tag">${t('unverified')}</span>`}</div>
         <p>${t(type === 'Caution' ? 'Seraph flags this player as a caution: play against them carefully — the report is not a confirmed cheater tag.' : 'This player is on the Seraph blacklist. Treat them as a confirmed threat in your lobbies.')}</p>
-        ${row(t('reason'), esc(bl.reason || ''))}${row(t('details'), esc(bl.tooltip || ''))}${row(t('reported'), bl.timestamp ? `${new Date(bl.timestamp).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · ${ago(bl.timestamp)}` : '')}`;
+        ${row(t('reason'), esc(cleanReport(bl.reason)))}${row(t('details'), esc(cleanReport(bl.tooltip)))}${row(t('reported'), bl.timestamp ? `${new Date(bl.timestamp).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · ${ago(bl.timestamp)}` : '')}`;
     } else if (bot.tagged) {
-      box.className = 'bl flagged'; box.innerHTML = `<div class="title flag-t">🤖 ${t('Flagged as a bot account by Seraph')}</div><p>${esc(bot.tooltip || bot.reason || '')}</p>`;
+      box.className = 'bl flagged'; box.innerHTML = `<div class="title flag-t">🤖 ${t('Flagged as a bot account by Seraph')}</div><p>${esc(cleanReport(bot.tooltip || bot.reason))}</p>`;
     } else {
       box.className = 'bl clean';
       box.innerHTML = `<div class="title clean-t">✔ ${t('Not blacklisted on Seraph')}</div><p>${t('No blacklist reports for this UUID — Seraph has nothing against this player.')}</p>`;
@@ -481,7 +483,7 @@ async function urchin(p) {
         <p>${t(confirmed ? 'This player is tagged on the Urchin blacklist. Treat them as a confirmed threat in your lobbies.' : 'Urchin has this player tagged — the tags below are what its community reported.')}</p>`;
       list.forEach(x => {
         const by = x.hide_username ? t('hidden reporter') : (x.added_by_username || '');
-        box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k">${esc(urType(x.tag_type))}</span><span class="v">${esc(x.reason || '')}${by ? ` <span class="dim">· ${t('added by')} ${esc(by)}</span>` : ''}</span></div>` +
+        box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k">${esc(urType(x.tag_type))}</span><span class="v">${esc(cleanReport(x.reason))}${by ? ` <span class="dim">· ${t('added by')} ${esc(by)}</span>` : ''}</span></div>` +
           row(t('reported'), when(x.added_on)) + (x.expires_at ? row(t('expires'), when(x.expires_at)) : ''));
       });
     } else {
