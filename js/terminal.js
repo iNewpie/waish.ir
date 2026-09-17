@@ -10,6 +10,11 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
   const isFA = s => /[؀-ۿ]/.test(s);
   const history = []; let hIdx = -1;
   const T = window.I18N ? window.I18N.t : x => x;
+  // /check: the same sources as the User Lookup app (apps/lookup.html) — Seraph straight from the browser (it sends
+  // CORS headers), Urchin + Mojang name→uuid through the proxy (tools/site-server.py locally, the Cloudflare worker on waish.ir).
+  const SERAPH_API_KEY = 'cac7921b-ef85-498f-81c6-7675300a3cd6';
+  const WORKER = 'https://waish-proxy.danesh2242.workers.dev';
+  const PROXY = /^(localhost|127\.0\.0\.1|155\.117\.127\.81)$/.test(location.hostname) && location.protocol !== 'file:' ? '/api' : WORKER;
 
   function print(html, cls) {
     const d = document.createElement('div');
@@ -62,6 +67,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         ['/contact', 'how to reach him'],
         ['/clear', 'clear the screen'],
       ];
+      rows.push(['/check <user>', 'is a Minecraft player blacklisted? (Seraph + Urchin)']);
       if (mode === 'full') rows.push(['/open <app>', 'open an app window (see /apps)'], ['/apps', 'list the apps on this computer'], ['/home', 'back to the main site']);
       else rows.push(['/computer', 'open the computer (desktop + full terminal)']);
       rows.forEach(([c, d]) => print(`  <span class="out-blue">${c.padEnd(14)}</span> ${T(d)}`));
@@ -118,6 +124,50 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       if (window.DESKTOP.open(alias)) print(`<span class="out-green">✔</span> opened <span class="out-blue">${esc(alias)}</span>`);
       else print(`no app called <span class="out-red">${esc(id)}</span> — see <span class="out-blue">/apps</span>`);
     },
+    async check(arg) {
+      const who = (arg || '').trim().replace(/-/g, '');
+      if (!/^([A-Za-z0-9_]{1,16}|[0-9a-fA-F]{32})$/.test(who)) { print(`${T('Usage:')} <span class="out-yellow">/check &lt;username or uuid&gt;</span> — ${T('is a Minecraft player blacklisted? (Seraph + Urchin)')}`, 'out-dim'); return; }
+      const wait = print(`<span class="out-dim">${T('checking')} <span class="out-cyan">${esc(who)}</span>…</span>`);
+      const get = async (url, opts, ms = 15000) => {
+        const c = new AbortController(); const tm = setTimeout(() => c.abort(), ms);
+        try { const r = await fetch(url, { ...opts, signal: c.signal }); let d = null; try { d = await r.json(); } catch (e) {} return { status: r.status, d }; }
+        catch (e) { return { status: 0, d: null, timeout: e.name === 'AbortError' }; }
+        finally { clearTimeout(tm); }
+      };
+      // 1) who is this? Mojang through the proxy: {success, ign, uuid}
+      const who1 = await get(`${PROXY}/convert?player=${encodeURIComponent(who)}`);
+      wait.remove();
+      if (who1.status === 404) { print(`<span class="out-red">✘</span> ${T('Player not found:')} <span class="out-cyan">${esc(who)}</span>`); return; }
+      if (!who1.d || !who1.d.success) { print(`<span class="out-red">✘</span> ${T('Could not resolve the player')} <span class="out-dim">(${who1.timeout ? 'timeout' : who1.status || 'network'})</span>`); return; }
+      const { ign, uuid } = who1.d;
+      print(`<span class="out-blue">${T('player')}</span>   <span class="out-cyan">${esc(ign)}</span>  <span class="out-dim">${uuid}</span>`);
+      // 2) both blacklists at once
+      const [se, ur] = await Promise.all([
+        get(`https://api.seraph.si/${uuid}/blacklist`, { headers: { 'seraph-api-key': SERAPH_API_KEY } }),
+        get(`${PROXY}/urchin?uuid=${uuid}`),
+      ]);
+      const line = (name, html) => print(`<span class="out-blue">${name.padEnd(8)}</span> ${html}`);
+      const fail = (r, host) => `<span class="out-yellow">?</span> ${T('check failed')} <span class="out-dim">(${r.timeout ? host + ' timed out' : r.status === 429 ? 'rate limited' : (r.d && (r.d.cause || r.d.error)) || r.status || 'network'})</span>`;
+      // Seraph: GET /{uuid}/blacklist → data.blacklist.tagged / report_type / reason
+      if (se.status === 200 && se.d && se.d.success && se.d.data) {
+        const bl = se.d.data.blacklist || {}, bot = se.d.data.bot || {};
+        if (bl.tagged) line('seraph', `<span class="out-red">⚠ ${T('BLACKLISTED')}</span> <span class="out-yellow">${esc(bl.report_type || 'Blacklist')}</span>${bl.verified ? ` <span class="out-green">${T('verified')}</span>` : ''}${bl.reason ? ` <span class="out-dim">— ${esc(bl.reason)}</span>` : ''}`);
+        else if (bot.tagged) line('seraph', `<span class="out-yellow">🤖 ${T('bot account')}</span>${bot.reason ? ` <span class="out-dim">— ${esc(bot.reason)}</span>` : ''}`);
+        else line('seraph', `<span class="out-green">✔ ${T('not blacklisted')}</span>`);
+      } else line('seraph', fail(se, 'api.seraph.si'));
+      // Urchin: proxy /urchin → {success, tags:[{tag_type, reason}]}; an empty list is clean
+      if (ur.d && ur.d.notConfigured) line('urchin', `<span class="out-yellow">?</span> ${T('not configured on this proxy')} <span class="out-dim">(URCHIN_KEY)</span>`);
+      else if (ur.status === 200 && ur.d && ur.d.success && Array.isArray(ur.d.tags)) {
+        const tags = ur.d.tags;
+        if (!tags.length) line('urchin', `<span class="out-green">✔ ${T('not blacklisted')}</span>`);
+        else {
+          line('urchin', `<span class="out-red">⚠ ${T('BLACKLISTED')}</span> ${tags.map(x => `<span class="out-yellow">${esc(String(x.tag_type || 'tag').replace(/_/g, ' '))}</span>`).join(' · ')}`);
+          tags.forEach(x => { if (x.reason) print(`         <span class="out-dim">${esc(String(x.tag_type || '').replace(/_/g, ' '))}: ${esc(x.reason)}</span>`); });
+        }
+      } else line('urchin', fail(ur, 'api.urchin.gg'));
+      if (window.DESKTOP) print(`${T('Full profile:')} <span class="out-yellow">/open lookup</span>`, 'out-dim');
+    },
+    blacklist(arg) { return COMMANDS.check(arg); },
     socials() {
       const L = (t, u) => `<a class="out-blue" href="${u}" target="_blank" rel="noopener">→ ${t}</a>`;
       print(`youtube    ${L('youtube.com/@WaishChannel', 'https://www.youtube.com/@WaishChannel')}`);
