@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tetris</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916b">
+<link rel="apple-touch-icon" href="../assets/waish.png?v=20260916b">
+<link rel="stylesheet" href="../css/site.css?v=20260916b">
+<link rel="stylesheet" href="../css/apps.css?v=20260916b">
+<style>
+  .app-main { padding: 10px; }
+  canvas.game { aspect-ratio: 33 / 40; height: min(100%, calc(100vh - 70px)); width: auto; max-width: 100%; }
+  .pad { grid-template-columns: repeat(4, 46px); grid-template-rows: repeat(2, 46px); }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>🧱 Tetris</b><span class="sp"></span><span class="pill" data-t="Score">Score</span> <span class="pill"><i id="score">0</i></span><span class="pill" data-t="Best">Best</span> <span class="pill"><i id="best">0</i></span></div>
+<div class="app-main">
+  <canvas class="game" id="c" width="330" height="400" tabindex="0"></canvas>
+  <div class="overlay" id="ov">
+    <h2 id="ovTitle" data-t="Tetris">Tetris</h2>
+    <p id="ovText"><kbd>←</kbd> <kbd>→</kbd> <span data-t="move">move</span> · <kbd>↑</kbd>/<kbd>X</kbd> <span data-t="rotate">rotate</span> · <kbd>Z</kbd> <span data-t="rotate back">rotate back</span><br><kbd>↓</kbd> <span data-t="soft drop">soft drop</span> · <kbd>Space</kbd> <span data-t="hard drop">hard drop</span> · <kbd>P</kbd> <span data-t="pause">pause</span></p>
+    <button class="abtn primary" id="ovBtn" data-t="Play">Play</button>
+  </div>
+  <div class="pad" id="pad">
+    <button data-k="left">◀</button><button data-k="rot">⟳</button><button data-k="right">▶</button><button data-k="pause">❚❚</button>
+    <button data-k="down">▼</button><button data-k="drop" style="grid-column: span 2">⤓</button><button data-k="rotl">⟲</button>
+  </div>
+  <div class="hint">← → · ↑/X rotate · ↓ soft · space hard · P pause · R restart</div>
+</div>
+<script>
+const FA = { 'Score': 'امتیاز', 'Best': 'رکورد', 'Tetris': 'تتریس', 'Play': 'بازی', 'Play again': 'دوباره', 'Resume': 'ادامه', 'Paused': 'مکث', 'Game over': 'باختی!', 'move': 'حرکت', 'rotate': 'چرخش', 'rotate back': 'چرخش برعکس', 'soft drop': 'پایین آهسته', 'hard drop': 'پایین سریع', 'pause': 'مکث', 'New record!': 'رکورد جدید!', 'LINES': 'خط', 'LEVEL': 'مرحله', 'NEXT': 'بعدی' };
+let lang = 'en'; try { lang = localStorage.getItem('waish-lang') === 'fa' ? 'fa' : 'en'; } catch (e) {}
+const t = s => lang === 'fa' && FA[s] ? FA[s] : s;
+if (lang === 'fa') { document.body.classList.add('fa'); document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t)); }
+
+const COLS = 10, ROWS = 20, CS = 20, SIDE = 130;
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const ov = document.getElementById('ov'), ovTitle = document.getElementById('ovTitle'), ovText = document.getElementById('ovText'), ovBtn = document.getElementById('ovBtn');
+const scoreEl = document.getElementById('score'), bestEl = document.getElementById('best');
+let best = 0; try { best = +localStorage.getItem('waish-tetris-best') || 0; } catch (e) {}
+bestEl.textContent = best;
+
+const SHAPES = { I: [[0, 1], [1, 1], [2, 1], [3, 1]], O: [[1, 0], [2, 0], [1, 1], [2, 1]], T: [[1, 0], [0, 1], [1, 1], [2, 1]], S: [[1, 0], [2, 0], [0, 1], [1, 1]], Z: [[0, 0], [1, 0], [1, 1], [2, 1]], J: [[0, 0], [0, 1], [1, 1], [2, 1]], L: [[2, 0], [0, 1], [1, 1], [2, 1]] };
+const COLORS = { I: '#2ee6ff', O: '#e3b341', T: '#a78bfa', S: '#3fb950', Z: '#ff3b3b', J: '#58a6ff', L: '#ff9f43' };
+let grid, cur, next, bag = [], score, lines, level, alive, paused, started = false, dropTimer = 0, last = 0, raf, flash = [];
+
+function bagNext() { if (!bag.length) bag = Object.keys(SHAPES).sort(() => Math.random() - .5); return bag.pop(); }
+function spawn(type) { const size = type === 'I' ? 4 : type === 'O' ? 4 : 3; return { type, cells: SHAPES[type].map(([x, y]) => [x, y]), x: 3, y: type === 'I' ? -1 : 0, size }; }
+function reset() { grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null)); bag = []; cur = spawn(bagNext()); next = bagNext(); score = 0; lines = 0; level = 1; alive = true; paused = false; flash = []; scoreEl.textContent = 0; }
+const fits = (p, dx = 0, dy = 0, cells = p.cells) => cells.every(([x, y]) => { const gx = p.x + x + dx, gy = p.y + y + dy; return gx >= 0 && gx < COLS && gy < ROWS && (gy < 0 || !grid[gy][gx]); });
+function rotate(dirn) {
+  if (cur.type === 'O') return;
+  const s = cur.type === 'I' ? 4 : 3;
+  const cells = cur.cells.map(([x, y]) => dirn > 0 ? [s - 1 - y, x] : [y, s - 1 - x]);
+  for (const k of [0, -1, 1, -2, 2]) if (fits(cur, k, 0, cells)) { cur.cells = cells; cur.x += k; return; }
+  if (fits(cur, 0, -1, cells)) { cur.cells = cells; cur.y -= 1; }
+}
+function lock() {
+  cur.cells.forEach(([x, y]) => { const gy = cur.y + y; if (gy < 0) return; grid[gy][cur.x + x] = COLORS[cur.type]; });
+  if (cur.cells.some(([x, y]) => cur.y + y < 0)) return die();
+  const full = []; for (let y = 0; y < ROWS; y++) if (grid[y].every(Boolean)) full.push(y);
+  if (full.length) {
+    flash = full; draw();
+    setTimeout(() => {
+      full.forEach(y => { grid.splice(y, 1); grid.unshift(Array(COLS).fill(null)); });
+      lines += full.length; score += [0, 100, 300, 500, 800][full.length] * level; level = 1 + Math.floor(lines / 10); flash = [];
+      scoreEl.textContent = score; spawnNext();
+    }, 120);
+  } else spawnNext();
+}
+function spawnNext() { cur = spawn(next); next = bagNext(); if (!fits(cur)) die(); }
+function hardDrop() { let d = 0; while (fits(cur, 0, 1)) { cur.y++; d++; } score += d * 2; scoreEl.textContent = score; lock(); }
+function ghostY() { let gy = cur.y; while (fits(cur, 0, gy - cur.y + 1)) gy++; return gy; }
+function die() {
+  alive = false; cancelAnimationFrame(raf);
+  const rec = score > best; if (rec) { best = score; bestEl.textContent = best; try { localStorage.setItem('waish-tetris-best', best); } catch (e) {} }
+  ovTitle.textContent = t('Game over'); ovText.innerHTML = `<span class="big">${score}</span><br>${lines} ${t('LINES').toLowerCase()} · ${rec ? '🏆 ' + t('New record!') : t('Best') + ': ' + best}`; ovBtn.textContent = t('Play again'); ov.hidden = false; draw();
+}
+function start() { reset(); started = true; ov.hidden = true; last = performance.now(); dropTimer = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); c.focus(); }
+function togglePause() {
+  if (!started || !alive) return; paused = !paused;
+  if (paused) { ovTitle.textContent = t('Paused'); ovText.innerHTML = `<span class="big">${score}</span>`; ovBtn.textContent = t('Resume'); ov.hidden = false; cancelAnimationFrame(raf); }
+  else { ov.hidden = true; last = performance.now(); raf = requestAnimationFrame(loop); c.focus(); }
+}
+function loop(now) {
+  if (!alive || paused) return;
+  dropTimer += now - last; last = now;
+  const interval = Math.max(80, 800 * Math.pow(.85, level - 1));
+  if (dropTimer > interval && !flash.length) { dropTimer = 0; if (fits(cur, 0, 1)) cur.y++; else lock(); }
+  draw(); raf = requestAnimationFrame(loop);
+}
+function act(k) {
+  if (!started || !alive) { if (k !== 'pause') start(); else start(); return; }
+  if (paused) { if (k === 'pause') togglePause(); return; }
+  if (flash.length) return;
+  if (k === 'left' && fits(cur, -1, 0)) cur.x--;
+  else if (k === 'right' && fits(cur, 1, 0)) cur.x++;
+  else if (k === 'down') { if (fits(cur, 0, 1)) { cur.y++; score += 1; scoreEl.textContent = score; dropTimer = 0; } else lock(); }
+  else if (k === 'rot') rotate(1); else if (k === 'rotl') rotate(-1);
+  else if (k === 'drop') hardDrop(); else if (k === 'pause') togglePause();
+  draw();
+}
+const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down', ArrowUp: 'rot', KeyX: 'rot', KeyZ: 'rotl', Space: 'drop', KeyP: 'pause', KeyA: 'left', KeyD: 'right', KeyS: 'down', KeyW: 'rot' };
+addEventListener('keydown', e => { if (e.code === 'KeyR') { start(); return; } const k = KEYS[e.code]; if (!k) return; e.preventDefault(); if (e.repeat && (k === 'rot' || k === 'rotl' || k === 'drop' || k === 'pause')) return; act(k); });
+ovBtn.addEventListener('click', () => { if (paused) togglePause(); else start(); });
+document.getElementById('pad').addEventListener('pointerdown', e => { const k = e.target.dataset.k; if (k) { e.preventDefault(); act(k); } });
+c.addEventListener('pointerdown', () => c.focus());
+
+function block(x, y, color, ghost) {
+  const px = x * CS, py = y * CS;
+  if (ghost) { ctx.strokeStyle = color; ctx.globalAlpha = .35; ctx.lineWidth = 2; ctx.strokeRect(px + 2, py + 2, CS - 4, CS - 4); ctx.globalAlpha = 1; return; }
+  ctx.fillStyle = color; ctx.fillRect(px + 1, py + 1, CS - 2, CS - 2);
+  ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(px + 1, py + 1, CS - 2, 3); ctx.fillRect(px + 1, py + 1, 3, CS - 2);
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(px + 1, py + CS - 4, CS - 2, 3); ctx.fillRect(px + CS - 4, py + 1, 3, CS - 2);
+}
+function draw() {
+  ctx.fillStyle = '#0b0d12'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = 'rgba(255,255,255,.03)'; for (let y = 0; y < ROWS; y++) for (let x = (y % 2); x < COLS; x += 2) ctx.fillRect(x * CS, y * CS, CS, CS);
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (grid[y][x]) block(x, y, flash.includes(y) ? '#ffffff' : grid[y][x]);
+  if (alive && started) {
+    const gy = ghostY(); if (gy !== cur.y) cur.cells.forEach(([x, y]) => { if (gy + y >= 0) block(cur.x + x, gy + y, COLORS[cur.type], true); });
+    cur.cells.forEach(([x, y]) => { if (cur.y + y >= 0) block(cur.x + x, cur.y + y, COLORS[cur.type]); });
+  }
+  // sidebar
+  const sx = COLS * CS; ctx.fillStyle = '#0f1116'; ctx.fillRect(sx, 0, SIDE, c.height); ctx.fillStyle = '#1c2029'; ctx.fillRect(sx, 0, 1, c.height);
+  ctx.fillStyle = '#6f7a8d'; ctx.font = '600 11px ui-monospace, Menlo, monospace'; ctx.textAlign = 'left';
+  const label = (txt, y) => { ctx.fillStyle = '#6f7a8d'; ctx.fillText(txt, sx + 16, y); };
+  const value = (txt, y) => { ctx.fillStyle = '#eef1f6'; ctx.font = '700 22px Inter, system-ui, sans-serif'; ctx.fillText(txt, sx + 16, y); ctx.font = '600 11px ui-monospace, Menlo, monospace'; };
+  label(t('NEXT'), 24);
+  if (next) { const cells = SHAPES[next], w = next === 'I' ? 4 : next === 'O' ? 4 : 3; const ox = sx + 16 + ((4 - w) * CS) / 2 + (next === 'O' ? -CS : 0), oy = 34 + (next === 'I' ? -CS / 2 : 0); ctx.save(); ctx.translate(ox, oy); cells.forEach(([x, y]) => block(x, y, COLORS[next])); ctx.restore(); }
+  label(t('LINES'), 130); value(lines, 154); label(t('LEVEL'), 190); value(level, 214); label(t('Score').toUpperCase(), 250); value(score, 274);
+  ctx.fillStyle = '#6f7a8d'; ctx.font = '10px ui-monospace, Menlo, monospace'; ctx.fillText('waish.ir', sx + 16, c.height - 14);
+}
+reset(); draw();
+addEventListener('load', () => { try { window.focus(); c.focus(); } catch (e) {} });
+</script>
+</body>
+</html>

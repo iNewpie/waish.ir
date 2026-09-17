@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Lookup</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="apple-touch-icon" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260916c">
+<link rel="stylesheet" href="../css/apps.css?v=20260916c">
+<style>
+  .app-main { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; overflow-y: auto; }
+  .panel { display: none; flex-direction: column; } .panel.on { display: flex; }
+  .search { display: flex; gap: 8px; padding: 14px; border-bottom: 1px solid var(--line); flex: none; }
+  .search input { flex: 1; min-width: 0; font-family: var(--mono); font-size: 15px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); outline: none; direction: ltr; }
+  .search input:focus { border-color: rgba(255,59,59,.5); }
+  .result { padding: 16px 14px 20px; display: none; flex-direction: column; gap: 14px; }
+  .result.on { display: flex; }
+  .top { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+  .viewer { flex: none; width: 300px; max-width: 100%; }
+  .viewer .stage { position: relative; width: 100%; height: 380px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; cursor: grab;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,59,59,.14), transparent 60%), linear-gradient(180deg, #12151c, #0b0d12); }
+  .viewer .stage:active, .viewer .stage.grab { cursor: grabbing; } .viewer .stage:focus { outline: none; box-shadow: 0 0 0 2px rgba(255,59,59,.25); }
+  .viewer canvas { display: block; width: 100% !important; height: 100% !important; }
+  .viewer .stage .fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .viewer .stage .fallback img { height: 90%; image-rendering: pixelated; }
+  .viewer .stage .drop { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 1.7; pointer-events: none; }
+  .viewer .stage.over { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,59,59,.2) inset; }
+  .vctl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+  .vctl .abtn { padding: 5px 9px; font-size: 11px; }
+  .vhint { font-family: var(--mono); font-size: 10.5px; color: var(--term-dim); margin-top: 6px; text-align: center; }
+  .meta { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+  .meta h2 { font-size: 30px; letter-spacing: -.8px; line-height: 1; font-family: var(--sans); direction: ltr; text-align: left; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rank { font-family: var(--mono); font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 6px; border: 1px solid currentColor; letter-spacing: .3px; }
+  .row { display: flex; gap: 10px; align-items: baseline; font-family: var(--mono); font-size: 12.5px; flex-wrap: wrap; direction: ltr; }
+  .row .k { color: var(--term-dim); min-width: 74px; }
+  .row .v { color: var(--ink); word-break: break-all; }
+  .row .v.dim { color: var(--muted); }
+  .copy { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 5px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+  .copy:hover { border-color: rgba(255,59,59,.45); color: var(--ink); }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-family: var(--mono); font-size: 11px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--muted); }
+  .tag.ok { border-color: rgba(63,185,80,.45); color: #3fb950; background: rgba(63,185,80,.08); }
+  .tag.bad { border-color: rgba(255,59,59,.55); color: var(--accent-soft); background: rgba(255,59,59,.1); }
+  .tag.warn { border-color: rgba(227,179,65,.5); color: var(--term-yellow); background: rgba(227,179,65,.08); }
+  .tag.info { border-color: rgba(46,230,255,.4); color: var(--cyan); }
+  .box { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); display: flex; flex-direction: column; gap: 10px; }
+  .box h3 { font-family: var(--mono); font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--term-dim); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  body.fa .box h3 { font-family: var(--fa); text-transform: none; }
+  .box h3 .sp { flex: 1; }
+  .capes { display: flex; gap: 12px; flex-wrap: wrap; }
+  .cape { display: flex; flex-direction: column; align-items: center; gap: 5px; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; }
+  .cape canvas, .cape img { width: 60px; height: 96px; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--line); background: rgba(255,255,255,.03); object-fit: contain; transition: border-color .15s; }
+  .cape.on canvas, .cape.on img { border-color: var(--accent); }
+  /* hypixel */
+  .hy-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-family: var(--mono); font-size: 12.5px; color: var(--muted); direction: ltr; }
+  .hy-head b { color: var(--ink); }
+  .bw { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  /* raw numbers on one side, what we calculate from them on the other */
+  .hy-split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  .hy-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .hy-col .bw { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+  .hy-col.calc { border-left: 1px solid var(--line); padding-left: 14px; }
+  body.fa .hy-col.calc { border-left: 0; padding-left: 0; border-right: 1px solid var(--line); padding-right: 14px; }
+  .hy-ctitle { font-family: var(--mono); font-size: 10px; letter-spacing: .6px; text-transform: uppercase; color: var(--term-dim); }
+  body.fa .hy-ctitle { font-family: var(--fa); text-transform: none; }
+  .hy-col.calc .hy-ctitle { color: var(--accent-soft); }
+  .hy-col.calc .stat { border-color: rgba(255,59,59,.22); background: rgba(255,59,59,.04); }
+  @media (max-width: 620px) { .hy-split { grid-template-columns: 1fr; } .hy-col.calc, body.fa .hy-col.calc { border: 0; border-top: 1px solid var(--line); padding: 10px 0 0; } }
+  .hy-sec { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .hy-sec:first-child { padding-top: 0; border-top: 0; }
+  .hy-title { font-family: var(--mono); font-size: 11px; color: var(--accent-soft); letter-spacing: .5px; text-transform: uppercase; font-weight: 600; }
+  #hyBody { display: flex; flex-direction: column; gap: 12px; }
+  .gtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ggroup { display: flex; flex-direction: column; gap: 6px; }
+  .ggroup + .ggroup { margin-top: 2px; }
+  .gg-title { font-family: var(--mono); font-size: 10px; letter-spacing: .6px; text-transform: uppercase; color: var(--term-dim); }
+  .guild-line { display: flex; align-items: baseline; gap: 8px; font-family: var(--mono); font-size: 12.5px; margin-bottom: 4px; direction: ltr; flex-wrap: wrap; }
+  .guild-line .gl-ico { color: var(--term-dim); }
+  .guild-line b { font-weight: 700; }
+  .guild-line .gl-sub { color: var(--term-dim); font-size: 11px; }
+  .meta h2 { font-size: 26px; }
+  .gl-name { text-decoration: none; } .gl-name:hover { text-decoration: underline; }
+  /* guild lookup */
+  .gres { gap: 12px; }
+  .ghead .gname { font-family: var(--mono); font-size: 26px; font-weight: 700; letter-spacing: -.3px; direction: ltr; text-align: left; }
+  .ghead .gtag { font-size: 20px; }
+  .ghead .gdesc { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.5; }
+  .xpbars { display: flex; flex-direction: column; gap: 6px; }
+  .xprow { display: grid; grid-template-columns: 140px 1fr 90px; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; direction: ltr; }
+  .xprow .xpn { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .xprow .xpv { color: var(--muted); text-align: right; }
+  .xpbar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .xpbar i { display: block; height: 100%; background: linear-gradient(90deg, #a78bfa, #2ee6ff); }
+  .mgroup { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+  .mg-title { font-family: var(--mono); font-size: 11px; color: var(--accent-soft); text-transform: uppercase; letter-spacing: .5px; margin: 6px 0 2px; }
+  .mg-title span { color: var(--term-dim); }
+  .member { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 8px; border: 1px solid transparent; background: rgba(255,255,255,.025); color: var(--ink); font-family: var(--mono); font-size: 12.5px; cursor: pointer; text-align: left; direction: ltr; transition: background .12s, border-color .12s; }
+  .member:hover { background: rgba(255,59,59,.08); border-color: rgba(255,59,59,.35); }
+  .member img { width: 24px; height: 24px; border-radius: 5px; image-rendering: pixelated; }
+  .member .mxp { color: var(--term-dim); font-size: 11px; }
+  @media (max-width: 560px) { .xprow { grid-template-columns: 100px 1fr 70px; } }
+  .gbtn { flex: none; display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; padding: 7px 12px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); cursor: pointer; white-space: nowrap; transition: border-color .15s, background .15s, color .15s; }
+  .gbtn:hover { border-color: rgba(255,59,59,.45); color: var(--ink); }
+  .gbtn.on { background: rgba(255,59,59,.14); border-color: rgba(255,59,59,.55); color: var(--ink); }
+  .gbtn .gi { font-size: 13px; }
+  .mtabs { display: flex; flex-wrap: wrap; gap: 5px; }
+  .mbtn { font-family: var(--mono); font-size: 11px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+  .mbtn:hover { color: var(--ink); border-color: rgba(139,92,246,.5); }
+  .mbtn.on { background: rgba(139,92,246,.2); border-color: rgba(139,92,246,.6); color: var(--ink); }
+  .gpanel { display: flex; flex-direction: column; gap: 12px; }
+  .gpanel .hy-sec { padding-top: 10px; border-top: 1px solid var(--line); }
+  .lvl { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 12px; color: var(--muted); direction: ltr; }
+  .lvl b { color: var(--ink); }
+  .lvl-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.07); overflow: hidden; max-width: 260px; }
+  .lvl-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #ff9f43); }
+  #nameLine { font-family: var(--mono); font-weight: 700; letter-spacing: -.3px; }
+  .meta h2 .rank { display: none; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: rgba(255,255,255,.02); }
+  .stat .k { font-family: var(--mono); font-size: 10px; color: var(--term-dim); text-transform: uppercase; letter-spacing: .4px; }
+  .stat .v { font-family: var(--sans); font-size: 19px; font-weight: 700; color: var(--ink); margin-top: 2px; letter-spacing: -.4px; overflow-wrap: anywhere; line-height: 1.15; }
+  .stat .v:not(.star) { font-variant-numeric: tabular-nums; }
+  .stat.hi .v { color: var(--accent-soft); }
+  .star { font-family: var(--mono); font-weight: 700; font-size: 20px; }
+  .bl { border-radius: 12px; padding: 14px; border: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+  .bl[hidden], .box[hidden] { display: none; }
+  .bl.clean { border-color: rgba(63,185,80,.45); background: rgba(63,185,80,.07); }
+  .bl.flagged { border-color: rgba(255,59,59,.55); background: rgba(255,59,59,.09); }
+  .bl.locked { border-color: rgba(227,179,65,.4); background: rgba(227,179,65,.06); }
+  .bl .title { font-family: var(--sans); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  body.fa .bl .title { font-family: var(--fa); }
+  .bl .clean-t { color: #3fb950; } .bl .flag-t { color: var(--accent-soft); } .bl .lock-t { color: var(--term-yellow); }
+  .bl p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .keyrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .keyrow input { flex: 1; min-width: 160px; font-family: var(--mono); font-size: 12px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); outline: none; direction: ltr; }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .links a { font-family: var(--mono); font-size: 12px; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--line); color: var(--ink); background: rgba(255,255,255,.03); text-decoration: none; }
+  .links a:hover { border-color: rgba(255,59,59,.45); background: rgba(255,59,59,.1); }
+  .msg { padding: 30px 14px; text-align: center; font-family: var(--mono); font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .msg b { color: var(--accent-soft); } .msg.err { color: var(--accent-soft); }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -3px; margin-right: 6px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  /* skin tab */
+  .skin-top { display: flex; gap: 18px; padding: 16px 14px; flex-wrap: wrap; align-items: flex-start; }
+  .skin-side { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 14px; }
+  .skin-side p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .skin-side .row { direction: ltr; }
+  .filebtn { position: relative; overflow: hidden; }
+  .filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .preview2d { display: flex; gap: 10px; align-items: center; }
+  .preview2d canvas { image-rendering: pixelated; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.03); }
+  @media (max-width: 560px) { .viewer { width: 100%; } .viewer .stage { height: 340px; } }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>🔍 <span data-t="User Lookup">User Lookup</span></b><span class="sp"></span>
+  <div class="seg" id="tabs"><button class="on" data-tab="user" data-t="User Lookup">User Lookup</button><button data-tab="skin" data-t="Skin Lookup">Skin Lookup</button><button data-tab="guild" data-t="Guild Lookup">Guild Lookup</button></div></div>
+<div class="app-main">
+
+  <!-- ================= USER LOOKUP ================= -->
+  <div class="panel on" id="panel-user">
+    <form class="search" id="form"><input id="q" placeholder="Minecraft username or UUID…" autocomplete="off" spellcheck="false" maxlength="36"><button class="abtn primary" type="submit" data-t="Look up">Look up</button></form>
+    <div class="msg" id="msg"><span data-t="Type a Minecraft username to see their 3D skin, capes, Hypixel BedWars stats, rank, UUID and whether they're on the Seraph blacklist.">Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they're blacklisted on Seraph or Bordic.</span></div>
+    <div class="result" id="result">
+      <div class="top">
+        <div class="viewer">
+          <div class="stage" id="stageU"></div>
+          <div class="vctl">
+            <button class="abtn" id="uRot" data-t="auto-rotate">auto-rotate</button>
+            <div class="seg" id="uAnim"><button data-a="none" class="on" data-t="still">still</button><button data-a="idle" data-t="idle">idle</button><button data-a="walk" data-t="walk">walk</button><button data-a="run" data-t="run">run</button></div>
+            <button class="abtn" id="uElytra" data-t="elytra">elytra</button>
+            <button class="abtn" id="uReset" title="reset camera">⟲</button>
+          </div>
+          <div class="vhint" data-t="drag to rotate · scroll to zoom · ← → keys">drag to rotate · scroll to zoom · ← → keys</div>
+        </div>
+        <div class="meta">
+          <div id="guildLine"></div>
+          <h2 id="nameLine"><span id="name">—</span></h2>
+          <div class="tags" id="tags"></div>
+          <div class="row"><span class="k">UUID</span><span class="v" id="uuid"></span><button class="copy" id="copyUuid" data-t="copy">copy</button></div>
+          <div class="row"><span class="k" data-t="model">model</span><span class="v" id="model"></span></div>
+          <div class="row" id="createdRow"><span class="k" data-t="created">created</span><span class="v dim" id="created"></span></div>
+          <div class="row" id="histRow"><span class="k" data-t="past names">past names</span><span class="v dim" id="names"></span></div>
+          <div class="links" id="links"></div>
+        </div>
+      </div>
+      <div class="box" id="hy"><h3>Hypixel<span class="sp"></span><span class="tag" id="hyMeta"></span></h3><div id="hyBody"></div></div>
+      <div class="box"><h3 data-t="Capes">Capes</h3><div class="capes" id="capes"><span class="tag" id="capesLoading"><span class="spin"></span><span data-t="checking…">checking…</span></span></div></div>
+      <div class="bl" id="bl"></div>
+      <div class="bl" id="bordic" hidden></div>
+    </div>
+  </div>
+
+  <!-- ================= GUILD LOOKUP ================= -->
+  <div class="panel" id="panel-guild">
+    <form class="search" id="gForm"><div class="seg" id="gMode"><button type="button" data-m="name" class="on" data-t="Guild name">Guild name</button><button type="button" data-m="player" data-t="Player">Player</button></div><input id="gQ" placeholder="Guild name…" autocomplete="off" spellcheck="false" maxlength="32"><button class="abtn primary" type="submit" data-t="Look up">Look up</button></form>
+    <div class="msg" id="gMsg"><span data-t="Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.">Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.</span></div>
+    <div class="result gres" id="gResult"></div>
+  </div>
+
+  <!-- ================= SKIN LOOKUP (your own skin file) ================= -->
+  <div class="panel" id="panel-skin">
+    <div class="skin-top">
+      <div class="viewer">
+        <div class="stage" id="stageS"><div class="drop" id="drop"><span data-t="Drop a skin PNG here, or use the buttons →">Drop a skin PNG here, or use the buttons →</span></div></div>
+        <div class="vctl">
+          <button class="abtn" id="sRot" data-t="auto-rotate">auto-rotate</button>
+          <div class="seg" id="sAnim"><button data-a="none" class="on" data-t="still">still</button><button data-a="idle" data-t="idle">idle</button><button data-a="walk" data-t="walk">walk</button><button data-a="run" data-t="run">run</button></div>
+          <button class="abtn" id="sReset" title="reset camera">⟲</button>
+        </div>
+        <div class="vhint" data-t="drag to rotate · scroll to zoom">drag to rotate · scroll to zoom</div>
+      </div>
+      <div class="skin-side">
+        <p data-t="Preview any skin in 3D: upload your own design, or pull a player's current skin. Switch between the classic (Steve) and slim (Alex) models.">Preview any skin in 3D: upload your own design, or pull a player's current skin. Switch between the classic (Steve) and slim (Alex) models.</p>
+        <div class="links">
+          <label class="abtn primary filebtn"><span data-t="Upload skin PNG">Upload skin PNG</span><input type="file" id="file" accept="image/png"></label>
+          <a class="abtn" id="dl" href="#" download="skin.png" hidden data-t="Download PNG">Download PNG</a>
+        </div>
+        <form class="search" id="sForm" style="padding:0;border:0"><input id="sQ" placeholder="…or a player's username / UUID" autocomplete="off" spellcheck="false" maxlength="36"><button class="abtn" type="submit" data-t="Load">Load</button></form>
+        <div class="row"><span class="k" data-t="model">model</span><div class="seg" id="sModel"><button data-m="auto-detect" class="on" data-t="auto">auto</button><button data-m="default" data-t="classic (Steve)">classic (Steve)</button><button data-m="slim" data-t="slim (Alex)">slim (Alex)</button></div></div>
+        <div class="row" id="sInfo"><span class="k" data-t="file">file</span><span class="v dim" id="sFile">—</span></div>
+        <div class="preview2d"><canvas id="p2f" width="16" height="32" style="width:64px;height:128px"></canvas><canvas id="p2b" width="16" height="32" style="width:64px;height:128px"></canvas><span class="vhint" data-t="front / back">front / back</span></div>
+        <div class="msg" id="sMsg" style="padding:0;text-align:left" hidden></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/vendor/skinview3d.bundle.js?v=20260916c"></script>
+<script src="hypixel-stats.js?v=20260916f" defer></script>
+<script src="guild-lookup.js?v=20260916f" defer></script>
+<script>addEventListener('DOMContentLoaded', () => { if (window.GUILD) GUILD.init(); });</script>
+<script>
+/* ============================================================
+   SERAPH — https://api.seraph.si  (header: seraph-api-key)
+   Read-only lookups use GET /{uuid}/blacklist, which returns every Seraph tag at once
+   (blacklist, safelist, bot, member, annoylist, name change). Do NOT call
+   /{uuid}/safelist or /report/{uuid} from here: those endpoints *add* the player to
+   the key owner's safelist / encounter log as a side effect.
+   BORDIC — https://bordic.xyz (anti-sniper blacklist, Cubelify tag feed). It needs a key and
+   sends no CORS headers, so browsers can't call it directly: deploy tools/proxy.worker.js
+   (free Cloudflare Worker), put your Bordic key there as BORDIC_KEY, and set PROXY_URL below.
+   PROFILE / SKIN / CAPE — Mojang's public API (https://minecraft.wiki/w/Mojang_API) through the proxy (/mojang):
+   api.mojang.com turns the name into a UUID, then https://sessionserver.mojang.com/session/minecraft/profile/<uuid> gives the skin,
+   cape and model. Mojang sends no CORS headers, so without PROXY_URL the app falls back to PlayerDB (live
+   session-server relay) and only then Ashcon (its profiles go stale for days — old names and old skins).
+   HYPIXEL STATS — the proxy worker (/player) → https://api.bordic.xyz/v3/cache/hypixel, Bordic's keyless
+   Hypixel cache (rank, network XP, BedWars / SkyWars / Duels). Bordic has no CORS either, so this
+   also needs PROXY_URL. The worker re-reads Bordic's newest snapshot every minute (it bypasses the 24 h
+   edge cache in front of api.bordic.xyz) and the browser never reuses an old answer, so the stats shown
+   are always the latest Bordic has; "updated …" under the panel is Bordic's own lastUpdated.
+   Guild member names come from Mojang too (/names → api.minecraftservices.com uuid lookup). Guilds themselves are not on Bordic, so
+   they come from the worker's /guild (official Hypixel API, HYPIXEL_KEY secret).
+   ============================================================ */
+const SERAPH_API_KEY = 'cac7921b-ef85-498f-81c6-7675300a3cd6';
+const PROXY_DEFAULT = '/api';   // same-origin proxy: tools/site-server.py serves the site and /api together. On static hosting point this at your deployed tools/proxy.worker.js, e.g. 'https://waish-proxy.<you>.workers.dev'
+const PROXY_URL = (new URLSearchParams(location.search).get('proxy') || PROXY_DEFAULT).replace(/\/$/, '');
+
+const FA = { 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Look up': 'جستجو', 'Guild Lookup': 'جستجوی گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.': 'یه گیلد هایپیکسل رو با اسمش جستجو کن، یا گیلد یه بازیکن رو پیدا کن: لول، XP، اعضا و فعالیت هفتگی‌شون، رنک‌ها و بازی‌های محبوب.', 'Load': 'بارگذاری', 'copy': 'کپی', 'copied': 'کپی شد', 'model': 'مدل', 'created': 'ساخته‌شده', 'past names': 'اسم‌های قبلی', 'Capes': 'شنل‌ها', 'checking…': 'در حال بررسی…', 'auto-rotate': 'چرخش خودکار', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'still': 'ثابت', 'elytra': 'الیترا',
+  'drag to rotate · scroll to zoom': 'بکش تا بچرخه · اسکرول برای زوم', 'file': 'فایل', 'front / back': 'جلو / پشت', 'auto': 'خودکار', 'classic (Steve)': 'کلاسیک (Steve)', 'slim (Alex)': 'باریک (Alex)', 'Upload skin PNG': 'آپلود اسکین PNG', 'drag to rotate · scroll to zoom · ← → keys': 'بکش تا بچرخه · اسکرول برای زوم · کلیدهای ← →', 'Download PNG': 'دانلود PNG',
+  'Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they\'re blacklisted on Seraph or Bordic.': 'یه یوزرنیم ماینکرفت بنویس تا اسکین سه‌بعدی، شنل‌ها، رنک هایپیکسل و آمار بدوارز، UUID و وضعیت بلک‌لیست Seraph و Bordic رو ببینی.',
+  'Drop a skin PNG here, or use the buttons →': 'یه فایل PNG اسکین اینجا بنداز، یا از دکمه‌ها استفاده کن ←', 'Preview any skin in 3D: upload your own design, or pull a player\'s current skin. Switch between the classic (Steve) and slim (Alex) models.': 'هر اسکینی رو سه‌بعدی ببین: طرح خودت رو آپلود کن یا اسکین فعلی یه بازیکن رو بگیر. بین مدل کلاسیک (Steve) و باریک (Alex) سوییچ کن.',
+  'Player not found.': 'بازیکن پیدا نشد.', 'Lookup failed — try again in a moment.': 'جستجو ناموفق بود — یه لحظه دیگه دوباره تلاش کن.', 'looking up': 'در حال جستجو', 'no capes': 'شنلی نداره', 'updated': 'به‌روزشده', 'Hypixel stats are not connected yet. Set PROXY_DEFAULT at the top of apps/lookup.html to your proxy worker.': 'آمار هایپیکسل هنوز وصل نشده. آدرس پروکسی رو توی PROXY_DEFAULT بالای فایل apps/lookup.html بذار.', 'network level': 'لول شبکه', 'first login': 'اولین ورود', 'last login': 'آخرین ورود', 'No BedWars games played.': 'بدوارز بازی نکرده.', 'Never joined Hypixel.': 'هیچ‌وقت وارد هایپیکسل نشده.', 'Bordic has no stats for this player yet.': 'Bordic هنوز آماری از این بازیکن نداره.', 'Hypixel check failed.': 'بررسی هایپیکسل ناموفق بود.', 'Hypixel data is busy — try again in a minute.': 'دادهٔ هایپیکسل شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Blacklisted on Bordic': 'توی Bordic بلک‌لیست شده', 'Not blacklisted on Bordic': 'توی Bordic بلک‌لیست نیست', 'sniper score': 'امتیاز اسنایپر', 'signals': 'نشانه‌ها', 'Bordic check failed:': 'بررسی Bordic ناموفق بود:', 'No sniper or blacklist entry on Bordic for this player.': 'هیچ ورودی اسنایپر یا بلک‌لیستی توی Bordic برای این بازیکن نیست.',
+  'Bordic is an anti-sniper blacklist for Hypixel BedWars: this player has an entry there. Read the reason before judging — some entries are automatic cautions, not confirmed cheating.': 'Bordic یه بلک‌لیست ضد اسنایپر برای بدوارز هایپیکسله: این بازیکن اون‌جا یه ورودی داره. قبل از قضاوت دلیلش رو بخون — بعضی ورودی‌ها احتیاط خودکارن، نه چیت تأییدشده.', 'classic': 'کلاسیک (Steve)', 'slim': 'باریک (Alex)', 'default skin': 'اسکین پیش‌فرض', 'Download skin': 'دانلود اسکین',
+  'Not blacklisted on Seraph': 'توی Seraph بلک‌لیست نیست', 'Blacklisted on Seraph': 'توی Seraph بلک‌لیست شده', 'Seraph safelisted': 'توی سیف‌لیست Seraph',
+  'Save key': 'ذخیرهٔ کلید', 'Remove key': 'حذف کلید', 'Invalid or locked API key.': 'کلید API نامعتبر یا قفل‌شده.', 'Seraph check failed:': 'بررسی Seraph ناموفق بود:',
+  'reason': 'دلیل', 'details': 'جزئیات', 'reported': 'گزارش‌شده', 'verified': 'تأییدشده', 'unverified': 'تأییدنشده', 'safelisted': 'سیف‌لیست', 'bot': 'بات', 'Seraph member': 'عضو Seraph', 'recent name change': 'تغییر اسم اخیر', 'safelist': 'سیف‌لیست', 'added by': 'اضافه‌شده توسط', 'member': 'عضویت', 'name change': 'تغییر اسم', 'annoy list': 'لیست مزاحم', 'encounters': 'برخوردها', 'Seraph is busy — try again in a minute.': 'Seraph شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Seraph is not responding (api.seraph.si timed out).': 'Seraph جواب نمی‌ده (api.seraph.si تایم‌اوت شد).', 'The Seraph API is down or very slow right now — the rest of the lookup is unaffected.': 'API سراف الان پایینه یا خیلی کنده — بقیهٔ جستجو مشکلی نداره.',
+  'Seraph flags this player as a caution: play against them carefully — the report is not a confirmed cheater tag.': 'Seraph این بازیکن رو با برچسب احتیاط علامت زده: با دقت مقابلش بازی کن — این گزارش تگ چیتر تأییدشده نیست.', 'This player is on the Seraph blacklist. Treat them as a confirmed threat in your lobbies.': 'این بازیکن توی بلک‌لیست Seraph هست. توی لابی‌هات به‌عنوان یه تهدید تأییدشده در نظرش بگیر.', 'Flagged as a bot account by Seraph': 'توسط Seraph به‌عنوان اکانت بات علامت‌گذاری شده', 'No blacklist reports for this UUID — Seraph has nothing against this player.': 'گزارش بلک‌لیستی برای این UUID نیست — Seraph چیزی علیه این بازیکن نداره.',
+  'Not a valid skin (need a 64×64 or 64×32 PNG).': 'اسکین معتبر نیست (PNG با ابعاد ۶۴×۶۴ یا ۶۴×۳۲ لازمه).' };
+let lang = 'en'; try { lang = localStorage.getItem('waish-lang') === 'fa' ? 'fa' : 'en'; } catch (e) {}
+const t = s => lang === 'fa' && FA[s] ? FA[s] : s;
+if (lang === 'fa') { document.body.classList.add('fa'); document.documentElement.dir = 'rtl'; document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t)); }
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+const fmtN = n => (n == null ? '—' : Number(n).toLocaleString(lang === 'fa' ? 'fa-IR' : 'en-US'));
+
+/* ---------- tabs ---------- */
+$('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'skin') skinViewer().resize(); else if (tab === 'user' && VU) VU.resize(); });
+
+/* ---------- 3D viewer (skinview3d) ---------- */
+function makeViewer(stage, ctl) {
+  const canvas = document.createElement('canvas'); stage.appendChild(canvas);
+  let v = null;
+  try {
+    if (!hasWebGL()) throw new Error('no webgl');
+    v = new skinview3d.SkinViewer({ canvas, width: stage.clientWidth || 300, height: stage.clientHeight || 380 });
+    // Same setup as the characters on clutchping.com: still until dragged, no auto-rotate,
+    // facing straight at the viewer, capped pixel ratio, gentle rotate speed.
+    v.animation = null; v.autoRotate = false; v.zoom = .86; v.fov = 45;
+    if (v.renderer && v.renderer.setPixelRatio) v.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    v.controls.enablePan = false; v.controls.enableZoom = true; v.controls.rotateSpeed = .6;
+  } catch (e) { canvas.remove(); return { ok: false, load() {}, cape() {}, resize() {}, reset() {}, fallback(url) { stage.innerHTML = `<div class="fallback"><img src="${url}" alt=""></div>`; } }; }
+  const rig = v.playerWrapper || v.playerObject; rig.rotation.y = 0;
+  // Render only while something can change: an animation, auto-rotate, or a drag / wheel / key
+  // in progress. Otherwise the renderer sleeps — the last frame stays on the canvas.
+  let timer = null; const live = () => !!v.animation || v.autoRotate;
+  const wake = () => { if (timer) { clearTimeout(timer); timer = null; } v.renderPaused = false; };
+  const sleep = (ms) => { if (live()) return; if (timer) clearTimeout(timer); timer = setTimeout(() => { timer = null; if (!live()) v.renderPaused = true; }, ms || 800); };
+  const api = {
+    ok: true, v, wake, sleep,
+    load(src, model) { wake(); return v.loadSkin(src, { model: model || 'auto-detect' }).then(r => { sleep(1200); return r; }); },
+    cape(src, eq) { wake(); if (!src) { v.resetCape(); sleep(600); return Promise.resolve(); } return v.loadCape(src, { backEquipment: eq || 'cape' }).catch(() => v.resetCape()).then(() => sleep(600)); },
+    resize() { const w = stage.clientWidth, h = stage.clientHeight; if (w && h) { wake(); v.setSize(w, h); sleep(600); } },
+    reset() { wake(); v.zoom = .86; rig.rotation.y = 0; v.camera.position.set(0, 0, 60); v.camera.lookAt(0, 0, 0); sleep(600); },
+  };
+  // controls row (extras on top of the ClutchPing defaults)
+  ctl.rot.addEventListener('click', () => { v.autoRotate = !v.autoRotate; ctl.rot.classList.toggle('on', v.autoRotate); wake(); sleep(600); });
+  ctl.anim.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return; ctl.anim.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === e.target)); v.animation = a === 'idle' ? new skinview3d.IdleAnimation() : a === 'walk' ? new skinview3d.WalkingAnimation() : a === 'run' ? new skinview3d.RunningAnimation() : null; wake(); sleep(600); });
+  ctl.reset.addEventListener('click', api.reset);
+  if (ctl.elytra) ctl.elytra.addEventListener('click', () => { const el = v.playerObject.backEquipment === 'elytra'; v.playerObject.backEquipment = el ? 'cape' : 'elytra'; ctl.elytra.classList.toggle('on', !el); wake(); sleep(600); });
+  stage.addEventListener('pointerdown', () => { stage.classList.add('grab'); wake(); if (v.autoRotate) { v.autoRotate = false; ctl.rot.classList.remove('on'); } });
+  addEventListener('pointerup', () => { stage.classList.remove('grab'); sleep(); });
+  stage.addEventListener('wheel', () => { wake(); sleep(900); }, { passive: true });
+  stage.tabIndex = 0;
+  stage.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') rig.rotation.y -= .25; else if (e.key === 'ArrowRight') rig.rotation.y += .25; else return; e.preventDefault(); wake(); sleep(400); });
+  new ResizeObserver(() => api.resize()).observe(stage);
+  return api;
+}
+function hasWebGL() { try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))); } catch (e) { return false; } }
+let VU = null, VS = null;
+const userViewer = () => VU || (VU = makeViewer($('#stageU'), { rot: $('#uRot'), anim: $('#uAnim'), reset: $('#uReset'), elytra: $('#uElytra') }));
+const skinViewer = () => VS || (VS = makeViewer($('#stageS'), { rot: $('#sRot'), anim: $('#sAnim'), reset: $('#sReset') }));
+
+/* ---------- profile: Mojang session server through the proxy (name → UUID → skin / cape / model).
+   Without a proxy the browser can't reach sessionserver.mojang.com (no CORS), so PlayerDB stands in: it relays
+   the live session-server profile (same base64 `textures` blob, so the skin, cape and slim/classic model are
+   current). Ashcon is the last resort only — it serves days-old profiles (old names, old skins). ---------- */
+const decodeTextures = props => { try { const pr = (props || []).find(x => x.name === 'textures'); return pr ? (JSON.parse(atob(pr.value)).textures || {}) : {}; } catch (e) { return {}; } };
+const dash = id => id.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5');
+const fromTextures = (name, id, tx, extra) => { const skin = tx.SKIN || null, cape = tx.CAPE || null; return { username: name, uuid: dash(id), undashed: id, created: null, slim: !!(skin && skin.metadata && skin.metadata.model === 'slim'), custom: !!skin, skinData: null, skinUrl: skin && skin.url, mojangCape: cape && cape.url, names: [], ...extra }; };
+const isUUID = s => /^([0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(s);
+const isQuery = s => /^[A-Za-z0-9_]{1,16}$/.test(s) || isUUID(s);   // an IGN or a uuid, dashed or not
+async function mojang(name, signal) {
+  // the proxy turns the name into a uuid with api.mojang.com, then reads the session-server profile (skin, cape, model)
+  const r = await fetch(`${PROXY_URL}/mojang?${isUUID(name) ? 'uuid=' + name.replace(/-/g, '').toLowerCase() : 'name=' + encodeURIComponent(name)}`, { signal });
+  if (r.status === 404) throw new Error('notfound');
+  const d = await r.json();
+  if (!r.ok || !d.success || !d.id) throw new Error('http');
+  return fromTextures(d.name, d.id.toLowerCase(), (d.textures && d.textures.textures) || {}, { source: 'mojang' });
+}
+async function playerdb(name, signal) {
+  const r = await fetch(`https://playerdb.co/api/player/minecraft/${encodeURIComponent(name)}`, { signal, cache: 'no-store' });
+  if (r.status === 404 || r.status === 400) throw new Error('notfound');
+  const d = await r.json().catch(() => null);
+  if (d && d.code === 'minecraft.invalid_username') throw new Error('notfound');
+  if (!r.ok || !d || !d.success || !d.data || !d.data.player) throw new Error(r.ok ? 'notfound' : 'http');
+  const pl = d.data.player, tx = decodeTextures(pl.properties);
+  if (!tx.SKIN && pl.skin_texture) tx.SKIN = { url: pl.skin_texture };
+  if (!tx.CAPE && pl.cape_texture) tx.CAPE = { url: pl.cape_texture };
+  return fromTextures(pl.username, pl.raw_id.toLowerCase(), tx, { source: 'playerdb' });
+}
+async function ashcon(name, signal) {
+  const r = await fetch(`https://api.ashcon.app/mojang/v2/user/${encodeURIComponent(name)}`, { signal });
+  if (r.status === 404 || r.status === 400) throw new Error('notfound');
+  if (!r.ok) throw new Error('http');
+  const d = await r.json(); const tx = d.textures || {};
+  return { username: d.username, uuid: d.uuid, undashed: d.uuid.replace(/-/g, ''), created: d.created_at, slim: !!tx.slim, custom: tx.custom !== false, skinData: tx.skin && tx.skin.data ? 'data:image/png;base64,' + tx.skin.data : null, skinUrl: tx.skin && tx.skin.url, mojangCape: tx.cape && tx.cape.url, names: (d.username_history || []).map(h => h.username).filter(n => n !== d.username), source: 'ashcon' };
+}
+async function profile(name, signal) {
+  const chain = PROXY_URL ? [mojang, playerdb, ashcon] : [playerdb, ashcon];
+  let last;
+  for (const src of chain) {
+    try { return await src(name, signal); }
+    catch (e) { if (e.message === 'notfound' || e.name === 'AbortError') throw e; last = e; }
+  }
+  throw last || new Error('http');
+}
+const skinSrc = p => p.skinData || (p.skinUrl ? p.skinUrl.replace(/^http:/, 'https:') : `https://mc-heads.net/skin/${p.undashed}`);
+
+/* ---------- user lookup ---------- */
+const form = $('#form'), q = $('#q'), msg = $('#msg'), result = $('#result');
+try { localStorage.removeItem('waish-skin-history'); } catch (e) {}   // recent-search chips were removed; drop what older visits stored
+form.addEventListener('submit', e => { e.preventDefault(); const n = q.value.trim(); if (isQuery(n)) lookup(n); });
+let ctrl;
+async function lookup(name) {
+  if (ctrl) ctrl.abort(); ctrl = new AbortController();
+  result.classList.remove('on'); msg.className = 'msg'; msg.innerHTML = `<span class="spin"></span>${t('looking up')} <b>${esc(name)}</b>…`; msg.hidden = false;
+  try {
+    const p = await profile(name, ctrl.signal);
+    show(p); capes(p); hypixel(p); blacklist(p); bordic(p);
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    msg.className = 'msg err'; msg.textContent = e.message === 'notfound' ? t('Player not found.') : t('Lookup failed — try again in a moment.');
+  }
+}
+function show(p) {
+  msg.hidden = true; result.classList.add('on');
+  $('#name').textContent = p.username; $('#uuid').textContent = p.uuid; $('#model').textContent = t(p.slim ? 'slim' : 'classic') + (p.custom ? '' : ' · ' + t('default skin'));
+  $('#createdRow').style.display = p.created ? '' : 'none'; $('#created').textContent = p.created || '';
+  $('#histRow').style.display = p.names.length ? '' : 'none'; $('#names').textContent = p.names.join(' · ');
+  // where the profile came from, so a stale skin is easy to trace (Ashcon = no worker reachable → cached, days old)
+  const SRC = { mojang: 'Mojang · live', playerdb: 'PlayerDB', ashcon: 'Ashcon · cached' };
+  $('#tags').innerHTML = `<span class="tag" title="profile source">${SRC[p.source] || p.source || ''}</span>`; $('#capes').innerHTML = `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`; $('#bl').innerHTML = ''; $('#bordic').innerHTML = ''; $('#hyBody').innerHTML = ''; $('#guildLine').innerHTML = '';
+  $('#links').innerHTML = `<a href="https://namemc.com/profile/${p.uuid}" target="_blank" rel="noopener">NameMC ↗</a><a href="https://plancke.io/hypixel/player/stats/${p.username}" target="_blank" rel="noopener">Plancke ↗</a>` + (p.skinUrl ? `<a href="${p.skinUrl.replace(/^http:/, 'https:')}" target="_blank" rel="noopener" download>${t('Download skin')} ↓</a>` : '');
+  const V = userViewer();
+  if (V.ok) { V.cape(null); V.load(skinSrc(p), p.slim ? 'slim' : 'default').catch(() => V.load(`https://mc-heads.net/skin/${p.undashed}`)); setTimeout(() => V.resize(), 50); }
+  else V.fallback(`https://mc-heads.net/body/${p.undashed}/300`);
+}
+$('#copyUuid').addEventListener('click', () => { navigator.clipboard && navigator.clipboard.writeText($('#uuid').textContent).then(() => { $('#copyUuid').textContent = t('copied'); setTimeout(() => $('#copyUuid').textContent = t('copy'), 1200); }); });
+
+/* ---------- capes — Mojang's session server only (https://minecraft.wiki/w/Mojang_API) ---------- */
+async function capes(p) {
+  // the player's cape as Mojang serves it (CAPE texture in the session-server profile) — click it to wear it in 3D
+  const box = $('#capes'); const found = [];
+  if (p.mojangCape) found.push({ prov: 'minecraft', url: p.mojangCape.replace(/^http:/, 'https:') });
+  box.innerHTML = '';
+  if (!found.length) { box.innerHTML = `<span class="tag">${t('no capes')}</span>`; return; }
+  const NAMES = { minecraft: 'Mojang' };
+  found.forEach((c, i) => {
+    const el = document.createElement('div'); el.className = 'cape' + (i === 0 ? ' on' : ''); const cv = document.createElement('canvas'); cv.width = 10; cv.height = 16; el.appendChild(cv);
+    const lbl = document.createElement('span'); lbl.textContent = NAMES[c.prov] || c.prov; el.appendChild(lbl);
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => { const s = img.width / 64 >= 1 && Math.abs(img.width / img.height - 2) < .2 ? img.width / 64 : 1; cv.width = 10 * s; cv.height = 16 * s; cv.getContext('2d').drawImage(img, 1 * s, 1 * s, 10 * s, 16 * s, 0, 0, 10 * s, 16 * s); };
+    img.onerror = () => { cv.remove(); const im = document.createElement('img'); im.src = c.url; el.prepend(im); };
+    img.src = c.url; box.appendChild(el);
+    el.addEventListener('click', () => { box.querySelectorAll('.cape').forEach(x => x.classList.toggle('on', x === el)); const V = userViewer(); if (V.ok) V.cape(c.url); });
+  });
+  const V = userViewer(); if (V.ok) V.cape(found[0].url);
+  $('#tags').insertAdjacentHTML('beforeend', `<span class="tag info">${found.length} ${found.length === 1 ? 'cape' : 'capes'}</span>`);
+}
+
+/* ---------- Hypixel: see hypixel-stats.js (HYP.run) ---------- */
+const ago = ts => { if (!ts) return ''; const d = Math.round((Date.now() - ts) / 86400000); return lang === 'fa' ? (d < 1 ? 'امروز' : d < 30 ? `${fmtN(d)} روز پیش` : d < 365 ? `${fmtN(Math.round(d / 30))} ماه پیش` : `${fmtN(Math.round(d / 365))} سال پیش`) : (d < 1 ? 'today' : d === 1 ? 'yesterday' : d < 30 ? `${d} days ago` : d < 365 ? `${Math.round(d / 30)} months ago` : `${Math.round(d / 365)} years ago`); };
+async function hypixel(p) { return HYP.run(p); }
+
+/* ---------- Bordic anti-sniper blacklist (via the proxy: bordic.xyz has no CORS and needs a key) ----------
+   Bordic's feed is a list of Cubelify tags. A blacklist entry looks like:
+     { text: "O", tooltip: "Blacklisted (Other) - Automatic (1mo3d ago)\n\nReason - \"…\"", color: … }
+   and the sniper score goes above 0. Everything else (SL safelist, ping, playtime gap, mode KDRs) is a signal. */
+async function bordic(p) {
+  const box = $('#bordic'); if (!PROXY_URL) { box.hidden = true; return; }
+  box.hidden = false; box.className = 'bl'; box.innerHTML = `<div class="title"><span class="spin"></span>Bordic…</div>`;
+  const hex = c => '#' + ((c >>> 0) & 0xffffff).toString(16).padStart(6, '0');
+  try {
+    const r = await fetch(`${PROXY_URL}/bordic?uuid=${p.undashed}`); const d = await r.json();
+    if ((r.status === 500 || r.status === 501) && d && /not set/i.test(d.cause || '')) { box.hidden = true; return; }   // no BORDIC_KEY on the proxy → the tags box simply doesn't exist
+    if (!r.ok || !d || !Array.isArray(d.tags)) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${t('Bordic check failed:')} ${esc((d && d.cause) || r.status)}</div>`; return; }
+    const isBL = tg => /blacklist/i.test(tg.tooltip || '') || /^(BL|SNIPER|CHEATER|CLOSET|CAUTION|O)$/i.test(tg.text || '');
+    const bl = d.tags.filter(isBL), signals = d.tags.filter(tg => !isBL(tg)), score = (d.score && d.score.value) || 0;
+    const chip = tg => `<span class="tag" style="background:${hex(tg.color)};color:${tg.textColor ? hex(tg.textColor) : '#0b0d12'};border-color:${hex(tg.color)};font-weight:700" title="${esc(tg.tooltip || '')}">${esc(tg.text)}${tg.tooltip ? `<span style="font-weight:400;opacity:.85"> · ${esc((tg.tooltip.split('\n')[0]))}</span>` : ''}</span>`;
+    const row = (k, v) => v ? `<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
+    if (bl.length || score > 0) {
+      const tip = (bl[0] && bl[0].tooltip) || '';
+      const head = tip.split('\n')[0], m = head.match(/^Blacklisted\s*\(([^)]+)\)\s*-?\s*(.*)$/i), reason = (tip.match(/Reason\s*-\s*"?([^"]+)"?/i) || [])[1];
+      box.className = 'bl flagged';
+      box.innerHTML = `<div class="title flag-t">⚠ ${t('Blacklisted on Bordic')}${m ? ` <span class="tag bad">${esc(m[1])}</span>` : ''}${score ? ` <span class="tag warn">${t('sniper score')} ${score}</span>` : ''}</div>
+        <p>${t('Bordic is an anti-sniper blacklist for Hypixel BedWars: this player has an entry there. Read the reason before judging — some entries are automatic cautions, not confirmed cheating.')}</p>
+        ${row(t('reason'), esc(reason || ''))}${row(t('details'), esc(m ? m[2] : head))}`;
+      $('#tags').insertAdjacentHTML('afterbegin', `<span class="tag bad">⚠ ${t('Blacklisted on Bordic')}</span>`);
+    } else {
+      box.className = 'bl clean';
+      box.innerHTML = `<div class="title clean-t">✔ ${t('Not blacklisted on Bordic')}</div><p>${t('No sniper or blacklist entry on Bordic for this player.')}</p>`;
+      $('#tags').insertAdjacentHTML('afterbegin', `<span class="tag ok">✔ ${t('Not blacklisted on Bordic')}</span>`);
+    }
+    if (signals.length) box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k">${t('signals')}</span><span class="tags" style="display:inline-flex">${signals.map(chip).join('')}</span></div>`);
+    box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k" style="min-width:0">${lang === 'fa' ? 'منبع' : 'source'}</span><a class="v dim" href="https://bordic.xyz" target="_blank" rel="noopener" style="color:var(--cyan)">bordic.xyz ↗</a></div>`);
+  } catch (e) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${t('Bordic check failed:')}</div><p>${t('Lookup failed — try again in a moment.')}</p>`; }
+}
+
+/* ---------- Seraph: every tag in one read-only call ---------- */
+const TYPE_FA = { Caution: 'احتیاط', Blacklist: 'بلک‌لیست', Cheater: 'چیتر', Sniper: 'اسنایپر', Closet: 'کلوزت چیتر', Boosting: 'بوستینگ', Bot: 'بات' };
+async function blacklist(p) {
+  const box = $('#bl'); box.className = 'bl'; box.innerHTML = `<div class="title"><span class="spin"></span>Seraph…</div>`;
+  const tags = $('#tags');
+  // Seraph is called straight from the browser (it sends CORS headers). Give it 15 s: when the API is down the
+  // request would otherwise hang and the spinner would never stop.
+  const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const r = await fetch(`https://api.seraph.si/${p.undashed}/blacklist`, { headers: { 'seraph-api-key': SERAPH_API_KEY }, signal: ctrl.signal });
+    let d = null; try { d = await r.json(); } catch (e) {}
+    if (r.status === 429) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">⏳ ${t('Seraph is busy — try again in a minute.')}</div>`; return; }
+    if (!r.ok || !d || !d.success || !d.data) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${t('Seraph check failed:')} ${r.status}</div><p>${esc((d && d.cause) || '')}</p>`; return; }
+    const x = d.data, bl = x.blacklist || {}, sl = x.safelist || {}, bot = x.bot || {}, mem = x.member || {}, ann = x.annoylist || {}, nc = x.name_change || {}, st = x.statistics || {};
+    const chips = [];
+    if (bl.tagged) chips.push(`<span class="tag bad">⚠ ${t('Blacklisted on Seraph')}${bl.report_type ? ' · ' + esc(bl.report_type) : ''}</span>`);
+    else chips.push(`<span class="tag ok">✔ ${t('Not blacklisted on Seraph')}</span>`);
+    if (sl.tagged) chips.push(`<span class="tag ok">${t('safelisted')}</span>`);
+    if (bot.tagged) chips.push(`<span class="tag warn">${t('bot')}</span>`);
+    if (mem.tagged) chips.push(`<span class="tag info">${t('Seraph member')}</span>`);
+    if (nc.tagged) chips.push(`<span class="tag warn">${t('recent name change')}</span>`);
+    tags.insertAdjacentHTML('afterbegin', chips.join(''));
+    const row = (k, v) => v ? `<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>` : '';
+    if (bl.tagged) {
+      const type = bl.report_type || 'Blacklist';
+      box.className = 'bl flagged';
+      box.innerHTML = `<div class="title flag-t">⚠ ${t('Blacklisted on Seraph')} <span class="tag bad">${esc(lang === 'fa' ? (TYPE_FA[type] || type) : type)}</span> ${bl.verified ? `<span class="tag ok">${t('verified')}</span>` : `<span class="tag">${t('unverified')}</span>`}</div>
+        <p>${t(type === 'Caution' ? 'Seraph flags this player as a caution: play against them carefully — the report is not a confirmed cheater tag.' : 'This player is on the Seraph blacklist. Treat them as a confirmed threat in your lobbies.')}</p>
+        ${row(t('reason'), esc(bl.reason || ''))}${row(t('details'), esc(bl.tooltip || ''))}${row(t('reported'), bl.timestamp ? `${new Date(bl.timestamp).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · ${ago(bl.timestamp)}` : '')}`;
+    } else if (bot.tagged) {
+      box.className = 'bl flagged'; box.innerHTML = `<div class="title flag-t">🤖 ${t('Flagged as a bot account by Seraph')}</div><p>${esc(bot.tooltip || bot.reason || '')}</p>`;
+    } else {
+      box.className = 'bl clean';
+      box.innerHTML = `<div class="title clean-t">✔ ${t('Not blacklisted on Seraph')}</div><p>${t('No blacklist reports for this UUID — Seraph has nothing against this player.')}</p>`;
+    }
+    const extra = [];
+    if (sl.tagged) extra.push(row(t('safelist'), esc(sl.tooltip || (sl.added_by ? `${t('added by')} ${sl.added_by}` : t('safelisted')))));
+    if (mem.tagged) extra.push(row(t('member'), esc(mem.tooltip || t('Seraph member'))));
+    if (nc.tagged) extra.push(row(t('name change'), esc(nc.tooltip || nc.reason || t('recent name change'))));
+    if (ann.tagged) extra.push(row(t('annoy list'), esc(ann.tooltip || ann.reason || '')));
+    if (st.encounters) extra.push(row(t('encounters'), fmtN(st.encounters)));
+    if (extra.length) box.insertAdjacentHTML('beforeend', extra.join(''));
+    box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k" style="min-width:0">${lang === 'fa' ? 'منبع' : 'source'}</span><a class="v dim" href="https://seraph.si" target="_blank" rel="noopener" style="color:var(--cyan)">seraph.si ↗</a></div>`);
+  } catch (e) {
+    box.className = 'bl locked';
+    box.innerHTML = `<div class="title lock-t">${t(e.name === 'AbortError' ? 'Seraph is not responding (api.seraph.si timed out).' : 'Seraph check failed:')}</div><p>${t(e.name === 'AbortError' ? 'The Seraph API is down or very slow right now — the rest of the lookup is unaffected.' : 'Lookup failed — try again in a moment.')}</p>`;
+  } finally { clearTimeout(timer); }
+}
+
+/* ---------- SKIN LOOKUP tab: your own skin file, model toggle, 2D preview, download ---------- */
+let sSrc = null, sModel = 'auto-detect';
+function sMessage(txt, err) { const m = $('#sMsg'); m.hidden = !txt; m.textContent = txt || ''; m.className = 'msg' + (err ? ' err' : ''); m.style.padding = '0'; m.style.textAlign = lang === 'fa' ? 'right' : 'left'; }
+function applySkin(src, label) {
+  const img = new Image(); img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const ok = (img.width === img.height || img.width === img.height * 2) && img.width >= 64 && img.width % 64 === 0;
+    if (!ok) { sMessage(t('Not a valid skin (need a 64×64 or 64×32 PNG).'), true); return; }
+    sSrc = src; sMessage(''); $('#sFile').textContent = `${label} · ${img.width}×${img.height}`;
+    const V = skinViewer(); if (V.ok) { V.load(src, sModel).then(() => { const d = $('#drop'); if (d) d.remove(); }); setTimeout(V.resize, 50); } else V.fallback(src);
+    const dl = $('#dl'); dl.href = src; dl.hidden = false;
+    paint2D(img, sModel === 'slim' || (sModel === 'auto-detect' && detectSlim(img)));
+  };
+  img.onerror = () => sMessage(t('Not a valid skin (need a 64×64 or 64×32 PNG).'), true);
+  img.src = src;
+}
+function detectSlim(img) { // transparent pixel at (54,20) in a 64×64 skin means slim arms
+  if (img.height !== img.width) return false; const s = img.width / 64; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.drawImage(img, 0, 0, 64, 64);
+  try { return g.getImageData(54, 20, 1, 1).data[3] === 0; } catch (e) { return false; }
+}
+function paint2D(img, slim) {
+  const F = $('#p2f').getContext('2d'), Bk = $('#p2b').getContext('2d'); F.clearRect(0, 0, 16, 32); Bk.clearRect(0, 0, 16, 32);
+  const s = img.width / 64, legacy = img.height === img.width / 2, aw = slim ? 3 : 4;
+  const part = (g, sx, sy, w, h, dx, dy, mirror) => { g.save(); if (mirror) { g.translate(dx + w, dy); g.scale(-1, 1); g.drawImage(img, sx * s, sy * s, w * s, h * s, 0, 0, w, h); } else g.drawImage(img, sx * s, sy * s, w * s, h * s, dx, dy, w, h); g.restore(); };
+  part(F, 8, 8, 8, 8, 4, 0); part(F, 20, 20, 8, 12, 4, 8); part(F, 44, 20, aw, 12, 4 - aw, 8);
+  if (legacy) part(F, 44, 20, 4, 12, 12, 8, true); else part(F, 36, 52, aw, 12, 12, 8);
+  part(F, 4, 20, 4, 12, 4, 20); if (legacy) part(F, 4, 20, 4, 12, 8, 20, true); else part(F, 20, 52, 4, 12, 8, 20);
+  part(F, 40, 8, 8, 8, 4, 0); if (!legacy) { part(F, 20, 36, 8, 12, 4, 8); part(F, 44, 36, aw, 12, 4 - aw, 8); part(F, 52, 52, aw, 12, 12, 8); part(F, 4, 36, 4, 12, 4, 20); part(F, 4, 52, 4, 12, 8, 20); }
+  part(Bk, 24, 8, 8, 8, 4, 0); part(Bk, 32, 20, 8, 12, 4, 8); part(Bk, 44 + aw + 4, 20, aw, 12, 12, 8);
+  if (legacy) part(Bk, 52, 20, 4, 12, 0, 8, true); else part(Bk, 36 + aw + 4, 52, aw, 12, 4 - aw, 8);
+  part(Bk, 12, 20, 4, 12, 8, 20); if (legacy) part(Bk, 12, 20, 4, 12, 4, 20, true); else part(Bk, 28, 52, 4, 12, 4, 20);
+  part(Bk, 56, 8, 8, 8, 4, 0); if (!legacy) { part(Bk, 32, 36, 8, 12, 4, 8); part(Bk, 44 + aw + 4, 36, aw, 12, 12, 8); part(Bk, 52 + aw + 4, 52, aw, 12, 4 - aw, 8); part(Bk, 12, 36, 4, 12, 8, 20); part(Bk, 12, 52, 4, 12, 4, 20); }
+}
+$('#file').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => applySkin(rd.result, f.name); rd.readAsDataURL(f); });
+const stageS = $('#stageS');
+['dragenter', 'dragover'].forEach(ev => stageS.addEventListener(ev, e => { e.preventDefault(); stageS.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => stageS.addEventListener(ev, e => { e.preventDefault(); stageS.classList.remove('over'); }));
+stageS.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (!f || !/png/i.test(f.type)) return; const rd = new FileReader(); rd.onload = () => applySkin(rd.result, f.name); rd.readAsDataURL(f); });
+$('#sForm').addEventListener('submit', async e => {
+  e.preventDefault(); const n = $('#sQ').value.trim(); if (!isQuery(n)) return;
+  sMessage(t('looking up') + ' ' + n + '…');
+  try { const p = await profile(n); applySkin(skinSrc(p), p.username); } catch (err) { sMessage(t(err.message === 'notfound' ? 'Player not found.' : 'Lookup failed — try again in a moment.'), true); }
+});
+$('#sModel').addEventListener('click', e => { const m = e.target.dataset.m; if (!m) return; sModel = m; document.querySelectorAll('#sModel button').forEach(b => b.classList.toggle('on', b === e.target)); if (sSrc) applySkin(sSrc, $('#sFile').textContent.split(' · ')[0]); });
+
+const initial = new URLSearchParams(location.search).get('u'); if (initial) { q.value = initial; lookup(initial); }
+addEventListener('load', () => { try { window.focus(); q.focus(); } catch (e) {} });
+</script>
+</body>
+</html>
