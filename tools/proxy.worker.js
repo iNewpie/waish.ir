@@ -30,12 +30,27 @@ const UA = { 'User-Agent': 'waish.ir lookup' };
 const TTL = { mojang: 60, player: 60, guild: 600, tags: 3600, name: 86400, convert: 3600 };   // seconds
 // Bordic's Hypixel cache. The `t` param changes every minute so Cloudflare's edge copy of api.bordic.xyz is bypassed.
 const bordic = uuid => new Request(`https://api.bordic.xyz/v3/cache/hypixel?uuid=${uuid}&t=${Math.floor(Date.now() / 60000)}`, { headers: UA });
+// PlayerDB relays Mojang's live session-server profile (same signed `properties` textures blob). Used when Mojang itself
+// answers 403 to Cloudflare's IP ranges. Returns the same shape as /mojang: { success, id, name, properties, textures }.
+async function playerdbProfile(who) {
+  const r = await fetch(`https://playerdb.co/api/player/minecraft/${encodeURIComponent(who)}`, { headers: UA });
+  let d = null; try { d = await r.json(); } catch (e) {}
+  const pl = d && d.success && d.data && d.data.player;
+  if (!pl) return { status: r.status === 200 || r.status === 404 || r.status === 400 ? 404 : 502, body: JSON.stringify({ success: false, cause: pl === null ? 'Player not found' : (d && d.message) || 'Player not found' }) };
+  let textures = null; try { const prop = (pl.properties || []).find(p => p.name === 'textures'); if (prop) textures = JSON.parse(atob(prop.value)); } catch (e) {}
+  if (!textures && pl.skin_texture) textures = { textures: { SKIN: { url: pl.skin_texture }, ...(pl.cape_texture ? { CAPE: { url: pl.cape_texture } } : {}) } };
+  return { status: 200, body: JSON.stringify({ success: true, id: pl.raw_id, name: pl.username, properties: pl.properties || [], textures }) };
+}
 // Mojang IGN ⇄ UUID (https://minecraft.wiki/w/Mojang_API): {success, ign, uuid} — 404 for an unknown player, 400 for a malformed one.
 const convert = async player => {
   const id = player.replace(/-/g, '').toLowerCase(), byId = /^[0-9a-f]{32}$/.test(id);
   if (!byId && !/^[A-Za-z0-9_]{1,16}$/.test(player)) return { status: 400, d: { success: false, cause: 'Malformed field [player]' } };
   const r = await fetch(byId ? `https://api.minecraftservices.com/minecraft/profile/lookup/${id}` : `https://api.mojang.com/users/profiles/minecraft/${encodeURIComponent(player)}`, { headers: UA });
   if (r.status === 204 || r.status === 404) return { status: 404, d: { success: false, cause: 'No data found [player]' } };
+  if (r.status === 403) {   // Mojang blocks Cloudflare's network → PlayerDB
+    const p = await playerdbProfile(player); const j = JSON.parse(p.body);
+    return j.success ? { status: 200, d: { success: true, ign: j.name, uuid: j.id } } : { status: p.status, d: { success: false, cause: j.cause } };
+  }
   let j = null; try { j = await r.json(); } catch (e) {}
   if (!r.ok || !j || !j.id) return { status: r.ok ? 502 : r.status, d: { success: false, cause: (j && j.errorMessage) || `Mojang lookup failed (${r.status})` } };
   return { status: 200, d: { success: true, ign: j.name, uuid: j.id.replace(/-/g, '').toLowerCase() } };
@@ -78,12 +93,14 @@ export default {
           const { status, d } = await convert(gname);
           if (status === 404) return { status: 404, body: JSON.stringify({ success: false, cause: 'Player not found' }) };
           if (status === 429) return { status: 429, body: JSON.stringify({ success: false, cause: 'Mojang API is rate limited — try again in a minute' }) };
+          if (status === 403) return playerdbProfile(gname);   // Mojang blocks Cloudflare's network → PlayerDB (name → live profile)
           if (status !== 200) return { status, body: JSON.stringify(d) };
           uuid = d.uuid;
         }
         const r = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`, { headers: UA });
         if (r.status === 204 || r.status === 404) return { status: 404, body: JSON.stringify({ success: false, cause: 'Player not found' }) };
         if (r.status === 429) return { status: 429, body: JSON.stringify({ success: false, cause: 'Mojang session server is rate limited — try again in a minute' }) };
+        if (r.status === 403) return playerdbProfile(uuid);   // Mojang blocks Cloudflare's network → PlayerDB relays the same signed profile
         if (!r.ok) return { status: r.status, body: JSON.stringify({ success: false, cause: 'Session server failed (' + r.status + ')' }) };
         const d = await r.json(); let textures = null;
         try { const prop = (d.properties || []).find(p => p.name === 'textures'); if (prop) textures = JSON.parse(atob(prop.value)); } catch (e) {}

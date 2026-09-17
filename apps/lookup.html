@@ -256,9 +256,9 @@ const SERAPH_API_KEY = 'cac7921b-ef85-498f-81c6-7675300a3cd6';
 // The proxy. '/api' = tools/site-server.py serving the site and the proxy together (the dev server). On static hosting
 // (GitHub Pages, Cloudflare Pages, Netlify, or the site opened from a folder) there is no /api, so point this at your
 // deployed tools/proxy.worker.js, e.g. 'https://waish-proxy.<you>.workers.dev' — until then those hosts run without a proxy.
-const WORKER = '';   // your deployed tools/proxy.worker.js, e.g. 'https://waish-proxy.<you>.workers.dev' — fill in once it exists
+const WORKER = 'https://waish-proxy.danesh2242.workers.dev';   // tools/proxy.worker.js on Cloudflare (deploy: tools/deploy-worker.sh)
 const STATIC_HOST = location.protocol === 'file:' || /(^|\.)(waish\.ir|github\.io|pages\.dev|netlify\.app|vercel\.app)$/.test(location.hostname);
-const PROXY_DEFAULT = WORKER || (STATIC_HOST ? '' : '/api');
+const PROXY_DEFAULT = STATIC_HOST ? WORKER : (WORKER && !/^(localhost|127\.0\.0\.1|155\.117\.127\.81)$/.test(location.hostname) ? WORKER : '/api');
 const PROXY_URL = (new URLSearchParams(location.search).get('proxy') || PROXY_DEFAULT).replace(/\/$/, '');
 
 const FA = { 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Look up': 'جستجو', 'Guild Lookup': 'جستجوی گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.': 'یه گیلد هایپیکسل رو با اسمش جستجو کن، یا گیلد یه بازیکن رو پیدا کن: لول، XP، اعضا و فعالیت هفتگی‌شون، رنک‌ها و بازی‌های محبوب.', 'Load': 'بارگذاری', 'copy': 'کپی', 'copied': 'کپی شد', 'model': 'مدل', 'created': 'ساخته‌شده', 'past names': 'اسم‌های قبلی', 'Capes': 'شنل‌ها', 'checking…': 'در حال بررسی…', 'auto-rotate': 'چرخش خودکار', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'still': 'ثابت', 'elytra': 'الیترا',
