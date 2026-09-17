@@ -141,21 +141,12 @@
   .msg b { color: var(--accent-soft); } .msg.err { color: var(--accent-soft); }
   .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -3px; margin-right: 6px; }
   @keyframes sp { to { transform: rotate(360deg); } }
-  /* skin tab */
-  .skin-top { display: flex; gap: 18px; padding: 16px 14px; flex-wrap: wrap; align-items: flex-start; }
-  .skin-side { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 14px; }
-  .skin-side p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-  .skin-side .row { direction: ltr; }
-  .filebtn { position: relative; overflow: hidden; }
-  .filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .preview2d { display: flex; gap: 10px; align-items: center; }
-  .preview2d canvas { image-rendering: pixelated; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.03); }
   @media (max-width: 560px) { .viewer { width: 100%; } .viewer .stage { height: 340px; } }
 </style>
 </head>
 <body class="app">
 <div class="app-bar"><b>🔍 <span data-t="User Lookup">User Lookup</span></b><span class="sp"></span>
-  <div class="seg" id="tabs"><button class="on" data-tab="user" data-t="User Lookup">User Lookup</button><button data-tab="skin" data-t="Skin Lookup">Skin Lookup</button><button data-tab="guild" data-t="Guild Lookup">Guild Lookup</button></div></div>
+  <div class="seg" id="tabs"><button class="on" data-tab="user" data-t="User Lookup">User Lookup</button><button data-tab="guild" data-t="Guild Lookup">Guild Lookup</button></div></div>
 <div class="app-main">
 
   <!-- ================= USER LOOKUP ================= -->
@@ -199,32 +190,6 @@
     <div class="result gres" id="gResult"></div>
   </div>
 
-  <!-- ================= SKIN LOOKUP (your own skin file) ================= -->
-  <div class="panel" id="panel-skin">
-    <div class="skin-top">
-      <div class="viewer">
-        <div class="stage" id="stageS"><div class="drop" id="drop"><span data-t="Drop a skin PNG here, or use the buttons →">Drop a skin PNG here, or use the buttons →</span></div></div>
-        <div class="vctl">
-          <button class="abtn" id="sRot" data-t="auto-rotate">auto-rotate</button>
-          <div class="seg" id="sAnim"><button data-a="none" class="on" data-t="still">still</button><button data-a="idle" data-t="idle">idle</button><button data-a="walk" data-t="walk">walk</button><button data-a="run" data-t="run">run</button></div>
-          <button class="abtn" id="sReset" title="reset camera">⟲</button>
-        </div>
-        <div class="vhint" data-t="drag to rotate · scroll to zoom">drag to rotate · scroll to zoom</div>
-      </div>
-      <div class="skin-side">
-        <p data-t="Preview any skin in 3D: upload your own design, or pull a player's current skin. Switch between the classic (Steve) and slim (Alex) models.">Preview any skin in 3D: upload your own design, or pull a player's current skin. Switch between the classic (Steve) and slim (Alex) models.</p>
-        <div class="links">
-          <label class="abtn primary filebtn"><span data-t="Upload skin PNG">Upload skin PNG</span><input type="file" id="file" accept="image/png"></label>
-          <a class="abtn" id="dl" href="#" download="skin.png" hidden data-t="Download PNG">Download PNG</a>
-        </div>
-        <form class="search" id="sForm" style="padding:0;border:0"><input id="sQ" placeholder="…or a player's username / UUID" autocomplete="off" spellcheck="false" maxlength="36"><button class="abtn" type="submit" data-t="Load">Load</button></form>
-        <div class="row"><span class="k" data-t="model">model</span><div class="seg" id="sModel"><button data-m="auto-detect" class="on" data-t="auto">auto</button><button data-m="default" data-t="classic (Steve)">classic (Steve)</button><button data-m="slim" data-t="slim (Alex)">slim (Alex)</button></div></div>
-        <div class="row" id="sInfo"><span class="k" data-t="file">file</span><span class="v dim" id="sFile">—</span></div>
-        <div class="preview2d"><canvas id="p2f" width="16" height="32" style="width:64px;height:128px"></canvas><canvas id="p2b" width="16" height="32" style="width:64px;height:128px"></canvas><span class="vhint" data-t="front / back">front / back</span></div>
-        <div class="msg" id="sMsg" style="padding:0;text-align:left" hidden></div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script src="../js/vendor/skinview3d.bundle.js?v=20260916c"></script>
@@ -267,7 +232,7 @@ const FA = { 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستج�
   'Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they\'re blacklisted on Seraph or Urchin.': 'یه یوزرنیم ماینکرفت بنویس تا اسکین سه‌بعدی، شنل‌ها، رنک هایپیکسل و آمار بدوارز، UUID و وضعیت بلک‌لیست Seraph و Urchin رو ببینی.',
   'Drop a skin PNG here, or use the buttons →': 'یه فایل PNG اسکین اینجا بنداز، یا از دکمه‌ها استفاده کن ←', 'Preview any skin in 3D: upload your own design, or pull a player\'s current skin. Switch between the classic (Steve) and slim (Alex) models.': 'هر اسکینی رو سه‌بعدی ببین: طرح خودت رو آپلود کن یا اسکین فعلی یه بازیکن رو بگیر. بین مدل کلاسیک (Steve) و باریک (Alex) سوییچ کن.',
   'Player not found.': 'بازیکن پیدا نشد.', 'Lookup failed — try again in a moment.': 'جستجو ناموفق بود — یه لحظه دیگه دوباره تلاش کن.', 'looking up': 'در حال جستجو', 'no capes': 'شنلی نداره', 'updated': 'به‌روزشده', 'Hypixel stats are not connected yet. Set PROXY_DEFAULT at the top of apps/lookup.html to your proxy worker.': 'آمار هایپیکسل هنوز وصل نشده. آدرس پروکسی رو توی PROXY_DEFAULT بالای فایل apps/lookup.html بذار.', 'network level': 'لول شبکه', 'first login': 'اولین ورود', 'last login': 'آخرین ورود', 'No BedWars games played.': 'بدوارز بازی نکرده.', 'Never joined Hypixel.': 'هیچ‌وقت وارد هایپیکسل نشده.', 'Bordic has no stats for this player yet.': 'Bordic هنوز آماری از این بازیکن نداره.', 'Hypixel check failed.': 'بررسی هایپیکسل ناموفق بود.', 'Hypixel data is busy — try again in a minute.': 'دادهٔ هایپیکسل شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Blacklisted on Bordic': 'توی Bordic بلک‌لیست شده', 'Not blacklisted on Bordic': 'توی Bordic بلک‌لیست نیست', 'sniper score': 'امتیاز اسنایپر', 'signals': 'نشانه‌ها', 'Bordic check failed:': 'بررسی Bordic ناموفق بود:', 'No sniper or blacklist entry on Bordic for this player.': 'هیچ ورودی اسنایپر یا بلک‌لیستی توی Bordic برای این بازیکن نیست.',
-  'Bordic is an anti-sniper blacklist for Hypixel BedWars: this player has an entry there. Read the reason before judging — some entries are automatic cautions, not confirmed cheating.': 'Bordic یه بلک‌لیست ضد اسنایپر برای بدوارز هایپیکسله: این بازیکن اون‌جا یه ورودی داره. قبل از قضاوت دلیلش رو بخون — بعضی ورودی‌ها احتیاط خودکارن، نه چیت تأییدشده.', 'classic': 'کلاسیک (Steve)', 'slim': 'باریک (Alex)', 'default skin': 'اسکین پیش‌فرض', 'Download skin': 'دانلود اسکین',
+  'Bordic is an anti-sniper blacklist for Hypixel BedWars: this player has an entry there. Read the reason before judging — some entries are automatic cautions, not confirmed cheating.': 'Bordic یه بلک‌لیست ضد اسنایپر برای بدوارز هایپیکسله: این بازیکن اون‌جا یه ورودی داره. قبل از قضاوت دلیلش رو بخون — بعضی ورودی‌ها احتیاط خودکارن، نه چیت تأییدشده.', 'classic': 'کلاسیک (Steve)', 'slim': 'باریک (Alex)', 'default skin': 'اسکین پیش‌فرض', 'Edit skin': 'ویرایش اسکین', 'Download skin': 'دانلود اسکین',
   'Not blacklisted on Seraph': 'توی Seraph بلک‌لیست نیست', 'Blacklisted on Seraph': 'توی Seraph بلک‌لیست شده', 'Seraph safelisted': 'توی سیف‌لیست Seraph',
   'Save key': 'ذخیرهٔ کلید', 'Remove key': 'حذف کلید', 'Invalid or locked API key.': 'کلید API نامعتبر یا قفل‌شده.', 'Seraph check failed:': 'بررسی Seraph ناموفق بود:',
   'Not blacklisted on Urchin': 'توی Urchin بلک‌لیست نیست', 'Blacklisted on Urchin': 'توی Urchin بلک‌لیست شده', 'Urchin check failed:': 'بررسی Urchin ناموفق بود:', 'Urchin is busy — try again in a minute.': 'Urchin شلوغه — یه دقیقه دیگه دوباره تلاش کن.', 'Urchin is not responding (api.urchin.gg timed out).': 'Urchin جواب نمی‌ده (api.urchin.gg تایم‌اوت شد).', 'The Urchin API is down or very slow right now — the rest of the lookup is unaffected.': 'API آرچین الان پایینه یا خیلی کنده — بقیهٔ جستجو مشکلی نداره.', 'Urchin is not configured on this proxy (URCHIN_KEY missing).': 'Urchin روی این پروکسی تنظیم نشده (URCHIN_KEY نیست).', 'No proxy reachable, so the Urchin blacklist can\'t be checked from here.': 'پروکسی در دسترس نیست، پس بلک‌لیست Urchin از اینجا قابل بررسی نیست.', 'No active tags for this UUID — Urchin has nothing against this player.': 'تگ فعالی برای این UUID نیست — Urchin چیزی علیه این بازیکن نداره.', 'This player is tagged on the Urchin blacklist. Treat them as a confirmed threat in your lobbies.': 'این بازیکن توی بلک‌لیست Urchin تگ شده. توی لابی‌هات به‌عنوان یه تهدید تأییدشده در نظرش بگیر.', 'Urchin has this player tagged — the tags below are what its community reported.': 'Urchin این بازیکن رو تگ کرده — تگ‌های پایین چیزیه که کامیونیتی‌ش گزارش داده.', 'expires': 'انقضا', 'tag': 'تگ', 'tags': 'تگ‌ها', 'hidden reporter': 'گزارش‌دهندهٔ مخفی',
@@ -282,7 +247,7 @@ const esc = s => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;'
 const fmtN = n => (n == null ? '—' : Number(n).toLocaleString(lang === 'fa' ? 'fa-IR' : 'en-US'));
 
 /* ---------- tabs ---------- */
-$('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'skin') skinViewer().resize(); else if (tab === 'user' && VU) VU.resize(); });
+$('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'user' && VU) VU.resize(); });
 
 /* ---------- 3D viewer (skinview3d) ---------- */
 function makeViewer(stage, ctl) {
@@ -327,9 +292,8 @@ function makeViewer(stage, ctl) {
   return api;
 }
 function hasWebGL() { try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))); } catch (e) { return false; } }
-let VU = null, VS = null;
+let VU = null;
 const userViewer = () => VU || (VU = makeViewer($('#stageU'), { rot: $('#uRot'), anim: $('#uAnim'), reset: $('#uReset'), elytra: $('#uElytra') }));
-const skinViewer = () => VS || (VS = makeViewer($('#stageS'), { rot: $('#sRot'), anim: $('#sAnim'), reset: $('#sReset') }));
 
 /* ---------- profile: Mojang session server through the proxy (name → UUID → skin / cape / model).
    Without a proxy the browser can't reach sessionserver.mojang.com (no CORS), so PlayerDB stands in: it relays
@@ -406,7 +370,8 @@ function show(p) {
   // where the profile came from, so a stale skin is easy to trace (Ashcon = no worker reachable → cached, days old)
   const SRC = { mojang: 'Mojang · live', playerdb: 'PlayerDB', ashcon: 'Ashcon · cached' };
   $('#tags').innerHTML = `<span class="tag" title="profile source">${SRC[p.source] || p.source || ''}</span>`; $('#capes').innerHTML = `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`; $('#bl').innerHTML = ''; $('#ur').innerHTML = ''; $('#hyBody').innerHTML = ''; $('#guildLine').innerHTML = '';
-  $('#links').innerHTML = `<a href="https://namemc.com/profile/${p.uuid}" target="_blank" rel="noopener">NameMC ↗</a><a href="https://plancke.io/hypixel/player/stats/${p.username}" target="_blank" rel="noopener">Plancke ↗</a>` + (p.skinUrl ? `<a href="${p.skinUrl.replace(/^http:/, 'https:')}" target="_blank" rel="noopener" download>${t('Download skin')} ↓</a>` : '');
+  $('#links').innerHTML = `<a href="https://namemc.com/profile/${p.uuid}" target="_blank" rel="noopener">NameMC ↗</a><a href="https://plancke.io/hypixel/player/stats/${p.username}" target="_blank" rel="noopener">Plancke ↗</a>` + (p.skinUrl ? `<a href="${p.skinUrl.replace(/^http:/, 'https:')}" target="_blank" rel="noopener" download>${t('Download skin')} ↓</a>` : '') + `<a href="skin-editor.html?u=${encodeURIComponent(p.username)}" id="editSkin">🎨 ${t('Edit skin')}</a>`;
+  $('#editSkin').addEventListener('click', e => { try { if (parent !== window && parent.DESKTOP) { e.preventDefault(); parent.DESKTOP.open('skineditor', null, 'u=' + encodeURIComponent(p.username)); } } catch (err) {} });
   const V = userViewer();
   if (V.ok) { V.cape(null); V.load(skinSrc(p), p.slim ? 'slim' : 'default').catch(() => V.load(`https://mc-heads.net/skin/${p.undashed}`)); setTimeout(() => V.resize(), 50); }
   else V.fallback(`https://mc-heads.net/body/${p.undashed}/300`);
@@ -454,7 +419,7 @@ async function blacklist(p) {
     let d = null; try { d = await r.json(); } catch (e) {}
     if (r.status === 429) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">⏳ ${t('Seraph is busy — try again in a minute.')}</div>`; return; }
     if (!r.ok || !d || !d.success || !d.data) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${t('Seraph check failed:')} ${r.status}</div><p>${esc((d && d.cause) || '')}</p>`; return; }
-    const x = d.data, bl = x.blacklist || {}, sl = x.safelist || {}, bot = x.bot || {}, mem = x.member || {}, ann = x.annoylist || {}, nc = x.name_change || {}, st = x.statistics || {};
+    const x = d.data, bl = x.blacklist || {}, sl = x.safelist || {}, bot = x.bot || {}, mem = x.member || {}, ann = x.annoylist || {}, nc = x.name_change || {};
     const chips = [];
     if (bl.tagged) chips.push(`<span class="tag bad">⚠ ${t('Blacklisted on Seraph')}${bl.report_type ? ' · ' + esc(bl.report_type) : ''}</span>`);
     else chips.push(`<span class="tag ok">✔ ${t('Not blacklisted on Seraph')}</span>`);
@@ -481,7 +446,6 @@ async function blacklist(p) {
     if (mem.tagged) extra.push(row(t('member'), esc(mem.tooltip || t('Seraph member'))));
     if (nc.tagged) extra.push(row(t('name change'), esc(nc.tooltip || nc.reason || t('recent name change'))));
     if (ann.tagged) extra.push(row(t('annoy list'), esc(ann.tooltip || ann.reason || '')));
-    if (st.encounters) extra.push(row(t('encounters'), fmtN(st.encounters)));
     if (extra.length) box.insertAdjacentHTML('beforeend', extra.join(''));
     box.insertAdjacentHTML('beforeend', `<div class="row"><span class="k" style="min-width:0">${lang === 'fa' ? 'منبع' : 'source'}</span><a class="v dim" href="https://seraph.si" target="_blank" rel="noopener" style="color:var(--cyan)">seraph.si ↗</a></div>`);
   } catch (e) {
@@ -529,51 +493,6 @@ async function urchin(p) {
     fail(t(e.name === 'AbortError' ? 'Urchin is not responding (api.urchin.gg timed out).' : 'Urchin check failed:'), t(e.name === 'AbortError' ? 'The Urchin API is down or very slow right now — the rest of the lookup is unaffected.' : 'Lookup failed — try again in a moment.'));
   } finally { clearTimeout(timer); }
 }
-
-/* ---------- SKIN LOOKUP tab: your own skin file, model toggle, 2D preview, download ---------- */
-let sSrc = null, sModel = 'auto-detect';
-function sMessage(txt, err) { const m = $('#sMsg'); m.hidden = !txt; m.textContent = txt || ''; m.className = 'msg' + (err ? ' err' : ''); m.style.padding = '0'; m.style.textAlign = lang === 'fa' ? 'right' : 'left'; }
-function applySkin(src, label) {
-  const img = new Image(); img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    const ok = (img.width === img.height || img.width === img.height * 2) && img.width >= 64 && img.width % 64 === 0;
-    if (!ok) { sMessage(t('Not a valid skin (need a 64×64 or 64×32 PNG).'), true); return; }
-    sSrc = src; sMessage(''); $('#sFile').textContent = `${label} · ${img.width}×${img.height}`;
-    const V = skinViewer(); if (V.ok) { V.load(src, sModel).then(() => { const d = $('#drop'); if (d) d.remove(); }); setTimeout(V.resize, 50); } else V.fallback(src);
-    const dl = $('#dl'); dl.href = src; dl.hidden = false;
-    paint2D(img, sModel === 'slim' || (sModel === 'auto-detect' && detectSlim(img)));
-  };
-  img.onerror = () => sMessage(t('Not a valid skin (need a 64×64 or 64×32 PNG).'), true);
-  img.src = src;
-}
-function detectSlim(img) { // transparent pixel at (54,20) in a 64×64 skin means slim arms
-  if (img.height !== img.width) return false; const s = img.width / 64; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.drawImage(img, 0, 0, 64, 64);
-  try { return g.getImageData(54, 20, 1, 1).data[3] === 0; } catch (e) { return false; }
-}
-function paint2D(img, slim) {
-  const F = $('#p2f').getContext('2d'), Bk = $('#p2b').getContext('2d'); F.clearRect(0, 0, 16, 32); Bk.clearRect(0, 0, 16, 32);
-  const s = img.width / 64, legacy = img.height === img.width / 2, aw = slim ? 3 : 4;
-  const part = (g, sx, sy, w, h, dx, dy, mirror) => { g.save(); if (mirror) { g.translate(dx + w, dy); g.scale(-1, 1); g.drawImage(img, sx * s, sy * s, w * s, h * s, 0, 0, w, h); } else g.drawImage(img, sx * s, sy * s, w * s, h * s, dx, dy, w, h); g.restore(); };
-  part(F, 8, 8, 8, 8, 4, 0); part(F, 20, 20, 8, 12, 4, 8); part(F, 44, 20, aw, 12, 4 - aw, 8);
-  if (legacy) part(F, 44, 20, 4, 12, 12, 8, true); else part(F, 36, 52, aw, 12, 12, 8);
-  part(F, 4, 20, 4, 12, 4, 20); if (legacy) part(F, 4, 20, 4, 12, 8, 20, true); else part(F, 20, 52, 4, 12, 8, 20);
-  part(F, 40, 8, 8, 8, 4, 0); if (!legacy) { part(F, 20, 36, 8, 12, 4, 8); part(F, 44, 36, aw, 12, 4 - aw, 8); part(F, 52, 52, aw, 12, 12, 8); part(F, 4, 36, 4, 12, 4, 20); part(F, 4, 52, 4, 12, 8, 20); }
-  part(Bk, 24, 8, 8, 8, 4, 0); part(Bk, 32, 20, 8, 12, 4, 8); part(Bk, 44 + aw + 4, 20, aw, 12, 12, 8);
-  if (legacy) part(Bk, 52, 20, 4, 12, 0, 8, true); else part(Bk, 36 + aw + 4, 52, aw, 12, 4 - aw, 8);
-  part(Bk, 12, 20, 4, 12, 8, 20); if (legacy) part(Bk, 12, 20, 4, 12, 4, 20, true); else part(Bk, 28, 52, 4, 12, 4, 20);
-  part(Bk, 56, 8, 8, 8, 4, 0); if (!legacy) { part(Bk, 32, 36, 8, 12, 4, 8); part(Bk, 44 + aw + 4, 36, aw, 12, 12, 8); part(Bk, 52 + aw + 4, 52, aw, 12, 4 - aw, 8); part(Bk, 12, 36, 4, 12, 8, 20); part(Bk, 12, 52, 4, 12, 4, 20); }
-}
-$('#file').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => applySkin(rd.result, f.name); rd.readAsDataURL(f); });
-const stageS = $('#stageS');
-['dragenter', 'dragover'].forEach(ev => stageS.addEventListener(ev, e => { e.preventDefault(); stageS.classList.add('over'); }));
-['dragleave', 'drop'].forEach(ev => stageS.addEventListener(ev, e => { e.preventDefault(); stageS.classList.remove('over'); }));
-stageS.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (!f || !/png/i.test(f.type)) return; const rd = new FileReader(); rd.onload = () => applySkin(rd.result, f.name); rd.readAsDataURL(f); });
-$('#sForm').addEventListener('submit', async e => {
-  e.preventDefault(); const n = $('#sQ').value.trim(); if (!isQuery(n)) return;
-  sMessage(t('looking up') + ' ' + n + '…');
-  try { const p = await profile(n); applySkin(skinSrc(p), p.username); } catch (err) { sMessage(t(err.message === 'notfound' ? 'Player not found.' : 'Lookup failed — try again in a moment.'), true); }
-});
-$('#sModel').addEventListener('click', e => { const m = e.target.dataset.m; if (!m) return; sModel = m; document.querySelectorAll('#sModel button').forEach(b => b.classList.toggle('on', b === e.target)); if (sSrc) applySkin(sSrc, $('#sFile').textContent.split(' · ')[0]); });
 
 const initial = new URLSearchParams(location.search).get('u'); if (initial) { q.value = initial; lookup(initial); }
 addEventListener('load', () => { try { window.focus(); q.focus(); } catch (e) {} });

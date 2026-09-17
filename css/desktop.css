@@ -37,6 +37,7 @@
 .tile.calc { background: linear-gradient(135deg, #3a3f4c, #1a1d26); border: 1px solid var(--line); }
 .tile.calendar { background: linear-gradient(135deg, #b42323, #5a0f0f); border: 1px solid rgba(255,59,59,.35); }
 .tile.skin { background: linear-gradient(135deg, #0f6b6b, #072a2a); border: 1px solid rgba(46,230,255,.3); }
+.tile.skined { background: linear-gradient(135deg, #d9480f, #6b1d5c); border: 1px solid rgba(255,255,255,.14); }
 .icon .tile svg { width: 26px; height: 26px; fill: #fff; }
 .tile img.logo { width: 68%; height: 68%; object-fit: contain; border-radius: 22%; }
 .tile img.logo + .fb { display: none; }

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skin Editor</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="apple-touch-icon" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260916c">
+<link rel="stylesheet" href="../css/apps.css?v=20260916c">
+<style>
+  .app-bar { gap: 6px; }
+  .app-bar .abtn { padding: 6px 10px; font-size: 12px; }
+  .filebtn { position: relative; overflow: hidden; }
+  .filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .pform { display: flex; gap: 4px; }
+  .pform input { width: 150px; font-family: var(--mono); font-size: 12px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); outline: none; direction: ltr; }
+  .pform input:focus { border-color: rgba(255,59,59,.5); }
+  .app-main { align-items: stretch; justify-content: flex-start; padding: 0; overflow: auto; gap: 0; flex-wrap: wrap; }
+  /* three columns: tools · pixel editor · 3D preview */
+  .tools { flex: none; width: 168px; padding: 12px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; direction: ltr; }
+  body.fa .tools { border-right: 0; border-left: 1px solid var(--line); }
+  .tools h4 { font-family: var(--mono); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--term-dim); margin: 0 0 6px; }
+  body.fa .tools h4 { font-family: var(--fa); letter-spacing: 0; text-transform: none; }
+  .tgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+  .tb { font-family: var(--mono); font-size: 11.5px; padding: 8px 6px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: border-color .15s, background .15s, color .15s; }
+  body.fa .tb { font-family: var(--fa); }
+  .tb:hover { border-color: rgba(255,59,59,.45); color: var(--ink); }
+  .tb.on { background: rgba(255,59,59,.16); border-color: rgba(255,59,59,.6); color: var(--ink); }
+  .tb .ic { font-size: 14px; }
+  .sizes { display: flex; gap: 5px; }
+  .sizes .tb { flex: 1; padding: 6px 0; }
+  .colorrow { display: flex; align-items: center; gap: 8px; }
+  .colorrow input[type=color] { width: 44px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: transparent; cursor: pointer; }
+  .colorrow input[type=text] { flex: 1; min-width: 0; font-family: var(--mono); font-size: 12px; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); outline: none; direction: ltr; }
+  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .sw { aspect-ratio: 1; border-radius: 5px; border: 1px solid rgba(255,255,255,.12); cursor: pointer; padding: 0; background-clip: padding-box; }
+  .sw.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .sw.empty { background: repeating-conic-gradient(#3a3f4c 0 25%, #262a33 0 50%) 0 0 / 8px 8px; }
+  .chk { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); cursor: pointer; }
+  body.fa .chk { font-family: var(--fa); }
+  .chk input { accent-color: var(--accent); }
+  .info { font-family: var(--mono); font-size: 11px; color: var(--term-dim); min-height: 30px; line-height: 1.5; direction: ltr; }
+  .editor { flex: 1; min-width: 300px; min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px; background: radial-gradient(ellipse at 50% 20%, rgba(255,59,59,.06), transparent 60%); position: relative; }
+  .editor .wrap { position: relative; touch-action: none; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px -22px rgba(0,0,0,.9); max-width: 100%; }
+  .editor canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .editor #ov { position: absolute; inset: 0; pointer-events: none; }
+  .editor .hint { font-family: var(--mono); font-size: 10.5px; color: var(--term-dim); margin-top: 8px; text-align: center; line-height: 1.6; }
+  .editor.over .wrap { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,59,59,.25); }
+  .msg { font-family: var(--mono); font-size: 12px; color: var(--accent-soft); margin-top: 8px; min-height: 16px; text-align: center; }
+  .msg.ok { color: var(--muted); }
+  .viewer { flex: none; width: 300px; max-width: 100%; padding: 14px; border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+  body.fa .viewer { border-left: 0; border-right: 1px solid var(--line); }
+  .viewer .stage { position: relative; width: 100%; height: 380px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; cursor: grab; background: radial-gradient(ellipse at 50% 30%, rgba(255,59,59,.14), transparent 60%), linear-gradient(180deg, #12151c, #0b0d12); }
+  .viewer .stage:active { cursor: grabbing; } .viewer .stage:focus { outline: none; box-shadow: 0 0 0 2px rgba(255,59,59,.25); }
+  .viewer canvas { display: block; width: 100% !important; height: 100% !important; }
+  .viewer .fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: center; padding: 20px; }
+  .vctl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+  .vctl .abtn { padding: 5px 9px; font-size: 11px; }
+  .vhint { font-family: var(--mono); font-size: 10.5px; color: var(--term-dim); margin-top: 6px; text-align: center; }
+  @media (max-width: 860px) {
+    .tools { width: 100%; border-right: 0 !important; border-left: 0 !important; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+    .tools > div { flex: 1; min-width: 140px; }
+    .viewer { width: 100%; border-left: 0 !important; border-right: 0 !important; border-top: 1px solid var(--line); }
+    .viewer .stage { height: 320px; }
+    .editor { min-height: 0; flex: none; width: 100%; }
+    .app-main { align-content: flex-start; }
+  }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>🎨 <span data-t="Skin Editor">Skin Editor</span></b>
+  <label class="abtn filebtn"><span data-t="Upload PNG">Upload PNG</span><input type="file" id="file" accept="image/png"></label>
+  <form class="pform" id="pForm"><input id="pQ" placeholder="player name / UUID" autocomplete="off" spellcheck="false" maxlength="36"><button class="abtn" type="submit" data-t="Load">Load</button></form>
+  <button class="abtn" id="newBtn" data-t="New">New</button>
+  <span class="sp"></span>
+  <div class="seg" id="model"><button data-m="default" class="on" data-t="classic (Steve)">classic (Steve)</button><button data-m="slim" data-t="slim (Alex)">slim (Alex)</button></div>
+  <button class="abtn" id="undo" title="undo (Ctrl+Z)">↶</button><button class="abtn" id="redo" title="redo (Ctrl+Y)">↷</button>
+  <button class="abtn primary" id="dl" data-t="Download PNG">Download PNG</button>
+</div>
+<div class="app-main">
+  <div class="tools">
+    <div>
+      <h4 data-t="tool">tool</h4>
+      <div class="tgrid" id="tools">
+        <button class="tb on" data-tool="pencil" title="B"><span class="ic">✏️</span><span data-t="pencil">pencil</span></button>
+        <button class="tb" data-tool="eraser" title="E"><span class="ic">🧽</span><span data-t="eraser">eraser</span></button>
+        <button class="tb" data-tool="fill" title="G"><span class="ic">🪣</span><span data-t="fill">fill</span></button>
+        <button class="tb" data-tool="picker" title="I"><span class="ic">💉</span><span data-t="pick">pick</span></button>
+      </div>
+    </div>
+    <div>
+      <h4 data-t="size">size</h4>
+      <div class="sizes" id="sizes"><button class="tb on" data-size="1">1</button><button class="tb" data-size="2">2</button><button class="tb" data-size="3">3</button></div>
+    </div>
+    <div>
+      <h4 data-t="color">color</h4>
+      <div class="colorrow"><input type="color" id="color" value="#c47a4a"><input type="text" id="hex" value="#c47a4a" maxlength="7" spellcheck="false"></div>
+      <div class="swatches" id="palette" style="margin-top:8px"></div>
+      <h4 style="margin-top:10px" data-t="recent">recent</h4>
+      <div class="swatches" id="recent"></div>
+    </div>
+    <div>
+      <h4 data-t="view">view</h4>
+      <label class="chk"><input type="checkbox" id="grid" checked><span data-t="pixel grid">pixel grid</span></label>
+      <label class="chk"><input type="checkbox" id="labels" checked><span data-t="part outlines">part outlines</span></label>
+      <label class="chk"><input type="checkbox" id="overlay" checked><span data-t="show layer 2 in 3D">show layer 2 in 3D</span></label>
+      <div class="info" id="info" style="margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="editor" id="editor">
+    <div class="wrap" id="wrap"><canvas id="ed" width="512" height="512"></canvas><canvas id="ov" width="512" height="512"></canvas></div>
+    <div class="msg ok" id="msg"></div>
+    <div class="hint" data-t="click / drag to paint · right-click picks a color · drop a skin PNG anywhere · B E G I switch tools · Ctrl+Z undo">click / drag to paint · right-click picks a color · drop a skin PNG anywhere · B E G I switch tools · Ctrl+Z undo</div>
+  </div>
+  <div class="viewer">
+    <div class="stage" id="stage"></div>
+    <div class="vctl">
+      <button class="abtn" id="rot" data-t="auto-rotate">auto-rotate</button>
+      <div class="seg" id="anim"><button data-a="none" class="on" data-t="still">still</button><button data-a="idle" data-t="idle">idle</button><button data-a="walk" data-t="walk">walk</button><button data-a="run" data-t="run">run</button></div>
+      <button class="abtn" id="reset" title="reset camera">⟲</button>
+    </div>
+    <div class="vhint" data-t="drag to rotate · scroll to zoom">drag to rotate · scroll to zoom</div>
+  </div>
+</div>
+
+<script src="../js/vendor/skinview3d.bundle.js?v=20260916c"></script>
+<script>
+/* ============================================================
+   SKIN EDITOR — a pixel editor for Minecraft skins with a live 3D preview.
+   The skin lives in an off-screen 64×64 canvas (`skin`); the big canvas (#ed) is a zoomed view of it and
+   #ov draws the grid, part outlines and hover highlight on top. Every stroke re-feeds `skin` to skinview3d.
+   Loading a player's skin uses the same sources as User Lookup: the proxy (/mojang) → PlayerDB → Ashcon,
+   and the PNG itself comes from textures.minecraft.net (CORS-enabled) with mc-heads.net as the fallback.
+   ============================================================ */
+const WORKER = 'https://waish-proxy.danesh2242.workers.dev';
+const PROXY_URL = (location.protocol !== 'file:' && /^(localhost|127\.0\.0\.1|155\.117\.127\.81)$/.test(location.hostname)) ? '/api' : WORKER;
+
+const FA = { 'Skin Editor': 'ویرایشگر اسکین', 'Upload PNG': 'آپلود PNG', 'Load': 'بارگذاری', 'New': 'جدید', 'classic (Steve)': 'کلاسیک (Steve)', 'slim (Alex)': 'باریک (Alex)', 'Download PNG': 'دانلود PNG',
+  'tool': 'ابزار', 'pencil': 'مداد', 'eraser': 'پاک‌کن', 'fill': 'سطل رنگ', 'pick': 'قطره‌چکان', 'size': 'اندازه', 'color': 'رنگ', 'recent': 'اخیر', 'view': 'نمایش', 'pixel grid': 'شبکهٔ پیکسلی', 'part outlines': 'خط دور قسمت‌ها', 'show layer 2 in 3D': 'نمایش لایهٔ ۲ در سه‌بعدی',
+  'click / drag to paint · right-click picks a color · drop a skin PNG anywhere · B E G I switch tools · Ctrl+Z undo': 'کلیک / بکش تا رنگ کنی · راست‌کلیک رنگ رو برمی‌داره · یه PNG اسکین هرجا بنداز · B E G I ابزار رو عوض می‌کنه · Ctrl+Z برگشت',
+  'auto-rotate': 'چرخش خودکار', 'still': 'ثابت', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'drag to rotate · scroll to zoom': 'بکش تا بچرخه · اسکرول برای زوم',
+  'Not a valid skin (need a 64×64 or 64×32 PNG).': 'اسکین معتبر نیست (PNG با ابعاد ۶۴×۶۴ یا ۶۴×۳۲ لازمه).', 'Player not found.': 'بازیکن پیدا نشد.', 'Lookup failed — try again in a moment.': 'جستجو ناموفق بود — یه لحظه دیگه دوباره تلاش کن.', 'looking up': 'در حال جستجوی',
+  'loaded': 'بارگذاری شد', 'converted from the old 64×32 format': 'از فرمت قدیمی ۶۴×۳۲ تبدیل شد', 'blank skin': 'اسکین خالی', 'unsaved changes': 'تغییرات ذخیره‌نشده', 'skin': 'اسکین', 'default skin could not be loaded — starting blank': 'اسکین پیش‌فرض بارگذاری نشد — از خالی شروع می‌کنیم',
+  'Head': 'سر', 'Hat': 'کلاه', 'Body': 'بدن', 'Jacket': 'ژاکت', 'Right arm': 'دست راست', 'Right sleeve': 'آستین راست', 'Left arm': 'دست چپ', 'Left sleeve': 'آستین چپ', 'Right leg': 'پای راست', 'Right pants': 'شلوار راست', 'Left leg': 'پای چپ', 'Left pants': 'شلوار چپ', 'layer 2': 'لایهٔ ۲',
+  'top': 'بالا', 'bottom': 'پایین', 'front': 'جلو', 'back': 'پشت', 'left': 'چپ', 'right': 'راست', 'outside the skin': 'بیرون از اسکین', 'unused': 'استفاده‌نشده' };
+let lang = 'en'; try { lang = localStorage.getItem('waish-lang') === 'fa' ? 'fa' : 'en'; } catch (e) {}
+const t = s => lang === 'fa' && FA[s] ? FA[s] : s;
+if (lang === 'fa') { document.body.classList.add('fa'); document.documentElement.dir = 'rtl'; document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t)); }
+const $ = s => document.querySelector(s);
+
+/* ---------- the skin itself: a 64×64 canvas ---------- */
+const skin = document.createElement('canvas'); skin.width = skin.height = 64; const sg = skin.getContext('2d', { willReadFrequently: true });
+let model = 'default';              // 'default' (4 px arms) or 'slim' (3 px arms)
+let skinName = 'skin';
+let dirty = false;
+
+/* ---------- part layout of the 64×64 texture (each box is a 6-face net) ---------- */
+const PARTS = () => { const aw = model === 'slim' ? 3 : 4; return [
+  { id: 'head',  label: 'Head',  x: 0,  y: 0,  w: 8,  d: 8, h: 8 },  { id: 'hat',   label: 'Hat',   x: 32, y: 0,  w: 8,  d: 8, h: 8,  layer2: true },
+  { id: 'body',  label: 'Body',  x: 16, y: 16, w: 8,  d: 4, h: 12 }, { id: 'jacket', label: 'Jacket', x: 16, y: 32, w: 8, d: 4, h: 12, layer2: true },
+  { id: 'rarm',  label: 'Right arm', x: 40, y: 16, w: aw, d: 4, h: 12 }, { id: 'rarm2', label: 'Right sleeve', x: 40, y: 32, w: aw, d: 4, h: 12, layer2: true },
+  { id: 'larm',  label: 'Left arm',  x: 32, y: 48, w: aw, d: 4, h: 12 }, { id: 'larm2', label: 'Left sleeve',  x: 48, y: 48, w: aw, d: 4, h: 12, layer2: true },
+  { id: 'rleg',  label: 'Right leg', x: 0,  y: 16, w: 4,  d: 4, h: 12 }, { id: 'rleg2', label: 'Right pants',  x: 0,  y: 32, w: 4,  d: 4, h: 12, layer2: true },
+  { id: 'lleg',  label: 'Left leg',  x: 16, y: 48, w: 4,  d: 4, h: 12 }, { id: 'lleg2', label: 'Left pants',   x: 0,  y: 48, w: 4,  d: 4, h: 12, layer2: true },
+]; };
+// the six faces of a box net whose top-left corner is (x, y): [name, x, y, w, h]
+const faces = p => [['top', p.x + p.d, p.y, p.w, p.d], ['bottom', p.x + p.d + p.w, p.y, p.w, p.d], ['right', p.x, p.y + p.d, p.d, p.h], ['front', p.x + p.d, p.y + p.d, p.w, p.h], ['left', p.x + p.d + p.w, p.y + p.d, p.d, p.h], ['back', p.x + p.d + p.w + p.d, p.y + p.d, p.w, p.h]];
+function faceAt(px, py) { for (const p of PARTS()) for (const f of faces(p)) if (px >= f[1] && px < f[1] + f[3] && py >= f[2] && py < f[2] + f[4]) return { part: p, face: f }; return null; }
+
+/* ---------- the zoomed view ---------- */
+const ed = $('#ed'), ov = $('#ov'), eg = ed.getContext('2d'), og = ov.getContext('2d'), wrap = $('#wrap');
+let Z = 8, hover = null;
+function fit() {
+  // wide layout: fit both ways inside the middle column; stacked (phone) layout: the column grows with the canvas, so width only
+  const host = $('#editor'); const narrow = matchMedia('(max-width: 860px)').matches;
+  const avail = Math.max(192, narrow ? host.clientWidth - 30 : Math.min(host.clientWidth - 30, host.clientHeight - 70));
+  Z = Math.max(3, Math.min(12, Math.floor(avail / 64)));
+  ed.width = ov.width = ed.height = ov.height = 64 * Z; wrap.style.width = wrap.style.height = 64 * Z + 'px';
+  draw(); drawOverlay();
+}
+function draw() {
+  eg.imageSmoothingEnabled = false;
+  // checkerboard behind transparent pixels
+  eg.fillStyle = '#1b1e26'; eg.fillRect(0, 0, ed.width, ed.height); eg.fillStyle = '#242832';
+  for (let y = 0; y < 64; y++) for (let x = (y & 1); x < 64; x += 2) eg.fillRect(x * Z, y * Z, Z, Z);
+  // parts that are not part of the skin at all (the gaps of the net) go darker so the layout reads at a glance
+  eg.fillStyle = 'rgba(0,0,0,.35)'; eg.fillRect(0, 0, ed.width, ed.height);
+  eg.save(); eg.beginPath(); PARTS().forEach(p => faces(p).forEach(f => eg.rect(f[1] * Z, f[2] * Z, f[3] * Z, f[4] * Z))); eg.clip();
+  eg.fillStyle = '#1b1e26'; eg.fillRect(0, 0, ed.width, ed.height); eg.fillStyle = '#242832';
+  for (let y = 0; y < 64; y++) for (let x = (y & 1); x < 64; x += 2) eg.fillRect(x * Z, y * Z, Z, Z);
+  eg.restore();
+  eg.drawImage(skin, 0, 0, 64, 64, 0, 0, ed.width, ed.height);
+}
+function drawOverlay() {
+  og.clearRect(0, 0, ov.width, ov.height);
+  if ($('#grid').checked && Z >= 5) {
+    og.strokeStyle = 'rgba(255,255,255,.06)'; og.lineWidth = 1; og.beginPath();
+    for (let i = 0; i <= 64; i++) { og.moveTo(i * Z + .5, 0); og.lineTo(i * Z + .5, ov.height); og.moveTo(0, i * Z + .5); og.lineTo(ov.width, i * Z + .5); }
+    og.stroke();
+  }
+  if ($('#labels').checked) {
+    PARTS().forEach(p => {
+      og.strokeStyle = p.layer2 ? 'rgba(46,230,255,.35)' : 'rgba(255,59,59,.45)'; og.lineWidth = 1;
+      faces(p).forEach(f => og.strokeRect(f[1] * Z + .5, f[2] * Z + .5, f[3] * Z - 1, f[4] * Z - 1));
+      if (Z >= 6) { og.font = `${Math.max(9, Z + 1)}px ${lang === 'fa' ? 'Vazirmatn, sans-serif' : 'JetBrains Mono, monospace'}`; og.fillStyle = 'rgba(255,255,255,.55)'; og.textBaseline = 'top'; og.fillText(t(p.label), (p.x + p.d) * Z + 2, p.y * Z + 1); }
+    });
+  }
+  if (hover) {
+    const { x, y, w, h } = hover;
+    og.fillStyle = 'rgba(255,255,255,.08)'; og.fillRect(x * Z, y * Z, w * Z, h * Z);
+    og.strokeStyle = 'rgba(255,255,255,.7)'; og.lineWidth = 1; og.strokeRect(x * Z + .5, y * Z + .5, w * Z - 1, h * Z - 1);
+  }
+}
+
+/* ---------- 3D preview ---------- */
+let V = null, rig = null, renderTimer = null;
+function initViewer() {
+  const stage = $('#stage'); const canvas = document.createElement('canvas'); stage.appendChild(canvas);
+  try {
+    const c = document.createElement('canvas'); if (!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')))) throw new Error('no webgl');
+    V = new skinview3d.SkinViewer({ canvas, width: stage.clientWidth || 300, height: stage.clientHeight || 380 });
+    V.animation = null; V.autoRotate = false; V.zoom = .86; V.fov = 45;
+    if (V.renderer && V.renderer.setPixelRatio) V.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    V.controls.enablePan = false; V.controls.enableZoom = true; V.controls.rotateSpeed = .6;
+    rig = V.playerWrapper || V.playerObject; rig.rotation.y = 0;
+  } catch (e) { canvas.remove(); stage.innerHTML = `<div class="fallback">3D preview needs WebGL — the editor still works.</div>`; V = null; return; }
+  const live = () => !!V.animation || V.autoRotate;
+  const wake = () => { if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; } V.renderPaused = false; };
+  const sleep = ms => { if (live()) return; if (renderTimer) clearTimeout(renderTimer); renderTimer = setTimeout(() => { renderTimer = null; if (!live()) V.renderPaused = true; }, ms || 900); };
+  V.wake = wake; V.sleep = sleep;
+  $('#rot').addEventListener('click', () => { V.autoRotate = !V.autoRotate; $('#rot').classList.toggle('on', V.autoRotate); wake(); sleep(); });
+  $('#anim').addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return; $('#anim').querySelectorAll('button').forEach(b => b.classList.toggle('on', b === e.target)); V.animation = a === 'idle' ? new skinview3d.IdleAnimation() : a === 'walk' ? new skinview3d.WalkingAnimation() : a === 'run' ? new skinview3d.RunningAnimation() : null; wake(); sleep(); });
+  $('#reset').addEventListener('click', () => { wake(); V.zoom = .86; rig.rotation.y = 0; V.camera.position.set(0, 0, 60); V.camera.lookAt(0, 0, 0); sleep(); });
+  stage.addEventListener('pointerdown', () => { wake(); if (V.autoRotate) { V.autoRotate = false; $('#rot').classList.remove('on'); } });
+  addEventListener('pointerup', () => { if (V) sleep(); });
+  stage.addEventListener('wheel', () => { wake(); sleep(); }, { passive: true });
+  stage.tabIndex = 0;
+  stage.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') rig.rotation.y -= .25; else if (e.key === 'ArrowRight') rig.rotation.y += .25; else return; e.preventDefault(); wake(); sleep(); });
+  new ResizeObserver(() => { const w = stage.clientWidth, h = stage.clientHeight; if (w && h) { wake(); V.setSize(w, h); sleep(); } }).observe(stage);
+}
+let pushPending = false;
+function push3D() {   // feed the edited canvas to the viewer, at most once per frame
+  if (!V || pushPending) return; pushPending = true;
+  requestAnimationFrame(() => {
+    pushPending = false; V.wake();
+    try { const r = V.loadSkin(skin, { model }); Promise.resolve(r).catch(() => {}).then(() => V.sleep(1200)); } catch (e) { V.sleep(600); }
+    const show2 = $('#overlay').checked; const po = V.playerObject && V.playerObject.skin; if (po) ['head', 'body', 'rightArm', 'leftArm', 'rightLeg', 'leftLeg'].forEach(k => { if (po[k] && po[k].outerLayer) po[k].outerLayer.visible = show2; });
+  });
+}
+$('#overlay').addEventListener('change', push3D);
+
+/* ---------- pixel ops ---------- */
+let tool = 'pencil', size = 1, color = '#c47a4a';
+const hex = c => '#' + [c[0], c[1], c[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+function putPixel(x, y, c) { if (x < 0 || y < 0 || x > 63 || y > 63) return; if (c) { sg.fillStyle = c; sg.fillRect(x, y, 1, 1); } else sg.clearRect(x, y, 1, 1); }
+function stamp(x, y, c) { const o = Math.floor((size - 1) / 2); for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) putPixel(x - o + dx, y - o + dy, c); }
+function line(x0, y0, x1, y1, fn) { const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let err = dx + dy; for (;;) { fn(x0, y0); if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } } }
+function pixelAt(x, y) { const d = sg.getImageData(x, y, 1, 1).data; return d[3] === 0 ? null : hex(d); }
+function flood(x, y, c) {
+  // fills the same-coloured area, but never past the edge of the face that was clicked (so a fill on the front of the
+  // head can't leak onto its side through a matching colour)
+  const hit = faceAt(x, y); const b = hit ? { x: hit.face[1], y: hit.face[2], w: hit.face[3], h: hit.face[4] } : { x: 0, y: 0, w: 64, h: 64 };
+  const img = sg.getImageData(0, 0, 64, 64), d = img.data, tgt = [d[(y * 64 + x) * 4], d[(y * 64 + x) * 4 + 1], d[(y * 64 + x) * 4 + 2], d[(y * 64 + x) * 4 + 3]];
+  const nc = c ? [...rgb(c), 255] : [0, 0, 0, 0];
+  if (tgt.every((v, i) => v === nc[i])) return;
+  const same = i => d[i] === tgt[0] && d[i + 1] === tgt[1] && d[i + 2] === tgt[2] && d[i + 3] === tgt[3];
+  const stack = [[x, y]], seen = new Uint8Array(64 * 64);
+  while (stack.length) {
+    const [px, py] = stack.pop(); if (px < b.x || py < b.y || px >= b.x + b.w || py >= b.y + b.h) continue;
+    const k = py * 64 + px; if (seen[k] || !same(k * 4)) continue; seen[k] = 1;
+    d[k * 4] = nc[0]; d[k * 4 + 1] = nc[1]; d[k * 4 + 2] = nc[2]; d[k * 4 + 3] = nc[3];
+    stack.push([px + 1, py], [px - 1, py], [px, py + 1], [px, py - 1]);
+  }
+  sg.putImageData(img, 0, 0);
+}
+
+/* ---------- undo / redo ---------- */
+const undoStack = [], redoStack = [];
+function snapshot() { undoStack.push(sg.getImageData(0, 0, 64, 64)); if (undoStack.length > 120) undoStack.shift(); redoStack.length = 0; buttons(); }
+function undo() { if (!undoStack.length) return; redoStack.push(sg.getImageData(0, 0, 64, 64)); sg.putImageData(undoStack.pop(), 0, 0); changed(); buttons(); }
+function redo() { if (!redoStack.length) return; undoStack.push(sg.getImageData(0, 0, 64, 64)); sg.putImageData(redoStack.pop(), 0, 0); changed(); buttons(); }
+function buttons() { $('#undo').disabled = !undoStack.length; $('#redo').disabled = !redoStack.length; $('#undo').style.opacity = undoStack.length ? 1 : .4; $('#redo').style.opacity = redoStack.length ? 1 : .4; }
+function changed() { dirty = true; draw(); push3D(); }
+
+/* ---------- pointer handling on the big canvas ---------- */
+let painting = false, last = null;
+const pos = e => { const r = ed.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / r.width * 64), Math.floor((e.clientY - r.top) / r.height * 64)]; };
+function useColor(c) { color = c; $('#color').value = c; $('#hex').value = c; document.querySelectorAll('.sw').forEach(s => s.classList.toggle('on', s.dataset.c === c)); }
+function apply(x, y, which) {
+  if (which === 'picker') { const c = pixelAt(x, y); if (c) { useColor(c); remember(c); } return; }
+  if (which === 'fill') { flood(x, y, tool === 'eraser' ? null : color); return; }
+  stamp(x, y, which === 'eraser' ? null : color);
+}
+wrap.addEventListener('contextmenu', e => e.preventDefault());
+wrap.addEventListener('pointerdown', e => {
+  if (e.button !== 0 && e.button !== 2) return;
+  const [x, y] = pos(e); if (x < 0 || y < 0 || x > 63 || y > 63) return;
+  const which = e.button === 2 ? 'picker' : tool;
+  if (which === 'picker') { apply(x, y, 'picker'); return; }
+  wrap.setPointerCapture(e.pointerId); painting = true; last = [x, y];
+  snapshot(); apply(x, y, which); if (which === 'pencil' || which === 'eraser') remember(color); changed();
+});
+wrap.addEventListener('pointermove', e => {
+  const [x, y] = pos(e);
+  const hit = (x >= 0 && y >= 0 && x < 64 && y < 64) ? faceAt(x, y) : null;
+  const nh = hit ? { x: hit.face[1], y: hit.face[2], w: hit.face[3], h: hit.face[4] } : null;
+  if (JSON.stringify(nh) !== JSON.stringify(hover)) { hover = nh; drawOverlay(); }
+  $('#info').textContent = (x >= 0 && y >= 0 && x < 64 && y < 64) ? `${x}, ${y} · ${hit ? `${t(hit.part.label)}${hit.part.layer2 ? ` (${t('layer 2')})` : ''} · ${t(hit.face[0])}` : t('unused')}${pixelAt(x, y) ? ' · ' + pixelAt(x, y) : ''}` : '';
+  if (!painting || (tool !== 'pencil' && tool !== 'eraser')) return;
+  if (x === last[0] && y === last[1]) return;
+  line(last[0], last[1], x, y, (px, py) => stamp(px, py, tool === 'eraser' ? null : color)); last = [x, y]; changed();
+});
+const stop = () => { if (painting) { painting = false; last = null; } };
+wrap.addEventListener('pointerup', stop); wrap.addEventListener('pointercancel', stop);
+wrap.addEventListener('pointerleave', () => { hover = null; drawOverlay(); $('#info').textContent = ''; });
+
+/* ---------- tools, sizes, colours ---------- */
+function setTool(name) { tool = name; document.querySelectorAll('#tools .tb').forEach(b => b.classList.toggle('on', b.dataset.tool === name)); }
+$('#tools').addEventListener('click', e => { const b = e.target.closest('.tb'); if (b) setTool(b.dataset.tool); });
+$('#sizes').addEventListener('click', e => { const b = e.target.closest('.tb'); if (!b) return; size = +b.dataset.size; document.querySelectorAll('#sizes .tb').forEach(x => x.classList.toggle('on', x === b)); });
+$('#color').addEventListener('input', e => useColor(e.target.value));
+$('#hex').addEventListener('change', e => { const v = e.target.value.trim(); if (/^#[0-9a-f]{6}$/i.test(v)) useColor(v.toLowerCase()); else e.target.value = color; });
+const PALETTE = ['#f9dcc4', '#e0ac69', '#c68642', '#8d5524', '#5c3a1e', '#3b2414', '#000000', '#1c1c1c', '#4a4a4a', '#8a8a8a', '#c8c8c8', '#ffffff',
+  '#c0392b', '#ff3b3b', '#f39c12', '#f1c40f', '#27ae60', '#2ecc71', '#16a085', '#2ee6ff', '#2980b9', '#3b5bdb', '#8b5cf6', '#ff5ea8'];
+const swatch = (c, host) => { const b = document.createElement('button'); b.className = 'sw' + (c === color ? ' on' : ''); b.style.background = c; b.dataset.c = c; b.title = c; b.addEventListener('click', () => { useColor(c); setTool(tool === 'eraser' ? 'pencil' : tool); }); host.appendChild(b); };
+PALETTE.forEach(c => swatch(c, $('#palette')));
+let recent = []; try { recent = JSON.parse(localStorage.getItem('waish-skin-recent') || '[]').filter(c => /^#[0-9a-f]{6}$/.test(c)).slice(0, 12); } catch (e) {}
+function drawRecent() { const h = $('#recent'); h.innerHTML = ''; recent.forEach(c => swatch(c, h)); for (let i = recent.length; i < 6; i++) { const e = document.createElement('span'); e.className = 'sw empty'; h.appendChild(e); } }
+function remember(c) { if (recent[0] === c) return; recent = [c, ...recent.filter(x => x !== c)].slice(0, 12); try { localStorage.setItem('waish-skin-recent', JSON.stringify(recent)); } catch (e) {} drawRecent(); }
+drawRecent();
+$('#grid').addEventListener('change', drawOverlay); $('#labels').addEventListener('change', drawOverlay);
+$('#undo').addEventListener('click', undo); $('#redo').addEventListener('click', redo);
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  else if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); }
+  else if (k === 'b') setTool('pencil'); else if (k === 'e') setTool('eraser'); else if (k === 'g') setTool('fill'); else if (k === 'i') setTool('picker');
+  else if (k === 'h') { $('#grid').checked = !$('#grid').checked; drawOverlay(); }
+  else if (k === '[' || k === ']') { size = Math.max(1, Math.min(3, size + (k === ']' ? 1 : -1))); document.querySelectorAll('#sizes .tb').forEach(x => x.classList.toggle('on', +x.dataset.size === size)); }
+});
+
+/* ---------- model toggle ---------- */
+$('#model').addEventListener('click', e => { const m = e.target.dataset.m; if (!m) return; model = m; document.querySelectorAll('#model button').forEach(b => b.classList.toggle('on', b === e.target)); draw(); drawOverlay(); push3D(); });
+function setModel(m) { model = m; document.querySelectorAll('#model button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); }
+function detectSlim() { try { return sg.getImageData(54, 20, 1, 1).data[3] === 0 && sg.getImageData(46, 20, 1, 1).data[3] !== 0; } catch (e) { return false; } }
+
+/* ---------- loading: file, drop, player, url ---------- */
+function message(txt, err) { const m = $('#msg'); m.textContent = txt || ''; m.className = 'msg' + (err ? '' : ' ok'); }
+function loadImage(src, label) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(); if (!/^data:/.test(src)) img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const ok = (img.width === img.height || img.width === img.height * 2) && img.width >= 64 && img.width % 64 === 0;
+      if (!ok) { reject(new Error('invalid')); return; }
+      snapshot();
+      sg.clearRect(0, 0, 64, 64);
+      const legacy = img.height * 2 === img.width;
+      sg.imageSmoothingEnabled = false;
+      sg.drawImage(img, 0, 0, img.width, img.height, 0, 0, 64, legacy ? 32 : 64);   // HD skins are downsampled to 64 px
+      if (legacy) convertLegacy();
+      try { sg.getImageData(0, 0, 1, 1); } catch (e) { sg.clearRect(0, 0, 64, 64); reject(new Error('tainted')); return; }
+      skinName = (label || 'skin').replace(/\.png$/i, '') || 'skin'; dirty = false;
+      setModel(detectSlim() ? 'slim' : 'default');
+      draw(); drawOverlay(); push3D();
+      message(`${t('loaded')}: ${skinName} · ${img.width}×${img.height}${legacy ? ' · ' + t('converted from the old 64×32 format') : ''}`);
+      resolve();
+    };
+    img.onerror = () => reject(new Error('load'));
+    img.src = src;
+  });
+}
+// 64×32 skins have no left limbs or second layers below the body: mirror the right arm / leg into the left slots
+function convertLegacy() {
+  const copy = (src, dst) => { const sf = Object.fromEntries(faces(src).map(f => [f[0], f])), df = Object.fromEntries(faces(dst).map(f => [f[0], f]));
+    const pairs = [['top', 'top'], ['bottom', 'bottom'], ['front', 'front'], ['back', 'back'], ['right', 'left'], ['left', 'right']];
+    pairs.forEach(([a, b]) => { const s = sf[a], d = df[b]; sg.save(); sg.translate(d[1] + d[3], d[2]); sg.scale(-1, 1); sg.drawImage(skin, s[1], s[2], s[3], s[4], 0, 0, d[3], d[4]); sg.restore(); }); };
+  const P = Object.fromEntries(PARTS().map(p => [p.id, p]));
+  copy(P.rarm, P.larm); copy(P.rleg, P.lleg);
+}
+$('#file').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => loadImage(rd.result, f.name).catch(() => message(t('Not a valid skin (need a 64×64 or 64×32 PNG).'), true)); rd.readAsDataURL(f); e.target.value = ''; });
+const host = $('#editor');
+['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); host.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); host.classList.remove('over'); }));
+document.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (!f || !/png/i.test(f.type)) return; const rd = new FileReader(); rd.onload = () => loadImage(rd.result, f.name).catch(() => message(t('Not a valid skin (need a 64×64 or 64×32 PNG).'), true)); rd.readAsDataURL(f); });
+
+// a player's current skin: the proxy (Mojang) → PlayerDB → Ashcon, same chain as User Lookup
+const decodeTextures = props => { try { const pr = (props || []).find(x => x.name === 'textures'); return pr ? (JSON.parse(atob(pr.value)).textures || {}) : {}; } catch (e) { return {}; } };
+const isUUID = s => /^([0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(s);
+async function profile(name) {
+  const sources = [
+    async () => { const r = await fetch(`${PROXY_URL}/mojang?${isUUID(name) ? 'uuid=' + name.replace(/-/g, '').toLowerCase() : 'name=' + encodeURIComponent(name)}`); if (!/json/i.test(r.headers.get('content-type') || '')) throw new Error('http'); if (r.status === 404) throw new Error('notfound'); const d = await r.json(); if (!r.ok || !d.success || !d.id) throw new Error('http'); const tx = (d.textures && d.textures.textures) || {}; return { name: d.name, id: d.id.toLowerCase(), url: tx.SKIN && tx.SKIN.url }; },
+    async () => { const r = await fetch(`https://playerdb.co/api/player/minecraft/${encodeURIComponent(name)}`, { cache: 'no-store' }); if (r.status === 404 || r.status === 400) throw new Error('notfound'); const d = await r.json().catch(() => null); if (d && d.code === 'minecraft.invalid_username') throw new Error('notfound'); if (!r.ok || !d || !d.success || !d.data || !d.data.player) throw new Error(r.ok ? 'notfound' : 'http'); const pl = d.data.player, tx = decodeTextures(pl.properties); return { name: pl.username, id: pl.raw_id.toLowerCase(), url: (tx.SKIN && tx.SKIN.url) || pl.skin_texture }; },
+    async () => { const r = await fetch(`https://api.ashcon.app/mojang/v2/user/${encodeURIComponent(name)}`); if (r.status === 404 || r.status === 400) throw new Error('notfound'); if (!r.ok) throw new Error('http'); const d = await r.json(); const tx = d.textures || {}; return { name: d.username, id: d.uuid.replace(/-/g, ''), url: tx.skin && tx.skin.data ? 'data:image/png;base64,' + tx.skin.data : tx.skin && tx.skin.url }; },
+  ];
+  let last; for (const s of sources) { try { return await s(); } catch (e) { if (e.message === 'notfound') throw e; last = e; } } throw last;
+}
+async function loadPlayer(name) {
+  if (!/^[A-Za-z0-9_]{1,16}$/.test(name) && !isUUID(name)) return;
+  message(`${t('looking up')} ${name}…`);
+  try {
+    const p = await profile(name);
+    const urls = [p.url && p.url.replace(/^http:/, 'https:'), `https://mc-heads.net/skin/${p.id}`].filter(Boolean);
+    let ok = false; for (const u of urls) { try { await loadImage(u, p.name); ok = true; break; } catch (e) {} }
+    if (!ok) message(t('Lookup failed — try again in a moment.'), true);
+  } catch (e) { message(t(e.message === 'notfound' ? 'Player not found.' : 'Lookup failed — try again in a moment.'), true); }
+}
+$('#pForm').addEventListener('submit', e => { e.preventDefault(); loadPlayer($('#pQ').value.trim()); });
+$('#newBtn').addEventListener('click', () => { snapshot(); sg.clearRect(0, 0, 64, 64); skinName = 'skin'; dirty = false; draw(); push3D(); message(t('blank skin')); });
+
+/* ---------- download ---------- */
+$('#dl').addEventListener('click', () => {
+  skin.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${skinName}.png`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); dirty = false; }, 'image/png');
+});
+addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- start ---------- */
+initViewer(); fit(); buttons();
+new ResizeObserver(fit).observe($('#editor'));
+(async () => {
+  const u = new URLSearchParams(location.search).get('u');
+  if (u) { $('#pQ').value = u; await loadPlayer(u); if (!dirty && skinName !== 'skin') return; }
+  // the default Steve (Mojang's own texture; mc-heads' MHF_Steve is the slim-armed variant, so it is only the fallback)
+  for (const u of ['https://textures.minecraft.net/texture/31f477eb1a7beee631c2ca64d06f8f68fa93a3386d04452ab27f43acdf1b60cb', 'https://mc-heads.net/skin/MHF_Steve']) {
+    try { await loadImage(u, 'Steve'); undoStack.length = 0; buttons(); return; } catch (e) {}
+  }
+  message(t('default skin could not be loaded — starting blank'));
+})();
+</script>
+</body>
+</html>

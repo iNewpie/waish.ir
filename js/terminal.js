@@ -120,7 +120,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       if (!window.DESKTOP) { print(`Apps live on the computer — type <span class="out-blue">/computer</span>`, 'out-dim'); return; }
       const id = (arg || '').toLowerCase().replace(/[^a-z]/g, '');
       if (!id) { print(`Usage: <span class="out-yellow">/open &lt;app&gt;</span> — see <span class="out-blue">/apps</span>`, 'out-dim'); return; }
-      const alias = { youtube: 'social', socials: 'social', skin: 'userlookup', lookup: 'userlookup', skinlookup: 'userlookup', user: 'userlookup', hypixel: 'userlookup', calc: 'calculator', mc: 'minicraft', minecraft: 'minicraft', games: 'snake' }[id] || id;
+      const alias = { youtube: 'social', socials: 'social', skin: 'skineditor', skineditor: 'skineditor', editor: 'skineditor', paint: 'skineditor', lookup: 'userlookup', skinlookup: 'skineditor', user: 'userlookup', hypixel: 'userlookup', calc: 'calculator', mc: 'minicraft', minecraft: 'minicraft', games: 'snake' }[id] || id;
       if (window.DESKTOP.open(alias)) print(`<span class="out-green">✔</span> opened <span class="out-blue">${esc(alias)}</span>`);
       else print(`no app called <span class="out-red">${esc(id)}</span> — see <span class="out-blue">/apps</span>`);
     },

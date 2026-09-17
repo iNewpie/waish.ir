@@ -35,9 +35,10 @@ window.DESKTOP = (function () {
     minicraft:  { title: 'Mini Minecraft', tile: 'minicraft', icon: '⛏️', kind: 'page', src: 'apps/minicraft.html?v=20260916b', w: .72, h: .8 },
     calculator: { title: 'Calculator', tile: 'calc', icon: '🧮', kind: 'page', src: 'apps/calculator.html?v=20260916b', w: .26, h: .74, minW: 340 },
     calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
-    userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260917g', w: .58, h: .88, minW: 520 },
+    userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260917h', w: .58, h: .88, minW: 520 },
+    skineditor: { title: 'Skin Editor', tile: 'skined', icon: '🎨', kind: 'page', src: 'apps/skin-editor.html?v=20260917a', w: .72, h: .88, minW: 560 },
   };
-  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'social', 'aboutme', 'music', 'snake', 'tetris', 'minicraft', 'calculator', 'calendar', 'userlookup']; // desktop icons, top-left down
+  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'social', 'aboutme', 'music', 'snake', 'tetris', 'minicraft', 'calculator', 'calendar', 'userlookup', 'skineditor']; // desktop icons, top-left down
   const PINNED = ['thispc'];                                                                             // taskbar
   // every launchable app, for the start menu and the terminal's /apps (folder contents included, no duplicates)
   const ALL = [...new Set(ORDER.flatMap(id => APPS[id].kind === 'folder' ? [id, ...APPS[id].items] : [id]).concat(PINNED))];
@@ -58,6 +59,7 @@ window.DESKTOP = (function () {
       { type: 'run', name: 'Calculator', icon: '🧮', app: 'calculator' },
       { type: 'run', name: 'Calendar', icon: '📅', sub: 'Persian · Gregorian', app: 'calendar' },
       { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Hypixel · Seraph · Urchin', app: 'userlookup' },
+      { type: 'run', name: 'Skin Editor', icon: '🎨', sub: 'paint & preview skins', app: 'skineditor' },
       { type: 'run', name: 'Music', icon: '🎵', sub: 'mp3 player', app: 'music' },
       { type: 'app', name: 'Cinema 4D', icon: '🎬', sub: '3D · ~6 years' },
       { type: 'app', name: 'Blender', icon: '🧊', sub: '3D' },
@@ -229,11 +231,12 @@ window.DESKTOP = (function () {
   }
 
   /* ---------- windows ---------- */
-  const ALIAS = { youtube: 'social', aparat: 'social', folder: 'projectsFolder', recycle: 'bin', trash: 'bin' };   // old / alternative ids used in links and terminal commands
-  function open(id, from) {
+  const ALIAS = { youtube: 'social', aparat: 'social', folder: 'projectsFolder', recycle: 'bin', trash: 'bin', skin: 'skineditor', skinlookup: 'skineditor' };   // old / alternative ids used in links and terminal commands
+  function open(id, from, query) {   // query: extra URL params for a page app, e.g. 'u=Notch' opens the Skin Editor on that player
     id = ALIAS[id] || id;
     const a = APPS[id]; if (!a) return false;
-    if (wins[id]) { restore(id, from); return true; }
+    const src = a.kind === 'page' && query ? a.src + (a.src.includes('?') ? '&' : '?') + query : a.src;
+    if (wins[id]) { restore(id, from); if (query && a.kind === 'page') { const f = wins[id].querySelector('iframe'); if (f) f.src = src; } return true; }
     const w = document.createElement('div'); w.className = 'win ' + (a.kind === 'terminal' ? 'terminal' : ''); w.dataset.app = id;
     w.innerHTML = `<div class="win-chrome">
         <span class="dot r" title="close"></span><span class="dot y" title="minimize"></span><span class="dot g" title="maximize"></span>
@@ -241,7 +244,7 @@ window.DESKTOP = (function () {
       </div><div class="win-body"></div>`;
     const body = w.querySelector('.win-body');
     if (a.kind === 'terminal') body.appendChild($('#terminalTemplate').content.cloneNode(true));
-    else if (a.kind === 'page') body.innerHTML = `<iframe src="${a.src}" title="${a.title}" loading="lazy"></iframe>`;
+    else if (a.kind === 'page') body.innerHTML = `<iframe src="${src}" title="${a.title}" loading="lazy"></iframe>`;
     else if (a.kind === 'explorer') explorer(body);
     else if (a.kind === 'folder') folderView(body, a);
     else if (a.kind === 'bin') binView(body);
