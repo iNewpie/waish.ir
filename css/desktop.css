@@ -7,6 +7,23 @@
 
 /* ---------- icons ---------- */
 /* the icon layer covers the desktop; desktop.js places every icon on a 98×102 grid and lets you drag it around */
+/* the wallpaper text: "waish" in the middle of the desktop, faint, with a flicker like a tired neon sign */
+.wallmark { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -54%); z-index: 1; pointer-events: none; user-select: none;
+  font-family: var(--mono); font-weight: 700; font-size: clamp(90px, 16vw, 230px); letter-spacing: -.06em; line-height: 1; color: var(--ink); opacity: .07;
+  text-shadow: 0 0 22px rgba(255,59,59,.55), 0 0 60px rgba(255,59,59,.3); animation: wallFlicker 9s linear infinite; }
+.wallmark::after { content: '.ir'; font-size: .32em; font-weight: 500; letter-spacing: 0; color: var(--accent-soft); vertical-align: .1em; margin-left: .06em; }
+@keyframes wallFlicker {   /* mostly steady, with a couple of quick dips and one short-lived brighter moment */
+  0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: .07; }
+  19%, 24% { opacity: .025; }
+  20% { opacity: .06; }
+  54%, 56% { opacity: .03; }
+  55% { opacity: .11; }
+  55.5% { opacity: .02; }
+  78% { opacity: .07; }
+  79% { opacity: .045; }
+  80% { opacity: .07; }
+}
+@media (prefers-reduced-motion: reduce) { .wallmark { animation: none; } }
 .icons { position: absolute; top: 12px; left: 12px; right: 12px; bottom: 44px; z-index: 2; pointer-events: none; }
 /* desktop icons and the taskbar are drawn at ~65 % of their original size */
 .icon { position: absolute; width: 62px; height: 64px; padding: 7px 3px 5px; border-radius: 9px; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: auto; touch-action: none;
@@ -209,6 +226,7 @@ html.fa .ctx button { text-align: right; font-family: var(--fa); }
 /* ---------- mobile: a phone home screen (big clock, app grid, dock), full-screen windows ---------- */
 .m-head { display: none; }
 @media (max-width: 760px) {
+  .wallmark { display: none; }   /* the phone home screen has the big clock instead */
   .m-head { display: block; position: absolute; top: calc(18px + env(safe-area-inset-top)); left: 0; right: 0; z-index: 2; text-align: center; pointer-events: none; }
   .m-head .m-time { font-family: var(--mono); font-size: 54px; font-weight: 600; letter-spacing: -2px; line-height: 1; color: var(--ink); text-shadow: 0 6px 30px rgba(255,59,59,.25); }
   .m-head .m-date { margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
