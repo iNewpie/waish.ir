@@ -21,8 +21,8 @@
   .tools { flex: none; width: 196px; padding: 12px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden; direction: ltr; }
   .tools > div { min-width: 0; }
   body.fa .tools { border-right: 0; border-left: 1px solid var(--line); }
-  .tools h4 { font-family: var(--mono); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--term-dim); margin: 0 0 6px; }
-  body.fa .tools h4 { font-family: var(--fa); letter-spacing: 0; text-transform: none; }
+  .tools h4, .viewer h4 { font-family: var(--mono); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--term-dim); margin: 0 0 6px; }
+  body.fa .tools h4, body.fa .viewer h4 { font-family: var(--fa); letter-spacing: 0; text-transform: none; }
   .tgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
   .tb { min-width: 0; font-family: var(--mono); font-size: 11px; padding: 8px 4px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: border-color .15s, background .15s, color .15s; }
   body.fa .tb { font-family: var(--fa); }
@@ -64,6 +64,12 @@
   .vctl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
   .vctl .abtn { padding: 5px 9px; font-size: 11px; }
   .vhint { font-family: var(--mono); font-size: 10.5px; color: var(--term-dim); margin-top: 6px; text-align: center; }
+  /* which body parts the 3D model shows (hide the arms to see the body's sides, and so on) */
+  .parts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 8px; }
+  .parts .tb { padding: 6px 4px; }
+  .parts .pair { grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .parts .tb.off { opacity: .55; text-decoration: line-through; }
+  .parts .tb.off:hover { opacity: .8; }
   @media (max-width: 860px) {
     .tools { width: 100%; border-right: 0 !important; border-left: 0 !important; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
     .tools > div { flex: 1; min-width: 140px; }
@@ -127,6 +133,12 @@
       <button class="abtn" id="reset" title="reset camera">⟲</button>
     </div>
     <div class="vhint" data-t="drag to rotate · scroll to zoom">drag to rotate · scroll to zoom</div>
+    <h4 class="ph" style="margin-top:12px" data-t="visible parts">visible parts</h4>
+    <div class="parts" id="parts">
+      <button class="tb on" data-p="head" data-t="head">head</button><button class="tb on" data-p="body" data-t="body">body</button><button class="tb on" data-p="rightArm" data-t="right arm">right arm</button>
+      <button class="tb on" data-p="leftArm" data-t="left arm">left arm</button><button class="tb on" data-p="rightLeg" data-t="right leg">right leg</button><button class="tb on" data-p="leftLeg" data-t="left leg">left leg</button>
+      <div class="pair"><button class="tb" data-p="all" data-t="show all">show all</button><button class="tb" data-p="none" data-t="hide all">hide all</button></div>
+    </div>
   </div>
 </div>
 
@@ -145,6 +157,7 @@ const PROXY_URL = (location.protocol !== 'file:' && /^(localhost|127\.0\.0\.1|15
 const FA = { 'Skin Editor': 'ویرایشگر اسکین', 'Upload PNG': 'آپلود PNG', 'Load': 'بارگذاری', 'New': 'جدید', 'classic (Steve)': 'کلاسیک (Steve)', 'slim (Alex)': 'باریک (Alex)', 'Download PNG': 'دانلود PNG',
   'copy': 'کپی', 'copied': 'کپی شد', 'picked': 'برداشته شد', 'tool': 'ابزار', 'pencil': 'مداد', 'eraser': 'پاک‌کن', 'fill': 'سطل رنگ', 'pick': 'قطره‌چکان', 'size': 'اندازه', 'color': 'رنگ', 'recent': 'اخیر', 'view': 'نمایش', 'pixel grid': 'شبکهٔ پیکسلی', 'part outlines': 'خط دور قسمت‌ها', 'show layer 2 in 3D': 'نمایش لایهٔ ۲ در سه‌بعدی',
   'click / drag to paint · right-click picks a color · drop a skin PNG anywhere · B E G I switch tools · Ctrl+Z undo': 'کلیک / بکش تا رنگ کنی · راست‌کلیک رنگ رو برمی‌داره · یه PNG اسکین هرجا بنداز · B E G I ابزار رو عوض می‌کنه · Ctrl+Z برگشت',
+  'visible parts': 'قسمت‌های قابل‌مشاهده', 'head': 'سر', 'body': 'بدن', 'show all': 'نمایش همه', 'hide all': 'پنهان کردن همه', 'right arm': 'دست راست', 'left arm': 'دست چپ', 'right leg': 'پای راست', 'left leg': 'پای چپ',
   'auto-rotate': 'چرخش خودکار', 'still': 'ثابت', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'drag to rotate · scroll to zoom': 'بکش تا بچرخه · اسکرول برای زوم',
   'Not a valid skin (need a 64×64 or 64×32 PNG).': 'اسکین معتبر نیست (PNG با ابعاد ۶۴×۶۴ یا ۶۴×۳۲ لازمه).', 'Player not found.': 'بازیکن پیدا نشد.', 'Lookup failed — try again in a moment.': 'جستجو ناموفق بود — یه لحظه دیگه دوباره تلاش کن.', 'looking up': 'در حال جستجوی',
   'loaded': 'بارگذاری شد', 'converted from the old 64×32 format': 'از فرمت قدیمی ۶۴×۳۲ تبدیل شد', 'blank skin': 'اسکین خالی', 'unsaved changes': 'تغییرات ذخیره‌نشده', 'skin': 'اسکین', 'default skin could not be loaded — starting blank': 'اسکین پیش‌فرض بارگذاری نشد — از خالی شروع می‌کنیم',
@@ -251,10 +264,28 @@ function push3D() {   // feed the edited canvas to the viewer, at most once per 
   requestAnimationFrame(() => {
     pushPending = false; V.wake();
     try { const r = V.loadSkin(skin, { model }); Promise.resolve(r).catch(() => {}).then(() => V.sleep(1200)); } catch (e) { V.sleep(600); }
-    const show2 = $('#overlay').checked; const po = V.playerObject && V.playerObject.skin; if (po) ['head', 'body', 'rightArm', 'leftArm', 'rightLeg', 'leftLeg'].forEach(k => { if (po[k] && po[k].outerLayer) po[k].outerLayer.visible = show2; });
+    applyParts();
   });
 }
 $('#overlay').addEventListener('change', push3D);
+
+/* ---------- which parts the 3D model shows ----------
+   hiding a part (both its layers) makes the ones behind it easy to see while painting; layer 2 stays a global toggle */
+const BODY_PARTS = ['head', 'body', 'rightArm', 'leftArm', 'rightLeg', 'leftLeg'];
+const hiddenParts = new Set();
+function applyParts() {
+  const po = V && V.playerObject && V.playerObject.skin; if (!po) return;
+  const show2 = $('#overlay').checked;
+  BODY_PARTS.forEach(k => { const part = po[k]; if (!part) return; part.visible = !hiddenParts.has(k); if (part.outerLayer) part.outerLayer.visible = show2; });
+  $('#parts').querySelectorAll('.tb[data-p]').forEach(b => { if (!BODY_PARTS.includes(b.dataset.p)) return; const on = !hiddenParts.has(b.dataset.p); b.classList.toggle('on', on); b.classList.toggle('off', !on); });
+}
+$('#parts').addEventListener('click', e => {
+  const b = e.target.closest('.tb'); if (!b) return; const k = b.dataset.p;
+  if (k === 'all') hiddenParts.clear();
+  else if (k === 'none') BODY_PARTS.forEach(p => hiddenParts.add(p));   // then turn on just the part you want to work on
+  else hiddenParts.has(k) ? hiddenParts.delete(k) : hiddenParts.add(k);
+  applyParts(); if (V) { V.wake(); V.sleep(); }
+});
 
 /* ---------- pixel ops ---------- */
 let tool = 'pencil', size = 1, color = '#c47a4a';

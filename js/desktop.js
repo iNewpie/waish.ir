@@ -15,8 +15,9 @@ window.DESKTOP = (function () {
   const APPS = {
     terminal:   { title: 'Terminal', tile: 'term', icon: '➜', kind: 'terminal', w: .66, h: .72 },
     projects:   { title: 'All projects', tile: 'projects', icon: ICONS.grid, kind: 'page', src: 'projects.html?embed=1', w: .78, h: .82 },
-    // desktop folder holding the project icons (open it → pick one)
+    // desktop folders: open one → pick an app inside
     projectsFolder: { title: 'Projects', tile: 'folder', icon: '📁', kind: 'folder', items: ['lunamc', 'clutchping', 'nairo', 'projects'], w: .46, h: .46, minW: 420 },
+    gamesFolder: { title: 'Games', tile: 'folder', icon: '📁', kind: 'folder', items: ['snake', 'tetris', 'minicraft'], w: .46, h: .46, minW: 420 },
     social:     { title: 'Social', tile: 'youtube', icon: ICONS.share, kind: 'card', sub: 'youtube · aparat · instagram · telegram · discord', w: .46, h: .52,
                   text: 'The Waish YouTube channel — Minecraft, mostly BedWars. Gameplay, PvP mechanics, ping & optimization, clients, and the occasional server-building video. Proper editing, thumbnails and structure. Persian streams and videos live on Aparat.',
                   links: [['Open YouTube ↗', 'https://www.youtube.com/@WaishChannel'], ['Aparat ↗', 'https://aparat.com/waish'], ['Instagram ↗', 'https://instagram.com/asunawaish'], ['Telegram ↗', 'https://t.me/wishingcommunity'], ['Discord ↗', 'https://discord.gg/8HVsMqucZ2']], meta: 'youtube.com/@WaishChannel · 100+ videos' },
@@ -36,9 +37,9 @@ window.DESKTOP = (function () {
     calculator: { title: 'Calculator', tile: 'calc', icon: '🧮', kind: 'page', src: 'apps/calculator.html?v=20260916b', w: .26, h: .74, minW: 340 },
     calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
     userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260917i', w: .58, h: .88, minW: 520 },
-    skineditor: { title: 'Skin Editor', tile: 'skined', icon: '🎨', kind: 'page', src: 'apps/skin-editor.html?v=20260917c', w: .72, h: .88, minW: 560 },
+    skineditor: { title: 'Skin Editor', tile: 'skined', icon: '🎨', kind: 'page', src: 'apps/skin-editor.html?v=20260917d', w: .72, h: .88, minW: 560 },
   };
-  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'social', 'aboutme', 'music', 'snake', 'tetris', 'minicraft', 'calculator', 'calendar', 'userlookup', 'skineditor']; // desktop icons, top-left down
+  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'gamesFolder', 'social', 'aboutme', 'music', 'calculator', 'calendar', 'userlookup', 'skineditor']; // desktop icons, top-left down
   const PINNED = ['thispc'];                                                                             // taskbar
   // every launchable app, for the start menu and the terminal's /apps (folder contents included, no duplicates)
   const ALL = [...new Set(ORDER.flatMap(id => APPS[id].kind === 'folder' ? [id, ...APPS[id].items] : [id]).concat(PINNED))];
@@ -231,7 +232,7 @@ window.DESKTOP = (function () {
   }
 
   /* ---------- windows ---------- */
-  const ALIAS = { youtube: 'social', aparat: 'social', folder: 'projectsFolder', recycle: 'bin', trash: 'bin', skin: 'skineditor', skinlookup: 'skineditor' };   // old / alternative ids used in links and terminal commands
+  const ALIAS = { youtube: 'social', aparat: 'social', folder: 'projectsFolder', games: 'gamesFolder', recycle: 'bin', trash: 'bin', skin: 'skineditor', skinlookup: 'skineditor' };   // old / alternative ids used in links and terminal commands
   function open(id, from, query) {   // query: extra URL params for a page app, e.g. 'u=Notch' opens the Skin Editor on that player
     id = ALIAS[id] || id;
     const a = APPS[id]; if (!a) return false;
@@ -292,7 +293,7 @@ window.DESKTOP = (function () {
   function restore(id, from) {
     const w = wins[id]; if (!w) return;
     const wasMin = w.classList.contains('min');
-    w.classList.remove('min');
+    w.classList.remove('min'); if (wasMin) fitIn(w);
     if (wasMin) animIn(w, from || taskBtn(id));   // before focus(): renderTasks() rebuilds the taskbar buttons
     focus(id);
   }
@@ -320,7 +321,16 @@ window.DESKTOP = (function () {
       w.classList.remove('max'); geo(w, w._rest || { left: 40, top: 30, width: 640, height: 440 });
     }
   }
-  addEventListener('resize', () => Object.values(wins).forEach(w => { if (w.classList.contains('max') && !isMobile()) geo(w, fullGeo(), false); }));
+  // the browser got smaller (or was un-maximized): fullscreen windows follow the desktop, the others are shrunk / pulled
+  // back so nothing ends up off-screen with its title bar out of reach. Minimized windows are fitted when they come back.
+  function fitIn(w) {
+    if (isMobile() || w.classList.contains('max') || w.classList.contains('min')) return;
+    const R = layer.getBoundingClientRect(); if (!R.width || !R.height) return;
+    const W = Math.min(parseFloat(w.style.width) || w.offsetWidth, R.width - 20), H = Math.min(parseFloat(w.style.height) || w.offsetHeight, R.height - 20);
+    const x = Math.max(0, Math.min(parseFloat(w.style.left) || 0, R.width - W - 10)), y = Math.max(0, Math.min(parseFloat(w.style.top) || 0, R.height - H - 10));
+    Object.assign(w.style, { width: W + 'px', height: H + 'px', left: x + 'px', top: y + 'px' });
+  }
+  addEventListener('resize', () => Object.values(wins).forEach(w => { if (w.classList.contains('max') && !isMobile()) geo(w, fullGeo(), false); else fitIn(w); }));
 
   /* ---------- dragging ----------
      drag a window to the top edge → it goes fullscreen; drag a fullscreen window down → it drops back to its old size. */
