@@ -173,7 +173,8 @@ html.fa .clock .tz { margin-left: 0; margin-right: 5px; font-family: var(--fa); 
 html.fa .clock small { font-family: var(--fa); }
 
 /* start menu */
-.start-menu { position: absolute; left: 7px; bottom: 38px; z-index: 6; width: 260px; background: rgba(15,17,22,.96); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.9); animation: winIn .18s cubic-bezier(.22,.61,.36,1) both; }
+/* two columns so ~20 apps fit on a laptop screen; scrolls instead of growing past the top when it still doesn't fit */
+.start-menu { position: absolute; left: 7px; bottom: 38px; z-index: 6; width: 400px; max-width: calc(100% - 14px); max-height: calc(100% - 46px); overflow-y: auto; background: rgba(15,17,22,.96); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.9); animation: winIn .18s cubic-bezier(.22,.61,.36,1) both; }
 .start-menu[hidden] { display: none; }
 .start-menu .sm-head { font-family: var(--mono); font-size: 11px; color: var(--term-dim); padding: 6px 10px 8px; letter-spacing: .5px; text-transform: uppercase; }
 .start-menu a, .start-menu button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 10px; border-radius: 9px; font-family: var(--sans); font-size: 14px; color: var(--ink); background: transparent; border: 0; cursor: pointer; transition: background .15s; }
@@ -181,6 +182,7 @@ html.fa .clock small { font-family: var(--fa); }
 .start-menu .sm-ico { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex: none; }
 .start-menu .sm-ico img { width: 17px; height: 17px; object-fit: contain; }
 .start-menu .sm-ico svg { width: 13px; height: 13px; fill: #fff; }
+.start-menu .sm-apps, .start-menu .sm-site { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
 .start-menu hr { border: 0; border-top: 1px solid var(--line); margin: 8px 4px; }
 
 /* right-click menu on desktop icons */
