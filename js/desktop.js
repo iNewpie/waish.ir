@@ -37,7 +37,7 @@ window.DESKTOP = (function () {
     calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
     userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260917d', w: .58, h: .88, minW: 520 },
   };
-  const ORDER = ['thispc', 'terminal', 'projectsFolder', 'social', 'aboutme', 'music', 'snake', 'tetris', 'minicraft', 'calculator', 'calendar', 'userlookup', 'bin']; // desktop icons, top-left down
+  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'social', 'aboutme', 'music', 'snake', 'tetris', 'minicraft', 'calculator', 'calendar', 'userlookup']; // desktop icons, top-left down
   const PINNED = ['thispc'];                                                                             // taskbar
   // every launchable app, for the start menu and the terminal's /apps (folder contents included, no duplicates)
   const ALL = [...new Set(ORDER.flatMap(id => APPS[id].kind === 'folder' ? [id, ...APPS[id].items] : [id]).concat(PINNED))];
@@ -98,7 +98,7 @@ window.DESKTOP = (function () {
      Laid out on a grid (columns, top-left down; top-right in Persian). Every icon can be dragged to another cell,
      or dropped on the Recycle Bin. Nothing is saved: a refresh puts everything back. On phones it's a plain grid. */
   const iconsEl = $('.icons');
-  const CELL = { w: 98, h: 102 };
+  const CELL = { w: 76, h: 80 };   // ~75 % of the old 98×102 cells (icons are scaled down in css/desktop.css)
   const icons = {};            // id → button
   const binned = [];           // ids sitting in the Recycle Bin
   const rtl = () => document.documentElement.dir === 'rtl';
