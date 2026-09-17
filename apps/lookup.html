@@ -298,13 +298,16 @@ function makeViewer(stage, ctl) {
   const rig = v.playerWrapper || v.playerObject; rig.rotation.y = 0;
   // Render only while something can change: an animation, auto-rotate, or a drag / wheel / key
   // in progress. Otherwise the renderer sleeps — the last frame stays on the canvas.
-  let timer = null; const live = () => !!v.animation || v.autoRotate;
+  // `pending` counts skin / cape downloads in flight: the renderer must never go to sleep while one is running,
+  // or a texture that arrives late (slow connection) is never drawn — the canvas stays blank until a click wakes it.
+  let timer = null, pending = 0; const live = () => !!v.animation || v.autoRotate;
   const wake = () => { if (timer) { clearTimeout(timer); timer = null; } v.renderPaused = false; };
-  const sleep = (ms) => { if (live()) return; if (timer) clearTimeout(timer); timer = setTimeout(() => { timer = null; if (!live()) v.renderPaused = true; }, ms || 800); };
+  const sleep = (ms) => { if (live()) return; if (timer) clearTimeout(timer); timer = setTimeout(() => { timer = null; if (!live() && pending === 0) v.renderPaused = true; }, ms || 800); };
+  const settle = (ms) => { pending = Math.max(0, pending - 1); wake(); sleep(ms); };   // download finished → draw it, then doze off
   const api = {
     ok: true, v, wake, sleep,
-    load(src, model) { wake(); return v.loadSkin(src, { model: model || 'auto-detect' }).then(r => { sleep(1200); return r; }); },
-    cape(src, eq) { wake(); if (!src) { v.resetCape(); sleep(600); return Promise.resolve(); } return v.loadCape(src, { backEquipment: eq || 'cape' }).catch(() => v.resetCape()).then(() => sleep(600)); },
+    load(src, model) { pending++; wake(); return v.loadSkin(src, { model: model || 'auto-detect' }).then(r => { settle(1200); return r; }, e => { settle(600); throw e; }); },
+    cape(src, eq) { wake(); if (!src) { v.resetCape(); sleep(600); return Promise.resolve(); } pending++; return v.loadCape(src, { backEquipment: eq || 'cape' }).catch(() => v.resetCape()).then(() => settle(600)); },
     resize() { const w = stage.clientWidth, h = stage.clientHeight; if (w && h) { wake(); v.setSize(w, h); sleep(600); } },
     reset() { wake(); v.zoom = .86; rig.rotation.y = 0; v.camera.position.set(0, 0, 60); v.camera.lookAt(0, 0, 0); sleep(600); },
   };
