@@ -98,7 +98,7 @@ window.DESKTOP = (function () {
      Laid out on a grid (columns, top-left down; top-right in Persian). Every icon can be dragged to another cell,
      or dropped on the Recycle Bin. Nothing is saved: a refresh puts everything back. On phones it's a plain grid. */
   const iconsEl = $('.icons');
-  const CELL = { w: 76, h: 80 };   // ~75 % of the old 98×102 cells (icons are scaled down in css/desktop.css)
+  const CELL = { w: 66, h: 70 };   // ~65 % of the original 98×102 cells (icons are scaled down in css/desktop.css)
   const icons = {};            // id → button
   const binned = [];           // ids sitting in the Recycle Bin
   const rtl = () => document.documentElement.dir === 'rtl';
