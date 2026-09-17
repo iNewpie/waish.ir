@@ -142,7 +142,7 @@ export default {
         return { status, body: JSON.stringify(d) };
       });
     } else {
-      if (!env.BORDIC_KEY) return json({ success: false, cause: 'BORDIC_KEY secret is not set on the worker' }, 500, cors);
+      if (!env.BORDIC_KEY) return json({ success: false, notConfigured: true, cause: 'BORDIC_KEY secret is not set on the worker' }, 200, cors);
       res = await cached(`/bordic/${uuid}`, TTL.tags, () => pass(new Request(`https://bordic.xyz/api/cubelify?id=${uuid}&key=${encodeURIComponent(env.BORDIC_KEY)}`, { headers: UA })));
     }
     const out = new Response(res.body, res); Object.entries(cors).forEach(([k, v]) => out.headers.set(k, v));

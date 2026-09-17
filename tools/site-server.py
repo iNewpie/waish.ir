@@ -186,7 +186,7 @@ def route_guild(q):
 
 def route_bordic(q):
     key = secret('BORDIC_KEY')
-    if not key: return out(500, {'success': False, 'cause': 'BORDIC_KEY secret is not set (tools/proxy.env)'})
+    if not key: return out(200, {'success': False, 'notConfigured': True, 'cause': 'BORDIC_KEY secret is not set (tools/proxy.env)'})
     uuid = q.get('uuid', '').replace('-', '').lower()
     if not UUID32.match(uuid): return out(400, {'success': False, 'cause': 'Invalid UUID'})
     return cached('/bordic/' + uuid, TTL['tags'], lambda: http_get(f'https://bordic.xyz/api/cubelify?id={uuid}&key={urllib.parse.quote(key)}'))

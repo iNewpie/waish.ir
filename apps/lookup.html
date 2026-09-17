@@ -446,7 +446,7 @@ async function bordic(p) {
   const hex = c => '#' + ((c >>> 0) & 0xffffff).toString(16).padStart(6, '0');
   try {
     const r = await fetch(`${PROXY_URL}/bordic?uuid=${p.undashed}`); const d = await r.json();
-    if ((r.status === 500 || r.status === 501) && d && /not set/i.test(d.cause || '')) { box.hidden = true; return; }   // no BORDIC_KEY on the proxy → the tags box simply doesn't exist
+    if (d && (d.notConfigured || ((r.status === 500 || r.status === 501) && /not set/i.test(d.cause || '')))) { box.hidden = true; return; }   // no BORDIC_KEY on the proxy → the tags box simply doesn't exist
     if (!r.ok || !d || !Array.isArray(d.tags)) { box.className = 'bl locked'; box.innerHTML = `<div class="title lock-t">${t('Bordic check failed:')} ${esc((d && d.cause) || r.status)}</div>`; return; }
     const isBL = tg => /blacklist/i.test(tg.tooltip || '') || /^(BL|SNIPER|CHEATER|CLOSET|CAUTION|O)$/i.test(tg.text || '');
     const bl = d.tags.filter(isBL), signals = d.tags.filter(tg => !isBL(tg)), score = (d.score && d.score.value) || 0;
