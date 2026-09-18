@@ -55,7 +55,7 @@ const lobbyName = (pl, fallback) => { const r = rankOf(pl); return `${r ? `[${r}
 // ---------- static commands: answered instantly ----------
 const STATIC = {
   help: () => ({ embeds: [{ color: COLOR.blue, title: 'waish bot', description: 'The same commands as the terminal on waish.ir.', fields: [
-    { name: 'Minecraft', value: '`/check <player>` — is a player blacklisted? (Seraph + Urchin)\n`/stats <player>` — Hypixel level, rank, BedWars & SkyWars\n`/skin <player>` — current skin + 3D viewer\n`/guild <player or guild>` — Hypixel guild' },
+    { name: 'Minecraft', value: '`/user <player>` — full profile: skin, Hypixel, guild, blacklists\n`/check <player>` — is a player blacklisted? (Seraph + Urchin)\n`/stats <player>` — Hypixel level, rank, BedWars & SkyWars\n`/skin <player>` — current skin + 3D viewer\n`/guild <player or guild>` — Hypixel guild' },
     { name: 'Waish', value: '`/about` · `/projects` · `/lunamc` · `/socials` · `/site`' },
   ], footer }], components: [row(btn('Open the terminal', `${SITE}/terminal.html`, '➜'), btn('waish.ir', SITE))] }),
   about: () => ({ embeds: [{ color: COLOR.blue, title: 'Waish', description: 'Server admin, builder, content creator.\nRuns LunaMC, builds ClutchPing, streams on Aparat & YouTube, and the infra behind all of it.', thumbnail: { url: `${SITE}/assets/avatar.jpg` }, footer }], components: [row(btn('About me', `${SITE}/about-me.html`), btn('The full story', `${SITE}/terminal.html`, '📖'))] }),
@@ -81,29 +81,59 @@ async function resolve(api, who) {
   if (!r.d || !r.d.success) return { err: `Could not resolve the player (${r.d && r.d.cause || r.status || 'network'}).` };
   return { ign: r.d.ign, uuid: r.d.uuid };
 }
+// Seraph + Urchin for one uuid → { bad, fields } (used by /check and /user)
+async function blacklists(api, uuid) {
+  const [se, ur] = await Promise.all([
+    fetch(`https://api.seraph.si/${uuid}/blacklist`, { headers: { 'seraph-api-key': SERAPH_KEY, 'User-Agent': 'waish.ir bot' } }).then(async r => ({ status: r.status, d: await r.json().catch(() => null) })).catch(() => ({ status: 0 })),
+    api(`/urchin?uuid=${uuid}`),
+  ]);
+  let bad = false; const fields = [];
+  const fail = (r, host) => `❔ check failed (${r.status === 429 ? 'rate limited' : (r.d && (r.d.cause || r.d.error)) || r.status || host + ' unreachable'})`;
+  if (se.status === 200 && se.d && se.d.success && se.d.data) {
+    const bl = se.d.data.blacklist || {}, bot = se.d.data.bot || {};
+    if (bl.tagged) { bad = true; fields.push({ name: 'Seraph', value: `⚠️ **BLACKLISTED** — ${bl.report_type || 'Blacklist'}${bl.verified ? ' (verified)' : ''}${clean(bl.reason || bl.tooltip) ? `\n${clean(bl.reason || bl.tooltip)}` : ''}` }); }
+    else if (bot.tagged) fields.push({ name: 'Seraph', value: `🤖 bot account${clean(bot.reason || bot.tooltip) ? `\n${clean(bot.reason || bot.tooltip)}` : ''}` });
+    else fields.push({ name: 'Seraph', value: '✅ not blacklisted' });
+  } else fields.push({ name: 'Seraph', value: fail(se, 'api.seraph.si') });
+  if (ur.d && ur.d.notConfigured) fields.push({ name: 'Urchin', value: '❔ not configured' });
+  else if (ur.status === 200 && ur.d && ur.d.success && Array.isArray(ur.d.tags)) {
+    const tags = ur.d.tags;
+    if (!tags.length) fields.push({ name: 'Urchin', value: '✅ not blacklisted' });
+    else { bad = true; fields.push({ name: 'Urchin', value: `⚠️ **BLACKLISTED** — ${tags.map(x => title(x.tag_type)).join(' · ')}\n${tags.map(x => clean(x.reason) ? `${title(x.tag_type)}: ${clean(x.reason)}` : '').filter(Boolean).join('\n')}`.trim() }); }
+  } else fields.push({ name: 'Urchin', value: fail(ur, 'api.urchin.gg') });
+  return { bad, fields };
+}
 const LOOKUP = {
   async check(api, opts) {
     const p = await resolve(api, opts.player); if (p.err) return { content: p.err };
-    const [se, ur] = await Promise.all([
-      fetch(`https://api.seraph.si/${p.uuid}/blacklist`, { headers: { 'seraph-api-key': SERAPH_KEY, 'User-Agent': 'waish.ir bot' } }).then(async r => ({ status: r.status, d: await r.json().catch(() => null) })).catch(() => ({ status: 0 })),
-      api(`/urchin?uuid=${p.uuid}`),
-    ]);
-    let bad = false; const fields = [];
-    const fail = (r, host) => `❔ check failed (${r.status === 429 ? 'rate limited' : (r.d && (r.d.cause || r.d.error)) || r.status || host + ' unreachable'})`;
-    if (se.status === 200 && se.d && se.d.success && se.d.data) {
-      const bl = se.d.data.blacklist || {}, bot = se.d.data.bot || {};
-      if (bl.tagged) { bad = true; fields.push({ name: 'Seraph', value: `⚠️ **BLACKLISTED** — ${bl.report_type || 'Blacklist'}${bl.verified ? ' (verified)' : ''}${clean(bl.reason || bl.tooltip) ? `\n${clean(bl.reason || bl.tooltip)}` : ''}` }); }
-      else if (bot.tagged) fields.push({ name: 'Seraph', value: `🤖 bot account${clean(bot.reason || bot.tooltip) ? `\n${clean(bot.reason || bot.tooltip)}` : ''}` });
-      else fields.push({ name: 'Seraph', value: '✅ not blacklisted' });
-    } else fields.push({ name: 'Seraph', value: fail(se, 'api.seraph.si') });
-    if (ur.d && ur.d.notConfigured) fields.push({ name: 'Urchin', value: '❔ not configured' });
-    else if (ur.status === 200 && ur.d && ur.d.success && Array.isArray(ur.d.tags)) {
-      const tags = ur.d.tags;
-      if (!tags.length) fields.push({ name: 'Urchin', value: '✅ not blacklisted' });
-      else { bad = true; fields.push({ name: 'Urchin', value: `⚠️ **BLACKLISTED** — ${tags.map(x => title(x.tag_type)).join(' · ')}\n${tags.map(x => clean(x.reason) ? `${title(x.tag_type)}: ${clean(x.reason)}` : '').filter(Boolean).join('\n')}`.trim() }); }
-    } else fields.push({ name: 'Urchin', value: fail(ur, 'api.urchin.gg') });
+    const { bad, fields } = await blacklists(api, p.uuid);
     return { embeds: [{ color: bad ? COLOR.red : COLOR.green, title: p.ign, description: `\`${p.uuid}\``, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
       components: [row(btn('Full profile on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'))] };
+  },
+  // /user — the whole User Lookup app in one card: who, skin, Hypixel, guild, both blacklists
+  async user(api, opts) {
+    const p = await resolve(api, opts.player); if (p.err) return { content: p.err };
+    const [mj, hy, gu, bl] = await Promise.all([api(`/mojang?uuid=${p.uuid}`), api(`/player?uuid=${p.uuid}`), api(`/guild?uuid=${p.uuid}`), blacklists(api, p.uuid)]);
+    const tex = mj.d && mj.d.textures && mj.d.textures.textures || {};
+    const slim = tex.SKIN && tex.SKIN.metadata && tex.SKIN.metadata.model === 'slim', cape = tex.CAPE && tex.CAPE.url;
+    const pl = hy.d && hy.d.success && hy.d.player, g = gu.d && gu.d.success && gu.d.guild;
+    const fields = [
+      { name: 'UUID', value: `\`${p.uuid}\``, inline: false },
+      { name: 'Skin', value: `${slim ? 'slim (Alex)' : 'classic (Steve)'}${cape ? ' · cape' : ''}`, inline: true },
+    ];
+    if (pl) {
+      const bw = (pl.stats || {}).Bedwars || {};
+      const star = (pl.achievements && pl.achievements.bedwars_level) || (bw.Experience != null ? Math.floor(bwLevel(bw.Experience)) : null);
+      const online = pl.lastLogin && pl.lastLogout && pl.lastLogin > pl.lastLogout;
+      fields.push({ name: 'Hypixel', value: `level **${Math.floor(netLevel(pl.networkExp))}**${rankOf(pl) ? ` · ${rankOf(pl)}` : ''}${star != null ? ` · BedWars **${n(star)}✫**` : ''}${bw.final_kills_bedwars != null ? ` · FKDR ${ratio(bw.final_kills_bedwars, bw.final_deaths_bedwars)}` : ''}`, inline: false });
+      const seen = [pl.firstLogin ? `first seen <t:${Math.floor(pl.firstLogin / 1000)}:D>` : '', pl.lastLogin ? (online ? '🟢 online' : `last seen <t:${Math.floor(pl.lastLogin / 1000)}:R>`) : '', pl.mostRecentGameType ? `last game ${title(pl.mostRecentGameType.toLowerCase())}` : ''].filter(Boolean).join(' · ');
+      if (seen) fields.push({ name: 'Activity', value: seen, inline: false });
+    } else fields.push({ name: 'Hypixel', value: hy.status === 404 ? 'no cached stats yet' : `unavailable (${hy.d && hy.d.cause || hy.status})`, inline: false });
+    if (g) fields.push({ name: 'Guild', value: `**${g.name}**${g.tag ? ` [${g.tag}]` : ''} · level ${Math.floor(guildLevel(g.exp))} · ${(g.members || []).length} members`, inline: false });
+    else if (pl) fields.push({ name: 'Guild', value: gu.d && gu.d.success ? 'none' : 'unavailable', inline: false });
+    fields.push(...bl.fields.map(f => ({ ...f, inline: true })));
+    return { embeds: [{ color: bl.bad ? COLOR.red : COLOR.blue, title: pl ? lobbyName(pl, p.ign) : p.ign, thumbnail: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=4` }, fields, footer: hy.d && hy.d.lastUpdated ? { ...footer, text: `waish.ir · Hypixel snapshot ${new Date(hy.d.lastUpdated).toISOString().slice(0, 10)}` } : footer }],
+      components: [row(btn('Open in User Lookup', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'), btn('3D skin', `${SITE}/apps/skin-editor.html?u=${encodeURIComponent(p.ign)}`, '🎨'))] };
   },
   async stats(api, opts) {
     const p = await resolve(api, opts.player); if (p.err) return { content: p.err };

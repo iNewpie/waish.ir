@@ -67,7 +67,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         ['/contact', 'how to reach him'],
         ['/clear', 'clear the screen'],
       ];
-      rows.push(['/check <user>', 'is a Minecraft player blacklisted? (Seraph + Urchin)'], ['/discord', 'the Discord server + the waish bot']);
+      rows.push(['/check <user>', 'is a Minecraft player blacklisted? (Seraph + Urchin)'], ['/user <user>', 'full profile: skin, Hypixel, guild, blacklists'], ['/discord', 'the Discord server + the waish bot']);
       if (mode === 'full') rows.push(['/open <app>', 'open an app window (see /apps)'], ['/apps', 'list the apps on this computer'], ['/home', 'back to the main site']);
       else rows.push(['/computer', 'open the computer (desktop + full terminal)']);
       rows.forEach(([c, d]) => print(`  <span class="out-blue">${esc(c.padEnd(14))}</span> ${T(d)}`));
@@ -171,6 +171,15 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       if (window.DESKTOP) print(`${T('Full profile:')} <span class="out-yellow">/open lookup</span>`, 'out-dim');
     },
     blacklist(arg) { return COMMANDS.check(arg); },
+    // /user: the full User Lookup app on that player — a window on the computer, the page elsewhere
+    user(arg) {
+      const who = (arg || '').trim().replace(/-/g, '');
+      if (!/^([A-Za-z0-9_]{1,16}|[0-9a-fA-F]{32})$/.test(who)) { print(`${T('Usage:')} <span class="out-yellow">/user &lt;username or uuid&gt;</span> — ${T('full profile: skin, Hypixel, guild, blacklists')}`, 'out-dim'); return; }
+      if (window.DESKTOP) { window.DESKTOP.open('userlookup', null, 'u=' + encodeURIComponent(who)); print(`<span class="out-green">✔</span> ${T('opened')} <span class="out-blue">User Lookup</span> → <span class="out-cyan">${esc(who)}</span>`); return; }
+      print(`${T('opening')} <span class="out-blue">User Lookup</span> → <span class="out-cyan">${esc(who)}</span>…`, 'out-dim');
+      setTimeout(() => location.href = 'apps/lookup.html?u=' + encodeURIComponent(who), 350);
+    },
+    lookup(arg) { return COMMANDS.user(arg); },
     socials() {
       const L = (t, u) => `<a class="out-blue" href="${u}" target="_blank" rel="noopener">→ ${t}</a>`;
       print(`youtube    ${L('youtube.com/@WaishChannel', 'https://www.youtube.com/@WaishChannel')}`);
