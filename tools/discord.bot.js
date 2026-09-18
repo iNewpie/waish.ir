@@ -12,10 +12,12 @@
         the register script needs it). `bash tools/deploy-worker.sh` puts them on the worker as secrets.
      2. `bash tools/discord-register.sh` — registers the slash commands in tools/discord-commands.json (global, instant).
      3. App → General Information → Interactions Endpoint URL = <worker-url>/discord → Save (Discord sends a PING to verify).
-     4. Invite: https://discord.com/oauth2/authorize?client_id=<app id>&scope=applications.commands
+     4. Install: https://discord.com/oauth2/authorize?client_id=<app id> — offers "Add to server" and "Add to my apps" (user install:
+        the commands then work for that person in every server and in DMs; enabled in the portal under Installation).
    ============================================================ */
 const SITE = 'https://waish.ir';
 const INVITE = 'https://discord.gg/8HVsMqucZ2';
+const APP_ID = '1550598910240620574';
 const SERAPH_KEY = 'cac7921b-ef85-498f-81c6-7675300a3cd6';   // the same public key the site terminal uses
 const COLOR = { red: 0xff5f57, green: 0x3ddc84, yellow: 0xffbd2e, blue: 0x5b9dff, grey: 0x8b95a7 };
 const hex = s => Uint8Array.from(s.match(/.{2}/g), b => parseInt(b, 16));
@@ -57,7 +59,8 @@ const STATIC = {
   help: () => ({ embeds: [{ color: COLOR.blue, title: 'waish bot', description: 'The same commands as the terminal on waish.ir.', fields: [
     { name: 'Minecraft', value: '`/user <player>` — full profile: skin, Hypixel, guild, blacklists\n`/check <player>` — is a player blacklisted? (Seraph + Urchin)\n`/stats <player>` — Hypixel level, rank, BedWars & SkyWars\n`/skin <player>` — current skin + 3D viewer\n`/guild <player or guild>` — Hypixel guild' },
     { name: 'Waish', value: '`/about` · `/projects` · `/lunamc` · `/socials` · `/site`' },
-  ], footer }], components: [row(btn('Open the terminal', `${SITE}/terminal.html`, '➜'), btn('waish.ir', SITE))] }),
+    { name: 'Use it anywhere', value: 'Add the app to your own account and these commands work in every server and in DMs — no need for the bot to be in the server.' },
+  ], footer }], components: [row(btn('Open the terminal', `${SITE}/terminal.html`, '➜'), btn('Add to my apps', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=1&scope=applications.commands`, '👤'), btn('Add to a server', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=0&scope=applications.commands`, '🏠'))] }),
   about: () => ({ embeds: [{ color: COLOR.blue, title: 'Waish', description: 'Server admin, builder, content creator.\nRuns LunaMC, builds ClutchPing, streams on Aparat & YouTube, and the infra behind all of it.', thumbnail: { url: `${SITE}/assets/avatar.jpg` }, footer }], components: [row(btn('About me', `${SITE}/about-me.html`), btn('The full story', `${SITE}/terminal.html`, '📖'))] }),
   projects: () => ({ embeds: [{ color: COLOR.red, title: 'Projects', fields: [
     { name: '🟣 LunaMC', value: 'Persian-language Minecraft server — `Play.LunaMC.iR`' },

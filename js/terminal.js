@@ -205,7 +205,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       print(`${T('join')}       ${L('discord.gg/8HVsMqucZ2', 'https://discord.gg/8HVsMqucZ2')}`);
       print(`${T('bot')}        <span class="out-dim">${T('the same commands as here, as slash commands in Discord:')}</span>`);
       print(`           <span class="out-yellow">/check</span> <span class="out-yellow">/stats</span> <span class="out-yellow">/skin</span> <span class="out-yellow">/guild</span> <span class="out-yellow">/about</span> <span class="out-yellow">/projects</span> <span class="out-yellow">/lunamc</span> <span class="out-yellow">/socials</span> <span class="out-yellow">/site</span>`);
-      print(`${T('add it to your own server:')} ${L('invite the waish bot', 'https://discord.com/oauth2/authorize?client_id=1550598910240620574&scope=applications.commands')}`, 'out-dim');
+      print(`${T('add it to your server, or to your own account to use it anywhere:')} ${L('get the waish bot', 'https://discord.com/oauth2/authorize?client_id=1550598910240620574')}`, 'out-dim');
     },
     contact() {
       print(`Best way is to create a ticket in Discord — <a class="out-blue" href="https://discord.gg/8HVsMqucZ2" target="_blank" rel="noopener">discord.gg/8HVsMqucZ2</a> — but you can DM him on Instagram too: <a class="out-blue" href="https://instagram.com/asunawaish" target="_blank" rel="noopener">instagram.com/asunawaish</a>`);

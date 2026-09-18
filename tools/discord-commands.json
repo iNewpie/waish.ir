@@ -1,7 +1,16 @@
 [
   {
     "name": "help",
-    "description": "What this bot can do"
+    "description": "What this bot can do",
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
+    ]
   },
   {
     "name": "user",
@@ -14,6 +23,15 @@
         "required": true,
         "max_length": 36
       }
+    ],
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
     ]
   },
   {
@@ -27,6 +45,15 @@
         "required": true,
         "max_length": 36
       }
+    ],
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
     ]
   },
   {
@@ -40,6 +67,15 @@
         "required": true,
         "max_length": 36
       }
+    ],
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
     ]
   },
   {
@@ -53,6 +89,15 @@
         "required": true,
         "max_length": 36
       }
+    ],
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
     ]
   },
   {
@@ -66,26 +111,80 @@
         "required": true,
         "max_length": 32
       }
+    ],
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
     ]
   },
   {
     "name": "about",
-    "description": "Who Waish is"
+    "description": "Who Waish is",
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
+    ]
   },
   {
     "name": "projects",
-    "description": "LunaMC, ClutchPing, content, waish.ir"
+    "description": "LunaMC, ClutchPing, content, waish.ir",
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
+    ]
   },
   {
     "name": "lunamc",
-    "description": "The LunaMC Minecraft server"
+    "description": "The LunaMC Minecraft server",
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
+    ]
   },
   {
     "name": "socials",
-    "description": "Where to find Waish"
+    "description": "Where to find Waish",
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
+    ]
   },
   {
     "name": "site",
-    "description": "Links to waish.ir, the computer and the terminal"
+    "description": "Links to waish.ir, the computer and the terminal",
+    "integration_types": [
+      0,
+      1
+    ],
+    "contexts": [
+      0,
+      1,
+      2
+    ]
   }
 ]
