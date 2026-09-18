@@ -150,7 +150,7 @@ const LOOKUP = {
     const { bad, fields, detail } = await blacklists(api, p.uuid);
     return { card: ['check', { ign: p.ign, uuid: p.uuid, bad, seraph: detail.seraph, urchin: detail.urchin }],
       embeds: [{ color: bad ? COLOR.red : COLOR.green, title: p.ign, description: `\`${p.uuid}\``, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
-      components: [row(btn('Full profile on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'))] };
+      components: [row(btn('Full profile on waish.ir', `${SITE}/computer.html#userlookup?u=${encodeURIComponent(p.ign)}`, '🔍'))] };
   },
   // /user — the whole User Lookup app in one card: who, skin, Hypixel, guild, both blacklists
   async user(api, opts) {
@@ -184,13 +184,13 @@ const LOOKUP = {
       seraph: bl.detail.seraph, urchin: bl.detail.urchin, snapshot: hy.d && hy.d.lastUpdated ? day(hy.d.lastUpdated) : null,
       activity: pl && pl.lastLogin ? (pl.lastLogout && pl.lastLogin > pl.lastLogout ? 'online on Hypixel now' : `last on Hypixel ${day(pl.lastLogin)}`) : null }];
     return { card, embeds: [{ color: bl.bad ? COLOR.red : COLOR.blue, title: pl ? lobbyName(pl, p.ign) : p.ign, thumbnail: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=4` }, fields, footer: hy.d && hy.d.lastUpdated ? { ...footer, text: `waish.ir · Hypixel snapshot ${new Date(hy.d.lastUpdated).toISOString().slice(0, 10)}` } : footer }],
-      components: [row(btn('Open in User Lookup', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'), btn('3D skin', `${SITE}/apps/skin-editor.html?u=${encodeURIComponent(p.ign)}`, '🎨'))] };
+      components: [row(btn('Open in User Lookup', `${SITE}/computer.html#userlookup?u=${encodeURIComponent(p.ign)}`, '🔍'), btn('3D skin', `${SITE}/computer.html#skineditor?u=${encodeURIComponent(p.ign)}`, '🎨'))] };
   },
   async stats(api, opts) {
     const p = await resolve(api, opts.player); if (p.err) return { content: p.err };
     const r = await api(`/player?uuid=${p.uuid}`);
     const pl = r.d && r.d.success && r.d.player;
-    if (!pl) return { content: r.status === 404 ? `No Hypixel stats cached for **${p.ign}** yet — look them up on the site once: ${SITE}/apps/lookup.html?u=${p.ign}` : `Stats lookup failed (${r.d && r.d.cause || r.status}).` };
+    if (!pl) return { content: r.status === 404 ? `No Hypixel stats cached for **${p.ign}** yet — look them up on the site once: ${SITE}/computer.html#userlookup?u=${p.ign}` : `Stats lookup failed (${r.d && r.d.cause || r.status}).` };
     const st = pl.stats || {}, bw = st.Bedwars || {}, sw = st.SkyWars || {}, du = st.Duels || {};
     const star = (pl.achievements && pl.achievements.bedwars_level) || (bw.Experience != null ? Math.floor(bwLevel(bw.Experience)) : null);
     const fields = [{ name: 'Network', value: `level **${Math.floor(netLevel(pl.networkExp))}** · karma ${n(pl.karma)} · ${pl.achievementPoints != null ? n(pl.achievementPoints) + ' AP' : ''}`.replace(/ · $/, ''), inline: false }];
@@ -203,7 +203,7 @@ const LOOKUP = {
       bw: { wins: bw.wins_bedwars ?? null, finals: bw.final_kills_bedwars ?? null, fkdr: bw.final_kills_bedwars != null ? ratio(bw.final_kills_bedwars, bw.final_deaths_bedwars) : '—', wlr: bw.wins_bedwars != null ? ratio(bw.wins_bedwars, bw.losses_bedwars) : '—' },
       sw: { wins: sw.wins ?? null, kdr: sw.kills != null ? ratio(sw.kills, sw.deaths) : '—' }, du: { wins: du.wins ?? null, wlr: du.wins != null ? ratio(du.wins, du.losses) : '—' }, snapshot: day(r.d.lastUpdated) }];
     return { card, embeds: [{ color: COLOR.yellow, title: lobbyName(pl, p.ign), description: when, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
-      components: [row(btn('Every game on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '📊'))] };
+      components: [row(btn('Every game on waish.ir', `${SITE}/computer.html#userlookup?u=${encodeURIComponent(p.ign)}`, '📊'))] };
   },
   async skin(api, opts) {
     const p = await resolve(api, opts.player); if (p.err) return { content: p.err };
@@ -212,7 +212,7 @@ const LOOKUP = {
     const skin = tex.SKIN && tex.SKIN.url, slim = tex.SKIN && tex.SKIN.metadata && tex.SKIN.metadata.model === 'slim', cape = tex.CAPE && tex.CAPE.url;
     return { card: skin ? ['skin', { ign: p.ign, uuid: p.uuid, model: slim ? 'slim (Alex)' : 'classic (Steve)', cape: !!cape, skinUrl: skin }] : null,
       embeds: [{ color: COLOR.blue, title: p.ign, description: `${slim ? 'slim (Alex)' : 'classic (Steve)'} model${cape ? ' · has a cape' : ''}\n\`${p.uuid}\``, image: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=8&t=${Math.floor(Date.now() / 60000)}` }, footer }],
-      components: [row(btn('3D viewer & editor', `${SITE}/apps/skin-editor.html?u=${encodeURIComponent(p.ign)}`, '🎨'), ...(skin ? [btn('Download skin', skin, '⬇️')] : []))] };
+      components: [row(btn('3D viewer & editor', `${SITE}/computer.html#skineditor?u=${encodeURIComponent(p.ign)}`, '🎨'), ...(skin ? [btn('Download skin', skin, '⬇️')] : []))] };
   },
   async guild(api, opts) {
     const q = (opts.name || '').trim();
@@ -235,7 +235,7 @@ const LOOKUP = {
     const card = ['guild', { query: q, name: g.name, tag: g.tag || null, color: MC[g.tagColor] || '#FFAA00', of: byPlayer && !byPlayer.err ? byPlayer.ign : null, gm: gmName, gmUuid: gm ? gm.uuid : (byPlayer && !byPlayer.err ? byPlayer.uuid : null),
       level: Math.floor(lvl), levelPct: Math.round((lvl % 1) * 100), members: members.length, created: day(g.created), description: g.description || null }];
     return { card, embeds: [{ color: COLOR.yellow, title: `${g.name}${g.tag ? ` [${g.tag}]` : ''}`, description: byPlayer && !byPlayer.err ? `guild of **${byPlayer.ign}**` : undefined, fields, footer }],
-      components: [row(btn('Open on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(byPlayer && !byPlayer.err ? byPlayer.ign : q)}`, '🔍'))] };
+      components: [row(btn('Open on waish.ir', `${SITE}/computer.html#userlookup?u=${encodeURIComponent(byPlayer && !byPlayer.err ? byPlayer.ign : q)}`, '🔍'))] };
   },
 };
 

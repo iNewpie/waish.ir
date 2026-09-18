@@ -177,7 +177,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       if (!/^([A-Za-z0-9_]{1,16}|[0-9a-fA-F]{32})$/.test(who)) { print(`${T('Usage:')} <span class="out-yellow">/user &lt;username or uuid&gt;</span> — ${T('full profile: skin, Hypixel, guild, blacklists')}`, 'out-dim'); return; }
       if (window.DESKTOP) { window.DESKTOP.open('userlookup', null, 'u=' + encodeURIComponent(who)); print(`<span class="out-green">✔</span> ${T('opened')} <span class="out-blue">User Lookup</span> → <span class="out-cyan">${esc(who)}</span>`); return; }
       print(`${T('opening')} <span class="out-blue">User Lookup</span> → <span class="out-cyan">${esc(who)}</span>…`, 'out-dim');
-      setTimeout(() => location.href = 'apps/lookup.html?u=' + encodeURIComponent(who), 350);
+      setTimeout(() => location.href = 'computer.html#userlookup?u=' + encodeURIComponent(who), 350);
     },
     lookup(arg) { return COMMANDS.user(arg); },
     socials() {

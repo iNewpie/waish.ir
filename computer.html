@@ -93,8 +93,8 @@
 <script src="js/desktop.js?v=20260917f"></script>
 <script>
   if (!matchMedia('(max-width: 760px)').matches) DESKTOP.open('terminal');   // phones start on the home screen
-  // deep link: computer.html#projects opens that app too
-  if (location.hash) DESKTOP.open(location.hash.slice(1));
+  // deep link: computer.html#projects opens that app too; #userlookup?u=Notch opens User Lookup on that player (the Discord bot's buttons)
+  if (location.hash) { const [app, query] = location.hash.slice(1).split('?'); DESKTOP.open(app, null, query || undefined); }
 </script>
 </body>
 </html>
