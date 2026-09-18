@@ -67,9 +67,6 @@ function rankInfo(pl) {
 }
 const starColor = s => s < 100 ? '#AAAAAA' : s < 200 ? '#FFFFFF' : s < 300 ? '#FFAA00' : s < 400 ? '#55FFFF' : s < 500 ? '#55FF55' : s < 600 ? '#55FFFF' : s < 700 ? '#FF5555' : s < 800 ? '#FF55FF' : s < 900 ? '#5555FF' : s < 1000 ? '#FF55FF' : '#FFFF55';
 const day = ms => ms ? new Date(ms).toISOString().slice(0, 10) : null;
-// a badge for the card from one blacklist field ({name, value} as /check builds them)
-const badgeOf = f => { const v = f.value; const [first, ...rest] = v.split('\n'); const label = first.replace(/^[^\w]+/, '').replace(/\*\*/g, '').trim();
-  return { src: f.name, state: /BLACKLISTED/.test(v) ? 'bad' : /bot account/.test(v) ? 'warn' : /^✅/.test(v) ? 'clean' : 'fail', label: /^✅/.test(v) ? 'not blacklisted' : label, why: rest.join(' · ').slice(0, 90) || undefined }; };
 
 // The image reply: tools/bot-render/server.mjs (on the VPS) draws a PNG from the card data. Null when it isn't reachable — the text embed is sent instead.
 async function renderCard(env, kind, data) {
@@ -120,26 +117,38 @@ async function blacklists(api, uuid) {
     api(`/urchin?uuid=${uuid}`),
   ]);
   let bad = false; const fields = [];
-  const fail = (r, host) => `❔ check failed (${r.status === 429 ? 'rate limited' : (r.d && (r.d.cause || r.d.error)) || r.status || host + ' unreachable'})`;
+  const fail = (r, host) => `${r.status === 429 ? 'rate limited' : (r.d && (r.d.cause || r.d.error)) || r.status || host + ' unreachable'}`;
+  // detail = what the image card draws: one block per source, each report = { tag, message, meta }
+  const detail = { seraph: { src: 'Seraph', state: 'fail', reports: [], note: null }, urchin: { src: 'Urchin', state: 'fail', reports: [], note: null } };
   if (se.status === 200 && se.d && se.d.success && se.d.data) {
     const bl = se.d.data.blacklist || {}, bot = se.d.data.bot || {};
-    if (bl.tagged) { bad = true; fields.push({ name: 'Seraph', value: `⚠️ **BLACKLISTED** — ${bl.report_type || 'Blacklist'}${bl.verified ? ' (verified)' : ''}${clean(bl.reason || bl.tooltip) ? `\n${clean(bl.reason || bl.tooltip)}` : ''}` }); }
-    else if (bot.tagged) fields.push({ name: 'Seraph', value: `🤖 bot account${clean(bot.reason || bot.tooltip) ? `\n${clean(bot.reason || bot.tooltip)}` : ''}` });
-    else fields.push({ name: 'Seraph', value: '✅ not blacklisted' });
-  } else fields.push({ name: 'Seraph', value: fail(se, 'api.seraph.si') });
-  if (ur.d && ur.d.notConfigured) fields.push({ name: 'Urchin', value: '❔ not configured' });
+    if (bl.tagged) { bad = true; fields.push({ name: 'Seraph', value: `⚠️ **BLACKLISTED** — ${bl.report_type || 'Blacklist'}${bl.verified ? ' (verified)' : ''}${clean(bl.reason || bl.tooltip) ? `\n${clean(bl.reason || bl.tooltip)}` : ''}` }); detail.seraph = { src: 'Seraph', state: 'bad', reports: [seraphReport(bl)] }; }
+    else if (bot.tagged) { fields.push({ name: 'Seraph', value: `🤖 bot account${clean(bot.reason || bot.tooltip) ? `\n${clean(bot.reason || bot.tooltip)}` : ''}` }); detail.seraph = { src: 'Seraph', state: 'warn', reports: [{ ...seraphReport(bot), tag: 'Bot account' }] }; }
+    else { fields.push({ name: 'Seraph', value: '✅ not blacklisted' }); detail.seraph = { src: 'Seraph', state: 'clean', reports: [], note: se.d.data.statistics && se.d.data.statistics.encounters ? `seen ${se.d.data.statistics.encounters}× by Seraph users` : null }; }
+  } else { fields.push({ name: 'Seraph', value: `❔ check failed (${fail(se, 'api.seraph.si')})` }); detail.seraph.note = `check failed — ${fail(se, 'api.seraph.si')}`; }
+  if (ur.d && ur.d.notConfigured) { fields.push({ name: 'Urchin', value: '❔ not configured' }); detail.urchin.note = 'not configured'; }
   else if (ur.status === 200 && ur.d && ur.d.success && Array.isArray(ur.d.tags)) {
     const tags = ur.d.tags;
-    if (!tags.length) fields.push({ name: 'Urchin', value: '✅ not blacklisted' });
-    else { bad = true; fields.push({ name: 'Urchin', value: `⚠️ **BLACKLISTED** — ${tags.map(x => title(x.tag_type)).join(' · ')}\n${tags.map(x => clean(x.reason) ? `${title(x.tag_type)}: ${clean(x.reason)}` : '').filter(Boolean).join('\n')}`.trim() }); }
-  } else fields.push({ name: 'Urchin', value: fail(ur, 'api.urchin.gg') });
-  return { bad, fields };
+    if (!tags.length) { fields.push({ name: 'Urchin', value: '✅ not blacklisted' }); detail.urchin = { src: 'Urchin', state: 'clean', reports: [] }; }
+    else { bad = true; fields.push({ name: 'Urchin', value: `⚠️ **BLACKLISTED** — ${tags.map(x => title(x.tag_type)).join(' · ')}\n${tags.map(x => clean(x.reason) ? `${title(x.tag_type)}: ${clean(x.reason)}` : '').filter(Boolean).join('\n')}`.trim() });
+      detail.urchin = { src: 'Urchin', state: 'bad', reports: tags.map(x => ({ tag: title(x.tag_type), message: clean(x.reason) || null, meta: [x.added_on ? day(x.added_on) : null, x.added_by_username ? `by ${x.added_by_username}` : null, x.expires_at ? `until ${day(x.expires_at)}` : null].filter(Boolean).join(' · ') || null })) }; }
+  } else { fields.push({ name: 'Urchin', value: `❔ check failed (${fail(ur, 'api.urchin.gg')})` }); detail.urchin.note = `check failed — ${fail(ur, 'api.urchin.gg')}`; }
+  return { bad, fields, detail };
+}
+// Seraph packs everything into one tooltip: "Blatant Cheating: hakar - funny tag ( Upgraded ) ( 1 week ago by waish ) " → tag / message / meta
+function seraphReport(e) {
+  let t = String(e.tooltip || e.reason || '').replace(/\(\s*upgraded\s*\)/gi, '').replace(/^\s*legacy\s*-\s*/i, '');
+  let meta = null; const m = t.match(/\(\s*([^()]*?\bago\b[^()]*?)\)\s*$/i); if (m) { meta = m[1].trim(); t = t.slice(0, m.index); }
+  const tag = e.report_type || 'Blacklist';
+  if (t.toLowerCase().startsWith(tag.toLowerCase() + ':')) t = t.slice(tag.length + 1);
+  const message = t.replace(/\s{2,}/g, ' ').trim() || null;
+  return { tag, message, meta, verified: !!e.verified };
 }
 const LOOKUP = {
   async check(api, opts) {
     const p = await resolve(api, opts.player); if (p.err) return { content: p.err };
-    const { bad, fields } = await blacklists(api, p.uuid);
-    return { card: ['check', { ign: p.ign, uuid: p.uuid, bad, seraph: badgeOf(fields[0]), urchin: badgeOf(fields[1]) }],
+    const { bad, fields, detail } = await blacklists(api, p.uuid);
+    return { card: ['check', { ign: p.ign, uuid: p.uuid, bad, seraph: detail.seraph, urchin: detail.urchin }],
       embeds: [{ color: bad ? COLOR.red : COLOR.green, title: p.ign, description: `\`${p.uuid}\``, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
       components: [row(btn('Full profile on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'))] };
   },
@@ -169,9 +178,10 @@ const LOOKUP = {
     const star = pl ? ((pl.achievements && pl.achievements.bedwars_level) || (bw.Experience != null ? Math.floor(bwLevel(bw.Experience)) : null)) : null;
     const card = ['user', { ign: p.ign, uuid: p.uuid, bad: bl.bad, rank: pl ? rankInfo(pl) : null, star, starColor: star != null ? starColor(star) : null,
       level: pl ? Math.floor(netLevel(pl.networkExp)) : null, fkdr: bw.final_kills_bedwars != null ? ratio(bw.final_kills_bedwars, bw.final_deaths_bedwars) : null, bwWins: bw.wins_bedwars ?? null,
+      finals: bw.final_kills_bedwars ?? null, wlr: bw.wins_bedwars != null ? ratio(bw.wins_bedwars, bw.losses_bedwars) : null, beds: bw.beds_broken_bedwars ?? null,
       karma: pl ? pl.karma ?? null : null, firstSeen: pl ? day(pl.firstLogin) : null, model: slim ? 'slim' : 'classic', cape: !!cape,
       guild: g ? { name: g.name, tag: g.tag || null, color: MC[g.tagColor] || '#AAAAAA', level: Math.floor(guildLevel(g.exp)), members: (g.members || []).length } : null,
-      seraph: badgeOf(bl.fields[0]), urchin: badgeOf(bl.fields[1]), snapshot: hy.d && hy.d.lastUpdated ? day(hy.d.lastUpdated) : null,
+      seraph: bl.detail.seraph, urchin: bl.detail.urchin, snapshot: hy.d && hy.d.lastUpdated ? day(hy.d.lastUpdated) : null,
       activity: pl && pl.lastLogin ? (pl.lastLogout && pl.lastLogin > pl.lastLogout ? 'online on Hypixel now' : `last on Hypixel ${day(pl.lastLogin)}`) : null }];
     return { card, embeds: [{ color: bl.bad ? COLOR.red : COLOR.blue, title: pl ? lobbyName(pl, p.ign) : p.ign, thumbnail: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=4` }, fields, footer: hy.d && hy.d.lastUpdated ? { ...footer, text: `waish.ir · Hypixel snapshot ${new Date(hy.d.lastUpdated).toISOString().slice(0, 10)}` } : footer }],
       components: [row(btn('Open in User Lookup', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'), btn('3D skin', `${SITE}/apps/skin-editor.html?u=${encodeURIComponent(p.ign)}`, '🎨'))] };

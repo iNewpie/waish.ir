@@ -66,7 +66,9 @@ function render(kind, data) {
     await p.setViewportSize({ width: w, height: h });
     await p.setContent(html, { waitUntil: 'load' });
     await p.evaluate(() => document.fonts.ready);
-    const png = await p.screenshot({ type: 'png', clip: { x: 0, y: 0, width: w, height: h } });
+    const real = Math.max(h, await p.evaluate(() => Math.ceil(document.querySelector('.card').getBoundingClientRect().height)));   // cards grow with their content
+    if (real !== h) await p.setViewportSize({ width: w, height: real });
+    const png = await p.screenshot({ type: 'png', clip: { x: 0, y: 0, width: w, height: real } });
     rendered++; return png;
   });
   queue = job.catch(() => {});
