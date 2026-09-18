@@ -2,7 +2,7 @@
    INDEX PAGE — project data, hero animations, mini terminal
    ============================================================ */
 const T = window.I18N ? I18N.t : s => s;
-const ROLES = ["content creator", "LunaMC founder", "ClutchPing founder", "NairoShop founder", "SEO expert", "streamer", "3D artist", "offline-AI tinkerer"].map(T);
+const ROLES = ["content creator", "LunaMC founder", "ClutchPing founder", "SEO expert", "streamer", "3D artist", "offline-AI tinkerer"].map(T);
 
 /* ---------- hero text animations ---------- */
 // headline word rise + shimmer

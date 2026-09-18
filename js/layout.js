@@ -54,7 +54,6 @@
       <div class="foot-links">
         <a href="https://play.lunamc.ir">lunamc</a>
         <a href="https://clutchping.com">clutchping</a>
-        <a href="https://nairo.ir" target="_blank" rel="noopener">nairoshop</a>
         <a href="https://coffeebede.com/waishchannel" target="_blank" rel="noopener">donate</a>
       </div>
     </div>

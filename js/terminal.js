@@ -189,7 +189,6 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       print(`discord    ${L('discord.gg/8HVsMqucZ2', 'https://discord.gg/8HVsMqucZ2')} <span class="out-dim">(10k+ members)</span>`);
       print(`lunamc     ${L('play.lunamc.ir', 'https://play.lunamc.ir')}`);
       print(`clutchping ${L('clutchping.com', 'https://clutchping.com')}`);
-      print(`nairoshop  ${L('nairo.ir', 'https://nairo.ir')}`);
     },
     // the Discord server (live counts from Discord's public invite endpoint, which sends CORS headers) and the bot that lives there
     async discord() {
