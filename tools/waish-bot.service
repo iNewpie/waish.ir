@@ -1,0 +1,17 @@
+# systemd unit for the waish Discord bot's presence (tools/discord-presence.mjs).
+# Install:  sudo cp tools/waish-bot.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now waish-bot
+# Logs:     journalctl -u waish-bot -f
+[Unit]
+Description=waish Discord bot presence (online + Do Not Disturb)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/waish
+ExecStart=/usr/bin/env node /root/waish/tools/discord-presence.mjs
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
