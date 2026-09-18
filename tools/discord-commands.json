@@ -1,0 +1,12 @@
+[
+  { "name": "help", "description": "What this bot can do" },
+  { "name": "check", "description": "Is a Minecraft player blacklisted? (Seraph + Urchin)", "options": [{ "type": 3, "name": "player", "description": "Minecraft username or UUID", "required": true, "max_length": 36 }] },
+  { "name": "stats", "description": "Hypixel stats: network level, rank, BedWars, SkyWars, Duels", "options": [{ "type": 3, "name": "player", "description": "Minecraft username or UUID", "required": true, "max_length": 36 }] },
+  { "name": "skin", "description": "A player's current Minecraft skin", "options": [{ "type": 3, "name": "player", "description": "Minecraft username or UUID", "required": true, "max_length": 36 }] },
+  { "name": "guild", "description": "Hypixel guild of a player, or a guild by name", "options": [{ "type": 3, "name": "name", "description": "Player name or guild name", "required": true, "max_length": 32 }] },
+  { "name": "about", "description": "Who Waish is" },
+  { "name": "projects", "description": "LunaMC, ClutchPing, content, waish.ir" },
+  { "name": "lunamc", "description": "The LunaMC Minecraft server" },
+  { "name": "socials", "description": "Where to find Waish" },
+  { "name": "site", "description": "Links to waish.ir, the computer and the terminal" }
+]

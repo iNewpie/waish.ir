@@ -67,10 +67,10 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         ['/contact', 'how to reach him'],
         ['/clear', 'clear the screen'],
       ];
-      rows.push(['/check <user>', 'is a Minecraft player blacklisted? (Seraph + Urchin)']);
+      rows.push(['/check <user>', 'is a Minecraft player blacklisted? (Seraph + Urchin)'], ['/discord', 'the Discord server + the waish bot']);
       if (mode === 'full') rows.push(['/open <app>', 'open an app window (see /apps)'], ['/apps', 'list the apps on this computer'], ['/home', 'back to the main site']);
       else rows.push(['/computer', 'open the computer (desktop + full terminal)']);
-      rows.forEach(([c, d]) => print(`  <span class="out-blue">${c.padEnd(14)}</span> ${T(d)}`));
+      rows.forEach(([c, d]) => print(`  <span class="out-blue">${esc(c.padEnd(14))}</span> ${T(d)}`));
       print(`\n${T('Example:')} <span class="out-yellow">what mouse do you use?</span>  ·  <span class="out-yellow">ستاپت چیه؟</span>  ·  <span class="out-yellow">how does tcp work</span>`, 'out-dim');
     },
     about() { print(`Waish — server admin, builder, content creator.`); print(`Runs LunaMC, builds ClutchPing, streams on Aparat & YouTube, and the infra behind all of it.`, 'out-dim'); },
@@ -181,6 +181,22 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       print(`lunamc     ${L('play.lunamc.ir', 'https://play.lunamc.ir')}`);
       print(`clutchping ${L('clutchping.com', 'https://clutchping.com')}`);
       print(`nairoshop  ${L('nairo.ir', 'https://nairo.ir')}`);
+    },
+    // the Discord server (live counts from Discord's public invite endpoint, which sends CORS headers) and the bot that lives there
+    async discord() {
+      const L = (t, u) => `<a class="out-blue" href="${u}" target="_blank" rel="noopener">→ ${t}</a>`;
+      let counts = '';
+      try {
+        const c = new AbortController(); const tm = setTimeout(() => c.abort(), 6000);
+        const r = await fetch('https://discord.com/api/v10/invites/8HVsMqucZ2?with_counts=true', { signal: c.signal }); clearTimeout(tm);
+        const d = await r.json();
+        if (d && d.guild) counts = ` <span class="out-dim">— <span class="out-green">${(d.approximate_presence_count || 0).toLocaleString()}</span> ${T('online')} · ${(d.approximate_member_count || 0).toLocaleString()} ${T('members')}</span>`;
+      } catch (e) {}
+      print(`<span class="out-cyan">Wishing</span>${counts}`);
+      print(`${T('join')}       ${L('discord.gg/8HVsMqucZ2', 'https://discord.gg/8HVsMqucZ2')}`);
+      print(`${T('bot')}        <span class="out-dim">${T('the same commands as here, as slash commands in Discord:')}</span>`);
+      print(`           <span class="out-yellow">/check</span> <span class="out-yellow">/stats</span> <span class="out-yellow">/skin</span> <span class="out-yellow">/guild</span> <span class="out-yellow">/about</span> <span class="out-yellow">/projects</span> <span class="out-yellow">/lunamc</span> <span class="out-yellow">/socials</span> <span class="out-yellow">/site</span>`);
+      print(`${T('add it to your own server:')} ${L('invite the waish bot', 'https://discord.com/oauth2/authorize?client_id=1550598910240620574&scope=applications.commands')}`, 'out-dim');
     },
     contact() {
       print(`Best way is to create a ticket in Discord — <a class="out-blue" href="https://discord.gg/8HVsMqucZ2" target="_blank" rel="noopener">discord.gg/8HVsMqucZ2</a> — but you can DM him on Instagram too: <a class="out-blue" href="https://instagram.com/asunawaish" target="_blank" rel="noopener">instagram.com/asunawaish</a>`);

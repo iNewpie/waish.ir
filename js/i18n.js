@@ -24,6 +24,7 @@ window.I18N = (function () {
     'From playing Minecraft BedWars to creating content and leading three successful projects.': 'از بازی کردن بدوارز ماینکرفت تا تولید محتوا و رهبری سه پروژهٔ موفق.',
     'Type /help below, or just talk to my assistant — English or Persian.': 'پایین /help رو بزن، یا همین‌طوری با دستیارم حرف بزن — انگلیسی یا فارسی.',
     'See projects': 'دیدن پروژه‌ها', 'Open the computer →': 'باز کردن کامپیوتر ←',
+    'the Discord server + the waish bot': 'سرور دیسکورد + بات ویش', 'online': 'آنلاین', 'members': 'عضو', 'join': 'عضویت', 'bot': 'بات', 'the same commands as here, as slash commands in Discord:': 'همین دستورها، به‌صورت اسلش‌کامند توی دیسکورد:', 'add it to your own server:': 'به سرور خودت اضافه‌ش کن:',
     'server admin': 'سرور ادمین', 'LunaMC owner': 'صاحب لونا ام‌سی', 'ClutchPing founder': 'بنیان‌گذار کلاچ‌پینگ', 'SEO expert': 'متخصص سئو', 'LunaMC founder': 'بنیان‌گذار لونا ام‌سی', 'NairoShop founder': 'بنیان‌گذار نایروشاپ', '3D artist': 'هنرمند سه‌بعدی', 'WooCommerce builder': 'سازندهٔ ووکامرس',
     'content creator': 'کانتنت کریتور', 'streamer': 'استریمر', 'offline-AI tinkerer': 'اهل ور رفتن با هوش مصنوعی آفلاین',
     'type /help and hit enter': 'بنویس /help و اینتر بزن',

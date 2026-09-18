@@ -9,6 +9,7 @@
      <worker-url>/names?uuids=a,b,c    → api.minecraftservices.com uuid → current name, up to 40 per call (Bordic's cache only if Mojang errors)
      <worker-url>/guild?uuid=<uuid>    → netherapi.com/api/v2/guild (secret NETHER_KEY) or api.hypixel.net/v2/guild (secret HYPIXEL_KEY)
      <worker-url>/urchin?uuid=<uuid>   → api.urchin.gg/v3/player/tags (secret URCHIN_KEY) — the Urchin cheater blacklist, no CORS upstream
+     POST <worker-url>/discord         → the Discord bot's slash commands (tools/discord.bot.js; secrets DISCORD_APP_ID + DISCORD_PUBLIC_KEY)
    FRESHNESS — api.bordic.xyz sits behind a 24 h Cloudflare edge cache, so a plain request can hand back a day-old
    copy even when Bordic already holds newer stats. Every Bordic call here carries a per-minute `t` param that skips
    that edge copy, and our own copy of a player lives only 60 s: what you see is Bordic's latest snapshot
@@ -56,8 +57,22 @@ const convert = async player => {
   return { status: 200, d: { success: true, ign: j.name, uuid: j.id.replace(/-/g, '').toLowerCase() } };
 };
 
+import { handleInteraction } from './discord.bot.js';
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    // Discord slash commands (tools/discord.bot.js). The bot reaches the routes below in-process — a worker can't fetch its own URL.
+    if (url.pathname === '/discord') {
+      if (request.method !== 'POST') return json({ success: false, cause: 'Discord posts interactions here' }, 405, {});
+      const call = async path => { const r = await api(new Request('https://waish-proxy.internal' + path, { headers: { Origin: 'https://waish.ir' } }), env); let d = null; try { d = await r.json(); } catch (e) {} return { status: r.status, d }; };
+      return handleInteraction(request, env, ctx, call);
+    }
+    return api(request, env);
+  },
+};
+
+async function api(request, env) {
     const origin = request.headers.get('Origin') || '';
     const ok = ALLOWED.some(a => origin === a || origin.startsWith(a + ':'));
     const cors = { 'Access-Control-Allow-Origin': ok ? origin : 'https://waish.ir', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin' };
@@ -152,6 +167,5 @@ export default {
     }
     const out = new Response(res.body, res); Object.entries(cors).forEach(([k, v]) => out.headers.set(k, v));
     return out;
-  },
-};
+}
 function json(obj, status, cors) { return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json', ...cors } }); }
