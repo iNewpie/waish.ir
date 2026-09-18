@@ -12,7 +12,8 @@
         the register script needs it). `bash tools/deploy-worker.sh` puts them on the worker as secrets.
      2. `bash tools/discord-register.sh` — registers the slash commands in tools/discord-commands.json (global, instant).
      3. App → General Information → Interactions Endpoint URL = <worker-url>/discord → Save (Discord sends a PING to verify).
-     4. Install: https://discord.com/oauth2/authorize?client_id=<app id> — offers "Add to server" and "Add to my apps" (user install:
+     Image replies: set RENDER_URL + RENDER_KEY (tools/bot-render/server.mjs on the VPS); without them the bot answers with text embeds.
+   4. Install: https://discord.com/oauth2/authorize?client_id=<app id> — offers "Add to server" and "Add to my apps" (user install:
         the commands then work for that person in every server and in DMs; enabled in the portal under Installation).
    ============================================================ */
 const SITE = 'https://waish.ir';
@@ -53,6 +54,34 @@ function rankOf(pl) {
   return { VIP: 'VIP', VIP_PLUS: 'VIP+', MVP: 'MVP', MVP_PLUS: 'MVP+' }[pk] || null;
 }
 const lobbyName = (pl, fallback) => { const r = rankOf(pl); return `${r ? `[${r}] ` : ''}${pl.displayname || fallback}`; };
+// Hypixel colours, lifted a little so they read on the card's dark background (same as apps/hypixel-stats.js)
+const MC = { BLACK: '#555', DARK_BLUE: '#5555FF', DARK_GREEN: '#55FF55', DARK_AQUA: '#55FFFF', DARK_RED: '#FF5555', DARK_PURPLE: '#FF55FF', GOLD: '#FFAA00', GRAY: '#AAAAAA', DARK_GRAY: '#888', BLUE: '#5555FF', GREEN: '#55FF55', AQUA: '#55FFFF', RED: '#FF5555', LIGHT_PURPLE: '#FF55FF', YELLOW: '#FFFF55', WHITE: '#FFFFFF' };
+const CODE = { 0: '#555', 1: '#5555FF', 2: '#55FF55', 3: '#55FFFF', 4: '#FF5555', 5: '#FF55FF', 6: '#FFAA00', 7: '#AAAAAA', 8: '#888', 9: '#5555FF', a: '#55FF55', b: '#55FFFF', c: '#FF5555', d: '#FF55FF', e: '#FFFF55', f: '#FFFFFF' };
+function rankInfo(pl) {
+  if (pl.prefix) { const m = pl.prefix.match(/§([0-9a-f])/); return { name: pl.prefix.replace(/§./g, '').replace(/[\[\]]/g, ''), color: m ? CODE[m[1]] : '#FF5555' }; }
+  const r = pl.rank && !['NORMAL', 'NONE'].includes(pl.rank) ? pl.rank : null;
+  if (r) return { ADMIN: { name: 'ADMIN', color: '#FF5555' }, GAME_MASTER: { name: 'GM', color: '#55FF55' }, MODERATOR: { name: 'MOD', color: '#55FF55' }, YOUTUBER: { name: 'YOUTUBE', color: '#FF5555' } }[r] || { name: r, color: '#FF5555' };
+  if (pl.monthlyPackageRank === 'SUPERSTAR') return { name: 'MVP', plus: '++', color: pl.monthlyRankColor === 'AQUA' ? '#55FFFF' : '#FFAA00', plusColor: MC[pl.rankPlusColor] || '#FF5555' };
+  const pk = (pl.newPackageRank && pl.newPackageRank !== 'NONE') ? pl.newPackageRank : pl.packageRank;
+  return { VIP: { name: 'VIP', color: '#55FF55' }, VIP_PLUS: { name: 'VIP', plus: '+', color: '#55FF55', plusColor: '#FFAA00' }, MVP: { name: 'MVP', color: '#55FFFF' }, MVP_PLUS: { name: 'MVP', plus: '+', color: '#55FFFF', plusColor: MC[pl.rankPlusColor] || '#FF5555' } }[pk] || null;
+}
+const starColor = s => s < 100 ? '#AAAAAA' : s < 200 ? '#FFFFFF' : s < 300 ? '#FFAA00' : s < 400 ? '#55FFFF' : s < 500 ? '#55FF55' : s < 600 ? '#55FFFF' : s < 700 ? '#FF5555' : s < 800 ? '#FF55FF' : s < 900 ? '#5555FF' : s < 1000 ? '#FF55FF' : '#FFFF55';
+const day = ms => ms ? new Date(ms).toISOString().slice(0, 10) : null;
+// a badge for the card from one blacklist field ({name, value} as /check builds them)
+const badgeOf = f => { const v = f.value; const [first, ...rest] = v.split('\n'); const label = first.replace(/^[^\w]+/, '').replace(/\*\*/g, '').trim();
+  return { src: f.name, state: /BLACKLISTED/.test(v) ? 'bad' : /bot account/.test(v) ? 'warn' : /^✅/.test(v) ? 'clean' : 'fail', label: /^✅/.test(v) ? 'not blacklisted' : label, why: rest.join(' · ').slice(0, 90) || undefined }; };
+
+// The image reply: tools/bot-render/server.mjs (on the VPS) draws a PNG from the card data. Null when it isn't reachable — the text embed is sent instead.
+async function renderCard(env, kind, data) {
+  if (!env.RENDER_URL || !env.RENDER_KEY) return null;
+  try {
+    const c = new AbortController(); const tm = setTimeout(() => c.abort(), 9000);
+    const r = await fetch(`${env.RENDER_URL}/render`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Render-Key': env.RENDER_KEY }, body: JSON.stringify({ kind, data }), signal: c.signal });
+    clearTimeout(tm);
+    if (!r.ok) return null;
+    return await r.arrayBuffer();
+  } catch (e) { return null; }
+}
 
 // ---------- static commands: answered instantly ----------
 const STATIC = {
@@ -110,7 +139,8 @@ const LOOKUP = {
   async check(api, opts) {
     const p = await resolve(api, opts.player); if (p.err) return { content: p.err };
     const { bad, fields } = await blacklists(api, p.uuid);
-    return { embeds: [{ color: bad ? COLOR.red : COLOR.green, title: p.ign, description: `\`${p.uuid}\``, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
+    return { card: ['check', { ign: p.ign, uuid: p.uuid, bad, seraph: badgeOf(fields[0]), urchin: badgeOf(fields[1]) }],
+      embeds: [{ color: bad ? COLOR.red : COLOR.green, title: p.ign, description: `\`${p.uuid}\``, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
       components: [row(btn('Full profile on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'))] };
   },
   // /user — the whole User Lookup app in one card: who, skin, Hypixel, guild, both blacklists
@@ -135,7 +165,15 @@ const LOOKUP = {
     if (g) fields.push({ name: 'Guild', value: `**${g.name}**${g.tag ? ` [${g.tag}]` : ''} · level ${Math.floor(guildLevel(g.exp))} · ${(g.members || []).length} members`, inline: false });
     else if (pl) fields.push({ name: 'Guild', value: gu.d && gu.d.success ? 'none' : 'unavailable', inline: false });
     fields.push(...bl.fields.map(f => ({ ...f, inline: true })));
-    return { embeds: [{ color: bl.bad ? COLOR.red : COLOR.blue, title: pl ? lobbyName(pl, p.ign) : p.ign, thumbnail: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=4` }, fields, footer: hy.d && hy.d.lastUpdated ? { ...footer, text: `waish.ir · Hypixel snapshot ${new Date(hy.d.lastUpdated).toISOString().slice(0, 10)}` } : footer }],
+    const bw = pl ? ((pl.stats || {}).Bedwars || {}) : {};
+    const star = pl ? ((pl.achievements && pl.achievements.bedwars_level) || (bw.Experience != null ? Math.floor(bwLevel(bw.Experience)) : null)) : null;
+    const card = ['user', { ign: p.ign, uuid: p.uuid, bad: bl.bad, rank: pl ? rankInfo(pl) : null, star, starColor: star != null ? starColor(star) : null,
+      level: pl ? Math.floor(netLevel(pl.networkExp)) : null, fkdr: bw.final_kills_bedwars != null ? ratio(bw.final_kills_bedwars, bw.final_deaths_bedwars) : null, bwWins: bw.wins_bedwars ?? null,
+      karma: pl ? pl.karma ?? null : null, firstSeen: pl ? day(pl.firstLogin) : null, model: slim ? 'slim' : 'classic', cape: !!cape,
+      guild: g ? { name: g.name, tag: g.tag || null, color: MC[g.tagColor] || '#AAAAAA', level: Math.floor(guildLevel(g.exp)), members: (g.members || []).length } : null,
+      seraph: badgeOf(bl.fields[0]), urchin: badgeOf(bl.fields[1]), snapshot: hy.d && hy.d.lastUpdated ? day(hy.d.lastUpdated) : null,
+      activity: pl && pl.lastLogin ? (pl.lastLogout && pl.lastLogin > pl.lastLogout ? 'online on Hypixel now' : `last on Hypixel ${day(pl.lastLogin)}`) : null }];
+    return { card, embeds: [{ color: bl.bad ? COLOR.red : COLOR.blue, title: pl ? lobbyName(pl, p.ign) : p.ign, thumbnail: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=4` }, fields, footer: hy.d && hy.d.lastUpdated ? { ...footer, text: `waish.ir · Hypixel snapshot ${new Date(hy.d.lastUpdated).toISOString().slice(0, 10)}` } : footer }],
       components: [row(btn('Open in User Lookup', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '🔍'), btn('3D skin', `${SITE}/apps/skin-editor.html?u=${encodeURIComponent(p.ign)}`, '🎨'))] };
   },
   async stats(api, opts) {
@@ -150,7 +188,11 @@ const LOOKUP = {
     if (sw.wins != null) fields.push({ name: 'SkyWars', value: `wins ${n(sw.wins)} · kills ${n(sw.kills)} · KDR **${ratio(sw.kills, sw.deaths)}**`, inline: false });
     if (du.wins != null) fields.push({ name: 'Duels', value: `wins ${n(du.wins)} · WLR **${ratio(du.wins, du.losses)}** · best streak ${n(du.best_overall_winstreak)}`, inline: false });
     const when = r.d.lastUpdated ? `Bordic snapshot <t:${Math.floor(r.d.lastUpdated / 1000)}:R>` : undefined;
-    return { embeds: [{ color: COLOR.yellow, title: lobbyName(pl, p.ign), description: when, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
+    const lvl = netLevel(pl.networkExp);
+    const card = ['stats', { ign: p.ign, uuid: p.uuid, rank: rankInfo(pl), star, starColor: star != null ? starColor(star) : null, level: Math.floor(lvl), levelPct: (lvl % 1) * 100, karma: pl.karma ?? null,
+      bw: { wins: bw.wins_bedwars ?? null, finals: bw.final_kills_bedwars ?? null, fkdr: bw.final_kills_bedwars != null ? ratio(bw.final_kills_bedwars, bw.final_deaths_bedwars) : '—', wlr: bw.wins_bedwars != null ? ratio(bw.wins_bedwars, bw.losses_bedwars) : '—' },
+      sw: { wins: sw.wins ?? null, kdr: sw.kills != null ? ratio(sw.kills, sw.deaths) : '—' }, du: { wins: du.wins ?? null, wlr: du.wins != null ? ratio(du.wins, du.losses) : '—' }, snapshot: day(r.d.lastUpdated) }];
+    return { card, embeds: [{ color: COLOR.yellow, title: lobbyName(pl, p.ign), description: when, thumbnail: { url: `https://crafatar.com/avatars/${p.uuid}?overlay&size=128` }, fields, footer }],
       components: [row(btn('Every game on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(p.ign)}`, '📊'))] };
   },
   async skin(api, opts) {
@@ -158,7 +200,8 @@ const LOOKUP = {
     const r = await api(`/mojang?uuid=${p.uuid}`);
     const tex = r.d && r.d.textures && r.d.textures.textures || {};
     const skin = tex.SKIN && tex.SKIN.url, slim = tex.SKIN && tex.SKIN.metadata && tex.SKIN.metadata.model === 'slim', cape = tex.CAPE && tex.CAPE.url;
-    return { embeds: [{ color: COLOR.blue, title: p.ign, description: `${slim ? 'slim (Alex)' : 'classic (Steve)'} model${cape ? ' · has a cape' : ''}\n\`${p.uuid}\``, image: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=8&t=${Math.floor(Date.now() / 60000)}` }, footer }],
+    return { card: skin ? ['skin', { ign: p.ign, uuid: p.uuid, model: slim ? 'slim (Alex)' : 'classic (Steve)', cape: !!cape, skinUrl: skin }] : null,
+      embeds: [{ color: COLOR.blue, title: p.ign, description: `${slim ? 'slim (Alex)' : 'classic (Steve)'} model${cape ? ' · has a cape' : ''}\n\`${p.uuid}\``, image: { url: `https://crafatar.com/renders/body/${p.uuid}?overlay&scale=8&t=${Math.floor(Date.now() / 60000)}` }, footer }],
       components: [row(btn('3D viewer & editor', `${SITE}/apps/skin-editor.html?u=${encodeURIComponent(p.ign)}`, '🎨'), ...(skin ? [btn('Download skin', skin, '⬇️')] : []))] };
   },
   async guild(api, opts) {
@@ -177,15 +220,28 @@ const LOOKUP = {
       { name: 'Created', value: g.created ? `<t:${Math.floor(g.created / 1000)}:D>` : '—', inline: true },
     ];
     if (g.description) fields.push({ name: 'Description', value: g.description.slice(0, 500) });
-    if (gm) { const nm = await api(`/names?uuids=${gm.uuid}`); fields.push({ name: 'Guild master', value: (nm.d && nm.d.names && nm.d.names[gm.uuid]) || `\`${gm.uuid}\`` }); }
-    return { embeds: [{ color: COLOR.yellow, title: `${g.name}${g.tag ? ` [${g.tag}]` : ''}`, description: byPlayer && !byPlayer.err ? `guild of **${byPlayer.ign}**` : undefined, fields, footer }],
+    let gmName = null;
+    if (gm) { const nm = await api(`/names?uuids=${gm.uuid}`); gmName = (nm.d && nm.d.names && nm.d.names[gm.uuid]) || null; fields.push({ name: 'Guild master', value: gmName || `\`${gm.uuid}\`` }); }
+    const card = ['guild', { query: q, name: g.name, tag: g.tag || null, color: MC[g.tagColor] || '#FFAA00', of: byPlayer && !byPlayer.err ? byPlayer.ign : null, gm: gmName, gmUuid: gm ? gm.uuid : (byPlayer && !byPlayer.err ? byPlayer.uuid : null),
+      level: Math.floor(lvl), levelPct: Math.round((lvl % 1) * 100), members: members.length, created: day(g.created), description: g.description || null }];
+    return { card, embeds: [{ color: COLOR.yellow, title: `${g.name}${g.tag ? ` [${g.tag}]` : ''}`, description: byPlayer && !byPlayer.err ? `guild of **${byPlayer.ign}**` : undefined, fields, footer }],
       components: [row(btn('Open on waish.ir', `${SITE}/apps/lookup.html?u=${encodeURIComponent(byPlayer && !byPlayer.err ? byPlayer.ign : q)}`, '🔍'))] };
   },
 };
 
 // Discord edits the deferred message through the interaction token — no bot token needed for that.
 async function followUp(env, token, data) {
-  await fetch(`https://discord.com/api/v10/webhooks/${env.DISCORD_APP_ID}/${token}/messages/@original`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  const url = `https://discord.com/api/v10/webhooks/${env.DISCORD_APP_ID}/${token}/messages/@original`;
+  const { card, ...rest } = data;
+  const png = card ? await renderCard(env, card[0], card[1]) : null;
+  if (png) {   // the card as a full-width image + the same buttons; the embed is only for the text fallback
+    const fd = new FormData();
+    fd.append('payload_json', JSON.stringify({ components: rest.components || [], attachments: [{ id: 0, filename: 'card.png' }] }));
+    fd.append('files[0]', new Blob([png], { type: 'image/png' }), 'card.png');
+    const r = await fetch(url, { method: 'PATCH', body: fd });
+    if (r.ok) return;
+  }
+  await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rest) });
 }
 
 /** POST /discord — `api(path)` calls the worker's own routes in-process and returns {status, d}. */

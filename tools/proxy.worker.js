@@ -68,6 +68,11 @@ export default {
       const call = async path => { const r = await api(new Request('https://waish-proxy.internal' + path, { headers: { Origin: 'https://waish.ir' } }), env); let d = null; try { d = await r.json(); } catch (e) {} return { status: r.status, d }; };
       return handleInteraction(request, env, ctx, call);
     }
+    if (url.pathname === '/render-health') {   // can the worker reach the card renderer on the VPS? (tools/bot-render)
+      if (!env.RENDER_URL) return json({ ok: false, cause: 'RENDER_URL not set' }, 200, {});
+      try { const c = new AbortController(); setTimeout(() => c.abort(), 5000); const r = await fetch(`${env.RENDER_URL}/health`, { signal: c.signal }); return json({ ok: r.ok, renderer: await r.text() }, 200, {}); }
+      catch (e) { return json({ ok: false, cause: String(e.message || e) }, 200, {}); }
+    }
     return api(request, env);
   },
 };

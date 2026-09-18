@@ -3,3 +3,5 @@
 # API keys for tools/site-server.py (BORDIC_KEY=…, HYPIXEL_KEY=…, URCHIN_KEY=…)
 tools/proxy.env
 debug*.png
+# the bot-render service installs Playwright locally (tools/bot-render/package.json)
+node_modules/

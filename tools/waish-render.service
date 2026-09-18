@@ -1,0 +1,19 @@
+# systemd unit for the Discord bot's card renderer (tools/bot-render/server.mjs) — headless Chromium drawing the image replies.
+# Install:  cd tools/bot-render && npm i   then   sudo cp tools/waish-render.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now waish-render
+# Firewall: ufw allow 8080/tcp   (the Cloudflare worker fetches the PNGs from here; requests need the RENDER_KEY)
+# Logs:     journalctl -u waish-render -f      Health: curl localhost:8080/health
+[Unit]
+Description=waish Discord bot card renderer (Chromium)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/waish/tools/bot-render
+ExecStart=/usr/bin/env node /root/waish/tools/bot-render/server.mjs
+Restart=always
+RestartSec=5
+MemoryMax=600M
+
+[Install]
+WantedBy=multi-user.target

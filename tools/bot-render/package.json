@@ -1,0 +1,7 @@
+{
+  "name": "waish-bot-render",
+  "private": true,
+  "type": "module",
+  "description": "Draws the Discord bot's image cards with headless Chromium (see server.mjs)",
+  "dependencies": { "playwright": "1.63.0" }
+}
