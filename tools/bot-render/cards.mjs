@@ -83,7 +83,7 @@ html { background: var(--bg); } body { width: 100%; min-height: 100%; background
 .bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); }
 `;
 const page = (cls, inner, w, h) => `<!doctype html><html><head><meta charset="utf-8"><style>${BASE}</style></head><body style="width:${w}px"><div class="card ${cls}" style="--min-h:${h}px"><div class="grid"></div>${inner}</div></body></html>`;
-const head = (cmd, arg) => `<div class="head"><span class="brand">waish<b>.ir</b></span><span>·</span><span>the terminal, in Discord</span><span class="cmd"><b>/${cmd}</b> ${esc(arg)}</span></div>`;
+const head = (cmd, arg) => `<div class="head"><span class="brand">waish<b>.ir</b></span><span>·</span><span>Terminal</span><span class="cmd"><b>/${cmd}</b> ${esc(arg)}</span></div>`;
 const foot = (l, r) => `<div class="foot"><span>${l}</span><span class="r">${r}</span></div>`;
 const rankHTML = r => r ? `<span class="pill" style="color:${r.color}">[${esc(r.name)}${r.plus ? `<span style="color:${r.plusColor || r.color}">${esc(r.plus)}</span>` : ''}]</span>` : '';
 const VERDICT = { bad: 'BLACKLISTED', clean: 'not blacklisted', warn: 'flagged', fail: 'check failed' };
