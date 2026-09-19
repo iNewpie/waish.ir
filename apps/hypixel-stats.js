@@ -233,7 +233,8 @@ window.HYP = (() => {
     const g = ST.guild, me = (g.members || []).find(m => m.uuid && m.uuid.replace(/-/g, '') === ST.p.undashed), lvl = guildLevel(g.exp), tagColor = MC[g.tagColor] || '#AAA';
     return `<div class="hy-head"><b style="font-size:18px">${esc(g.name)}</b>${g.tag ? `<span class="rank" style="color:${tagColor}">[${esc(g.tag)}]</span>` : ''}</div>
       ${g.description ? `<p class="vhint" style="text-align:left">${esc(g.description)}</p>` : ''}
-      ${grid([calc('level', fmtN(Math.floor(lvl)), true, '#FA0'), stat('members', N((g.members || []).length)), stat('created', dt(g.created)), stat('XP', N(g.exp)), me ? stat('rank', esc(me.rank)) : '', me ? stat('joined', dt(me.joined)) : '', g.preferredGames && g.preferredGames.length ? stat('games', esc(g.preferredGames.map(x => GAME_NAMES[x] || x).join(', '))) : '', g.publiclyListed != null ? stat('listed', g.publiclyListed ? (fa() ? 'بله' : 'yes') : (fa() ? 'نه' : 'no')) : ''])}`;
+      ${grid([calc('level', fmtN(Math.floor(lvl)), true, '#FA0'), stat('members', N((g.members || []).length)), stat('created', dt(g.created)), stat('XP', N(g.exp)), me ? stat('rank', esc(me.rank)) : '', me ? stat('joined', dt(me.joined)) : '', g.publiclyListed != null ? stat('listed', g.publiclyListed ? (fa() ? 'بله' : 'yes') : (fa() ? 'نه' : 'no')) : ''])}
+      ${g.preferredGames && g.preferredGames.length ? `<div class="row"><span class="k">${esc(L('games'))}</span><span class="tags">${g.preferredGames.map(x => `<span class="tag">${esc(GAME_NAMES[x] || x)}</span>`).join('')}</span></div>` : ''}`;
   }
   function panel() {
     if (ST.tab === 'overview') return overview();
