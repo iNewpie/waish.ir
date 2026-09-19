@@ -4,7 +4,7 @@
      • the [RANK] Name header in Hypixel colours
      • an Overview tab (network level, socials, highlights — whatever Bordic has cached)
      • one tab per game the player has stats for, with mode buttons where Hypixel has modes
-     • a Guild tab (fetched only when opened, to save API requests)
+     • a Guild button that jumps to the Guild Lookup section on the player's guild (GUILD.open) — no guild view in this panel
    Relies on globals from lookup.html: $, t, esc, fmtN, lang, ago, PROXY_URL.
    ============================================================ */
 window.HYP = (() => {
@@ -204,7 +204,10 @@ window.HYP = (() => {
     const main = MAIN.filter(present), classic = ORDER.filter(id => !MAIN.includes(id) && id !== 'SkyBlock' && present(id));
     const other = [...(present('SkyBlock') ? ['SkyBlock'] : []), ...Object.keys(st).filter(id => !ORDER.includes(id) && !['Housing', 'Legacy', 'SkyClash', 'TrueCombat'].includes(id) && present(id))];
     const group = (title, inner) => inner ? `<div class="ggroup"><span class="gg-title">${esc(title)}</span><div class="gtabs">${inner}</div></div>` : '';
-    return group(fa() ? 'کلی' : 'General', btn('overview', fa() ? 'نمای کلی' : 'Overview', '◈') + btn('guild', fa() ? 'گیلد' : 'Guild', '⚑'))
+    // The Guild button is a jump, not a tab: it opens the Guild Lookup section on this player's guild (nothing is shown here).
+    const gname = ST.guild && !ST.guild.error && ST.guild.name;
+    const guildBtn = gname ? `<button class="gbtn jump" data-jump="${esc(gname)}" title="${fa() ? 'باز کردن توی جستجوی گیلد' : 'open in Guild Lookup'}"><span class="gi">⚑</span>${fa() ? 'گیلد' : 'Guild'} · ${esc(gname)} ↗</button>` : '';
+    return group(fa() ? 'کلی' : 'General', btn('overview', fa() ? 'نمای کلی' : 'Overview', '◈') + guildBtn)
       + group(fa() ? 'بازی‌های اصلی' : 'Main games', main.map(game).join(''))
       + group(fa() ? 'بازی‌های کلاسیک' : 'Classic games', classic.map(game).join(''))
       + group(fa() ? 'دیگر' : 'Other', other.map(game).join(''));
@@ -226,19 +229,8 @@ window.HYP = (() => {
       ${socHTML ? `<div class="row"><span class="k">${fa() ? 'سوشال' : 'socials'}</span><span class="tags">${socHTML}</span></div>` : ''}
       ${section(fa() ? 'خلاصه' : 'Highlights', grid([bwStar != null ? starCalc('BedWars ' + L('stars'), bwStar, true) : '', bw.final_kills_bedwars != null ? fkdrCalc('BedWars FKDR', bw.final_kills_bedwars, bw.final_deaths_bedwars) : '', sw.skywars_experience != null ? swCalc('SkyWars ' + L('level'), Math.floor(swLevel(sw.skywars_experience)), true) : '', sw.kills != null ? calc('SkyWars KDR', R(sw.kills, sw.deaths)) : '', du.wins != null ? stat('Duels ' + L('wins'), N(du.wins)) : '', du.wins != null ? calc('Duels WLR', R(du.wins, du.losses)) : '', mm.wins != null ? stat('Murder Mystery ' + L('wins'), N(mm.wins)) : '', st.TNTGames && st.TNTGames.wins != null ? stat('TNT Games ' + L('wins'), N(st.TNTGames.wins)) : '', st.Arcade && st.Arcade.coins != null ? stat('Arcade ' + L('coins'), N(st.Arcade.coins)) : '']))}`;
   }
-  function guildPanel() {
-    if (ST.guild === undefined) return `<span class="tag"><span class="spin"></span>${t('checking…')}</span>`;
-    if (ST.guild === null) return empty(fa() ? 'توی گیلدی نیست.' : 'Not in a guild.');
-    if (ST.guild.error) return empty(ST.guild.error);
-    const g = ST.guild, me = (g.members || []).find(m => m.uuid && m.uuid.replace(/-/g, '') === ST.p.undashed), lvl = guildLevel(g.exp), tagColor = MC[g.tagColor] || '#AAA';
-    return `<div class="hy-head"><b style="font-size:18px">${esc(g.name)}</b>${g.tag ? `<span class="rank" style="color:${tagColor}">[${esc(g.tag)}]</span>` : ''}</div>
-      ${g.description ? `<p class="vhint" style="text-align:left">${esc(g.description)}</p>` : ''}
-      ${grid([calc('level', fmtN(Math.floor(lvl)), true, '#FA0'), stat('members', N((g.members || []).length)), stat('created', dt(g.created)), stat('XP', N(g.exp)), me ? stat('rank', esc(me.rank)) : '', me ? stat('joined', dt(me.joined)) : '', g.publiclyListed != null ? stat('listed', g.publiclyListed ? (fa() ? 'بله' : 'yes') : (fa() ? 'نه' : 'no')) : ''])}
-      ${g.preferredGames && g.preferredGames.length ? `<div class="row"><span class="k">${esc(L('games'))}</span><span class="tags">${g.preferredGames.map(x => `<span class="tag">${esc(GAME_NAMES[x] || x)}</span>`).join('')}</span></div>` : ''}`;
-  }
   function panel() {
     if (ST.tab === 'overview') return overview();
-    if (ST.tab === 'guild') return guildPanel();
     const s = (ST.player.stats || {})[ST.tab] || {}, g = GAMES[ST.tab];
     if (!g) return auto(s);
     let html = '';
@@ -248,19 +240,13 @@ window.HYP = (() => {
   }
   function draw() {
     const body = $('#hyBody'); body.innerHTML = tabs() + `<div class="gpanel">${panel()}</div>`;
-    body.querySelectorAll('.gbtn').forEach(b => b.addEventListener('click', () => { ST.tab = b.dataset.tab; if (ST.tab === 'guild' && ST.guild === undefined) loadGuild(); draw(); }));
+    body.querySelectorAll('.gbtn[data-tab]').forEach(b => b.addEventListener('click', () => { ST.tab = b.dataset.tab; draw(); }));
+    body.querySelectorAll('.gbtn[data-jump]').forEach(b => b.addEventListener('click', () => { if (window.GUILD) GUILD.open(b.dataset.jump); }));
     body.querySelectorAll('.mbtn').forEach(b => b.addEventListener('click', () => { ST.mode[ST.tab] = b.dataset.mode; draw(); }));
     const act = body.querySelector('.gbtn.on'); if (act) act.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
   /* ---------- fetching (everything goes through the proxy worker) ---------- */
-  async function loadGuild() {
-    try {
-      const r = await fetch(`${PROXY_URL}/guild?uuid=${ST.p.undashed}`); const d = await r.json();
-      ST.guild = d && d.success ? (d.guild || null) : { error: (d && (d.cause || d.error)) || 'guild lookup failed' };
-    } catch (e) { ST.guild = { error: fa() ? 'گیلد لود نشد.' : 'Guild lookup failed.' }; }
-    if (ST.tab === 'guild') draw();
-  }
   async function run(p) {
     const box = $('#hy'), body = $('#hyBody'), meta = $('#hyMeta'); box.hidden = false; meta.textContent = '';
     ST.p = p; ST.player = null; ST.guild = undefined; ST.tab = 'overview'; ST.mode = {};
