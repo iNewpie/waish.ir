@@ -118,7 +118,8 @@
   .meta h2 .rank { display: none; }
   .stat { border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: rgba(255,255,255,.02); }
   .stat .k { font-family: var(--mono); font-size: 10px; color: var(--term-dim); text-transform: uppercase; letter-spacing: .4px; }
-  .stat .v { font-family: var(--sans); font-size: 19px; font-weight: 700; color: var(--ink); margin-top: 2px; letter-spacing: -.4px; overflow-wrap: anywhere; line-height: 1.15; }
+  .stat .v { font-family: var(--sans); font-size: 19px; font-weight: 700; color: var(--ink); margin-top: 2px; letter-spacing: -.4px; overflow-wrap: normal; word-break: keep-all; line-height: 1.15; }
+  .stat .v.tight { overflow-wrap: anywhere; word-break: normal; }
   .stat .v:not(.star) { font-variant-numeric: tabular-nums; }
   .stat.hi .v { color: var(--accent-soft); }
   .star { font-family: var(--mono); font-weight: 700; font-size: 20px; }
@@ -284,8 +285,23 @@ const fmtN = n => (n == null ? '—' : Number(n).toLocaleString(lang === 'fa' ? 
 // blacklist report texts carry a "( Upgraded )" marker from Seraph's migration — noise for the reader, so it is stripped everywhere
 const cleanReport = s => String(s || '').replace(/\(\s*upgraded\s*\)/gi, '').replace(/\s{2,}/g, ' ').trim();
 
+/* ---------- stat tiles: shrink a value's font until its longest word fits the tile (no more "ENGLIS / H" in a narrow window).
+   Runs after any render that adds tiles (MutationObserver) and again on resize, since the grid re-flows. ---------- */
+const fitStats = () => {
+  document.querySelectorAll('.stat .v').forEach(v => {
+    v.style.fontSize = ''; v.classList.remove('tight');
+    const w = v.clientWidth; if (!w) return;   // hidden panel — fitted when it shows
+    let fs = parseFloat(getComputedStyle(v).fontSize);
+    while (v.scrollWidth > w + 1 && fs > 11) { fs -= 1; v.style.fontSize = fs + 'px'; }
+    if (v.scrollWidth > w + 1) v.classList.add('tight');
+  });
+};
+let fitRaf = 0; const fitSoon = () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitStats); };
+new MutationObserver(fitSoon).observe(document.body, { childList: true, subtree: true });
+addEventListener('resize', fitSoon);
+
 /* ---------- tabs ---------- */
-$('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'user' && VU) VU.resize(); });
+$('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'user' && VU) VU.resize(); fitSoon(); });
 
 /* ---------- 3D viewer (skinview3d) ---------- */
 function makeViewer(stage, ctl) {
