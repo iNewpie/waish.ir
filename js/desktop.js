@@ -4,6 +4,12 @@
    ============================================================ */
 window.DESKTOP = (function () {
   const ICONS = {
+    // brand marks for the Social card buttons (24×24 paths, filled with currentColor)
+    youtube: '<svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>',
+    aparat: '<svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm-3.9 4.8a2.4 2.4 0 1 1-1.2 4.6 2.4 2.4 0 0 1 1.2-4.6zm10.5 3.4a2.4 2.4 0 1 1-4.6-1.2 2.4 2.4 0 0 1 4.6 1.2zM12 10.4a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zm-6.6 5.4a2.4 2.4 0 1 1 4.6 1.2 2.4 2.4 0 0 1-4.6-1.2zm10.5 3.4a2.4 2.4 0 1 1 1.2-4.6 2.4 2.4 0 0 1-1.2 4.6z"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2-.1-1.3-.1-1.6-.1-4.8s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4 1.3-.1 1.6-.1 4.8-.1zM12 0C8.7 0 8.3 0 7.1.1 5.8.1 4.9.3 4.1.6c-.8.3-1.5.7-2.1 1.4C1.3 2.6.9 3.3.6 4.1.3 4.9.1 5.8.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.1 1.3.3 2.2.6 2.9.3.8.7 1.5 1.4 2.1.6.7 1.3 1.1 2.1 1.4.8.3 1.6.5 2.9.6C8.3 24 8.7 24 12 24s3.7 0 4.9-.1c1.3-.1 2.2-.3 2.9-.6.8-.3 1.5-.7 2.1-1.4.7-.6 1.1-1.3 1.4-2.1.3-.8.5-1.6.6-2.9.1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.1-1.3-.3-2.2-.6-2.9-.3-.8-.7-1.5-1.4-2.1C21.4 1.3 20.7.9 19.9.6 19.1.3 18.2.1 16.9.1 15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-10.8a1.4 1.4 0 1 0 0 2.9 1.4 1.4 0 0 0 0-2.9z"/></svg>',
+    telegram: '<svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm5.6 8.2-2 9.3c-.1.7-.5.8-1.1.5l-3-2.2-1.5 1.4c-.2.2-.3.3-.6.3l.2-3.1 5.6-5.1c.2-.2 0-.3-.4-.1l-6.9 4.4-3-.9c-.6-.2-.7-.6.1-.9l11.7-4.5c.5-.2 1 .1.9.9z"/></svg>',
+    discord: '<svg viewBox="0 0 24 24"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.3 18.3 0 0 0-5.5 0L8.6 3a19.7 19.7 0 0 0-4.9 1.5C.6 9.1-.3 13.6.1 18.1a19.9 19.9 0 0 0 6 3l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.8 19.8 0 0 0 6-3c.5-5.2-.9-9.7-3.6-13.7zM8 15.3c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.5 8 10.5s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg>',
     share: '<svg viewBox="0 0 24 24"><path d="M18 16a3 3 0 0 0-2.4 1.2l-7-4.1a3 3 0 0 0 0-2.2l7-4.1A3 3 0 1 0 15 5c0 .3 0 .6.1.9l-7 4.1a3 3 0 1 0 0 4l7 4.1c0 .3-.1.6-.1.9a3 3 0 1 0 3-3z"/></svg>',
     cart: '<svg viewBox="0 0 24 24"><path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM3 2v2h2l3.6 7.6L7.2 14A2 2 0 0 0 9 17h11v-2H9.4l1-2h7.5a2 2 0 0 0 1.8-1.1L23 5H6.2L5.3 3H3z"/></svg>',
     grid: '<svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg>',
@@ -20,7 +26,7 @@ window.DESKTOP = (function () {
     gamesFolder: { title: 'Games', tile: 'folder', icon: '📁', kind: 'folder', items: ['snake', 'tetris', 'minicraft'], w: .46, h: .46, minW: 420 },
     social:     { title: 'Social', tile: 'youtube', icon: ICONS.share, kind: 'card', sub: 'youtube · aparat · instagram · telegram · discord', w: .46, h: .52,
                   text: 'The Waish YouTube channel — Minecraft, mostly BedWars. Gameplay, PvP mechanics, ping & optimization, clients, and the occasional server-building video. Proper editing, thumbnails and structure. Persian streams and videos live on Aparat.',
-                  links: [['Open YouTube ↗', 'https://www.youtube.com/@WaishChannel'], ['Aparat ↗', 'https://aparat.com/waish'], ['Instagram ↗', 'https://instagram.com/asunawaish'], ['Telegram ↗', 'https://t.me/wishingcommunity'], ['Discord ↗', 'https://discord.gg/8HVsMqucZ2']], meta: 'youtube.com/@WaishChannel · 100+ videos' },
+                  links: [['Open YouTube ↗', 'https://www.youtube.com/@WaishChannel', 0, 'youtube'], ['Aparat ↗', 'https://aparat.com/waish', 0, 'aparat'], ['Instagram ↗', 'https://instagram.com/asunawaish', 0, 'instagram'], ['Telegram ↗', 'https://t.me/wishingcommunity', 0, 'telegram'], ['Discord ↗', 'https://discord.gg/8HVsMqucZ2', 0, 'discord']], meta: 'youtube.com/@WaishChannel · 100+ videos' },
     lunamc:     { title: 'LunaMC', tile: 'lunamc', icon: '<img src="assets/luna-logo.png" alt="">', kind: 'page', src: 'projects/lunamc.html?embed=1', w: .74, h: .82 },
     clutchping: { title: 'ClutchPing', tile: 'clutchping', icon: '<img src="assets/clutchping-white.png" alt="">', kind: 'page', src: 'projects/clutchping.html?embed=1', w: .74, h: .82 },
     aboutme:    { title: 'About me', tile: 'aboutme', icon: ICONS.user, kind: 'page', src: 'about-me.html?embed=1', w: .78, h: .82 },
@@ -249,7 +255,7 @@ window.DESKTOP = (function () {
         <div class="head"><div class="tile ${a.tile}">${a.icon}</div><div><h2>${a.title}</h2><div class="sub">${a.sub || ''}</div></div></div>
         ${a.cover ? `<a class="card-cover" href="${a.cover}" data-caption="${a.title}"><img src="${a.cover}" alt="${a.title}"></a>` : ''}
         <p>${a.text}</p>
-        <div class="actions">${a.links.map(([t, h, dis]) => `<a class="btn btn-primary${dis ? ' disabled' : ''}" href="${h}" target="_blank" rel="noopener">${t}</a>`).join('')}</div>
+        <div class="actions">${a.links.map(([t, h, dis, ic]) => `<a class="btn btn-primary${dis ? ' disabled' : ''}" href="${h}" target="_blank" rel="noopener">${ic && ICONS[ic] ? `<span class="bi">${ICONS[ic]}</span>` : ''}${t}</a>`).join('')}</div>
         <div class="meta">// ${a.meta || ''}</div></div>`;
 
     // size + position (cascade a little for each new window)

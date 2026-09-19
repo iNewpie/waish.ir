@@ -98,7 +98,9 @@
 .app-card .sub { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 3px; }
 .app-card p { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 52ch; }
 .app-card .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
-.app-card .btn { text-decoration: none; display: inline-block; }
+.app-card .btn { text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+.app-card .btn .bi { display: inline-flex; width: 16px; height: 16px; flex: none; }
+.app-card .btn .bi svg { width: 100%; height: 100%; fill: currentColor; }
 .app-card .btn.disabled { opacity: .45; pointer-events: none; }
 .app-card .meta { font-family: var(--mono); font-size: 12px; color: var(--term-dim); }
 
