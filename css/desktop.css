@@ -9,7 +9,7 @@
 /* the icon layer covers the desktop; desktop.js places every icon on a 98×102 grid and lets you drag it around */
 .icons { position: absolute; top: 12px; left: 12px; right: 12px; bottom: 44px; z-index: 2; pointer-events: none; }
 /* desktop icons and the taskbar are drawn at ~65 % of their original size */
-.icon { position: absolute; width: 62px; height: 64px; padding: 7px 3px 5px; border-radius: 9px; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: auto; touch-action: none;
+.icon { position: absolute; width: 62px; min-height: 64px; padding: 7px 3px 5px; border-radius: 9px; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: auto; touch-action: none;
   background: transparent; border: 1px solid transparent; color: var(--ink); font-family: var(--sans); font-size: 9.5px; cursor: pointer; transition: background .15s, border-color .15s, left .25s cubic-bezier(.22,.61,.36,1), top .25s cubic-bezier(.22,.61,.36,1); user-select: none; }
 .icon.dragging { transition: none; z-index: 30; opacity: .9; cursor: grabbing; background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); box-shadow: 0 20px 40px -18px rgba(0,0,0,.9); }
 .icon.dragging .tile { transform: scale(1.06); }
