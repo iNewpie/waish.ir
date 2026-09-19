@@ -115,6 +115,9 @@ window.DESKTOP = (function () {
   const desk = $('.desktop'), layer = $('.windows'), tasks = $('.tasks');
   const wins = {}; let z = 10; let focused = null;
   const isMobile = () => matchMedia('(max-width: 760px)').matches;
+  // recently opened apps → the start menu's Recommended list ([id, timestamp], newest first, folders excluded)
+  const recentGet = () => { try { return JSON.parse(localStorage.getItem('waish-recent-apps') || '[]'); } catch (e) { return []; } };
+  const recentAdd = id => { if (!APPS[id] || APPS[id].kind === 'folder') return; const l = recentGet().filter(x => x[0] !== id); l.unshift([id, Date.now()]); try { localStorage.setItem('waish-recent-apps', JSON.stringify(l.slice(0, 12))); } catch (e) {} };
 
   /* ---------- desktop icons ----------
      Laid out on a grid (columns, top-left down; top-right in Persian). Every icon can be dragged to another cell,
@@ -256,6 +259,7 @@ window.DESKTOP = (function () {
     id = ALIAS[id] || id;
     const a = APPS[id]; if (!a) return false;
     const src = a.kind === 'page' && query ? a.src + (a.src.includes('?') ? '&' : '?') + query : a.src;
+    recentAdd(id);
     if (wins[id]) { restore(id, from); if (query && a.kind === 'page') { const f = wins[id].querySelector('iframe'); if (f) f.src = src; } return true; }
     const w = document.createElement('div'); w.className = 'win ' + (a.kind === 'terminal' ? 'terminal' : ''); w.dataset.app = id;
     w.innerHTML = `<div class="win-chrome">
@@ -502,11 +506,64 @@ window.DESKTOP = (function () {
   })();
 
   /* ---------- start menu ---------- */
+  /* ---------- start menu (Windows 11 style) ----------
+     Search on top · Pinned grid that pages vertically (scroll-snap, dots on the side) · Recommended = recently opened apps ·
+     "All apps" slides in as a second page with letter headers · footer with the avatar and a power button. */
+  const SITE = [['index.html', 'Home page', '⌂'], ['projects.html', 'Projects page', '🧱'], ['about-me.html', 'About me page', '🧑‍💻'], ['contact.html', 'Contact page', '📬']];
   const startBtn = $('.start'), menu = $('.start-menu');
   if (startBtn && menu) {
-    ALL.forEach(id => { const a = APPS[id]; const b = document.createElement('button'); b.type = 'button'; b.innerHTML = `<span class="sm-ico tile ${a.tile}">${a.icon}</span>${a.title}`; b.addEventListener('click', () => { open(id); menu.hidden = true; startBtn.classList.remove('on'); }); menu.querySelector('.sm-apps').appendChild(b); });
-    startBtn.addEventListener('click', e => { e.stopPropagation(); menu.hidden = !menu.hidden; startBtn.classList.toggle('on', !menu.hidden); });
-    document.addEventListener('pointerdown', e => { if (!menu.hidden && !menu.contains(e.target) && e.target !== startBtn) { menu.hidden = true; startBtn.classList.remove('on'); } });
+    const PER_PAGE = 10;   // 5 × 2 tiles per page
+    const tileHTML = id => { const a = APPS[id]; return `<button type="button" class="sm-tile" data-app="${id}"><span class="sm-ico tile ${a.tile}">${a.icon}</span><span class="sm-name">${T(a.title)}</span></button>`; };
+    const rowHTML = (id, sub) => { const a = APPS[id]; return `<button type="button" class="sm-row-btn" data-app="${id}"><span class="sm-ico tile ${a.tile}">${a.icon}</span><span class="sm-txt"><span class="sm-name">${T(a.title)}</span>${sub ? `<span class="sm-sub">${sub}</span>` : ''}</span></button>`; };
+    const siteHTML = ([href, title, ico]) => `<a class="sm-row-btn" href="${href}"><span class="sm-ico site">${ico}</span><span class="sm-txt"><span class="sm-name">${T(title)}</span><span class="sm-sub">waish.ir</span></span></a>`;
+    const ago = ts => { const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? T('just now') : m < 60 ? `${m} ${T('min ago')}` : m < 1440 ? `${Math.round(m / 60)} ${T('h ago')}` : `${Math.round(m / 1440)} ${T('d ago')}`; };
+    const pages = []; for (let i = 0; i < ALL.length; i += PER_PAGE) pages.push(ALL.slice(i, i + PER_PAGE));
+    const letters = ALL.map(id => [id, APPS[id].title]).sort((x, y) => x[1].localeCompare(y[1]));
+    let lastL = ''; const allList = letters.map(([id, title]) => { const L = title[0].toUpperCase(); const h = L !== lastL ? `<div class="sm-letter">${L}</div>` : ''; lastL = L; return h + rowHTML(id); }).join('');
+    menu.innerHTML = `
+      <div class="sm-search"><span class="sm-glass">⌕</span><input type="text" placeholder="${T('Search apps and pages…')}" autocomplete="off" spellcheck="false"></div>
+      <div class="sm-body">
+        <section class="sm-home">
+          <div class="sm-head"><span>${T('Pinned')}</span><button type="button" class="sm-link" data-go="all">${T('All apps')} <b>›</b></button></div>
+          <div class="sm-pinned"><div class="sm-pages">${pages.map(pg => `<div class="sm-page">${pg.map(tileHTML).join('')}</div>`).join('')}</div><div class="sm-dots">${pages.map((_, i) => `<button type="button" data-p="${i}" aria-label="${T('page')} ${i + 1}"></button>`).join('')}</div></div>
+          <div class="sm-head"><span>${T('Recommended')}</span></div>
+          <div class="sm-rec"></div>
+        </section>
+        <section class="sm-all" hidden>
+          <div class="sm-head"><span>${T('All apps')}</span><button type="button" class="sm-link" data-go="home"><b>‹</b> ${T('Back')}</button></div>
+          <div class="sm-list">${allList}<div class="sm-letter">waish.ir</div>${SITE.map(siteHTML).join('')}</div>
+        </section>
+        <section class="sm-results" hidden><div class="sm-list"></div></section>
+      </div>
+      <div class="sm-foot"><div class="sm-user"><img src="assets/avatar.jpg" alt=""><span>Waish</span></div><div class="sm-power-wrap"><button type="button" class="sm-power" aria-label="power">⏻</button><div class="sm-power-menu" hidden><button type="button" data-pw="restart">↻ ${T('Restart')}</button><a href="index.html">⏻ ${T('Shut down')}</a></div></div></div>`;
+    const search = menu.querySelector('.sm-search input'), home = menu.querySelector('.sm-home'), all = menu.querySelector('.sm-all'), results = menu.querySelector('.sm-results'), pagesEl = menu.querySelector('.sm-pages'), dots = menu.querySelectorAll('.sm-dots button'), rec = menu.querySelector('.sm-rec');
+    const show = which => { home.hidden = which !== 'home'; all.hidden = which !== 'all'; results.hidden = which !== 'results'; menu.querySelector('.sm-body').scrollTop = 0; };
+    const closeMenu = () => { menu.hidden = true; startBtn.classList.remove('on'); menu.querySelector('.sm-power-menu').hidden = true; };
+    const openMenu = () => { menu.hidden = false; startBtn.classList.add('on'); search.value = ''; show('home'); renderRec(); setDot(); if (!isMobile()) setTimeout(() => search.focus(), 30); };
+    function renderRec() {
+      const list = recentGet().filter(([id]) => APPS[id]).slice(0, 6);
+      rec.innerHTML = list.length ? list.map(([id, ts]) => rowHTML(id, ago(ts))).join('') : SITE.slice(0, 4).map(siteHTML).join('');
+    }
+    const setDot = () => { const i = Math.round(pagesEl.scrollTop / Math.max(1, pagesEl.clientHeight)); dots.forEach((d, k) => d.classList.toggle('on', k === i)); };
+    pagesEl.addEventListener('scroll', setDot, { passive: true });
+    dots.forEach(d => d.addEventListener('click', () => pagesEl.scrollTo({ top: +d.dataset.p * pagesEl.clientHeight, behavior: 'smooth' })));
+    pagesEl.addEventListener('wheel', e => { if (isMobile()) return; e.preventDefault(); const i = Math.round(pagesEl.scrollTop / Math.max(1, pagesEl.clientHeight)) + (e.deltaY > 0 ? 1 : -1); pagesEl.scrollTo({ top: Math.max(0, Math.min(pages.length - 1, i)) * pagesEl.clientHeight, behavior: 'smooth' }); }, { passive: false });
+    menu.addEventListener('click', e => {
+      const app = e.target.closest('[data-app]'); if (app) { open(app.dataset.app); closeMenu(); return; }
+      const go = e.target.closest('[data-go]'); if (go) { show(go.dataset.go); return; }
+      if (e.target.closest('.sm-power')) { const pm = menu.querySelector('.sm-power-menu'); pm.hidden = !pm.hidden; return; }
+      if (e.target.closest('[data-pw=restart]')) location.reload();
+    });
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase(); if (!q) { show('home'); return; }
+      const apps = letters.filter(([, title]) => title.toLowerCase().includes(q) || T(title).toLowerCase().includes(q)).map(([id]) => rowHTML(id));
+      const site = SITE.filter(([, title]) => title.toLowerCase().includes(q) || T(title).toLowerCase().includes(q)).map(siteHTML);
+      results.querySelector('.sm-list').innerHTML = apps.concat(site).join('') || `<div class="sm-empty">${T('No results')}</div>`; show('results');
+    });
+    search.addEventListener('keydown', e => { if (e.key === 'Enter') { const first = results.hidden ? null : results.querySelector('[data-app], a'); if (first) first.click(); } if (e.key === 'Escape') closeMenu(); });
+    startBtn.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); });
+    document.addEventListener('pointerdown', e => { if (!menu.hidden && !menu.contains(e.target) && !startBtn.contains(e.target)) closeMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) closeMenu(); });
   }
 
   // clicking the empty desktop unfocuses
