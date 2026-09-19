@@ -122,6 +122,42 @@
   .stat .v:not(.star) { font-variant-numeric: tabular-nums; }
   .stat.hi .v { color: var(--accent-soft); }
   .star { font-family: var(--mono); font-weight: 700; font-size: 20px; }
+  /* ---- FKDR tiers: colour climbs with the ratio (classes set in hypixel-stats.js) ---- */
+  .stat.fk-gray .v { color: #9A9A9A; }
+  .stat.fk-white .v { color: #FFF; }
+  .stat.fk-green .v { color: #5F5; }
+  .stat.fk-yellow .v { color: #FF5; }
+  .stat.fk-red .v { color: #FF5C5C; }
+  .stat.fk-purple .v { color: #E066FF; }
+  .stat.fk-aqua .v { color: #5FF; }
+  .stat.fk-green .v, .stat.fk-yellow .v { text-shadow: 0 0 10px currentColor; }
+  .stat.fk-red .v, .stat.fk-purple .v, .stat.fk-aqua .v { text-shadow: 0 0 10px currentColor, 0 0 22px currentColor; animation: glowPulse 2.2s ease-in-out infinite; }
+  /* ---- levels: normal Hypixel colour, plus particles floating up in that colour (.pts is built in hypixel-stats.js) ---- */
+  .stat.lv { position: relative; overflow: hidden; }
+  .stat.lv .k, .stat.lv .v { position: relative; z-index: 1; }
+  .pts { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  .pts i { position: absolute; bottom: -4px; width: var(--s, 3px); height: var(--s, 3px); border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; opacity: 0; animation: ptRise 2.6s linear infinite; }
+  @keyframes ptRise { 0% { transform: translateY(0) scale(.5); opacity: 0; } 15% { opacity: .95; } 100% { transform: translateY(-52px) translateX(var(--dx, 0)) scale(1); opacity: 0; } }
+  /* light sweep across the tile for purple / aqua FKDR and hot levels */
+  .stat.fk-purple, .stat.fk-aqua, .stat.fk-rainbow, .stat.fk-god { position: relative; overflow: hidden; }
+  .stat.fk-purple::before, .stat.fk-aqua::before, .stat.fk-rainbow::before, .stat.fk-god::before { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.14), transparent); animation: tileSweep 3.2s ease-in-out infinite; pointer-events: none; }
+  /* rainbow text: 100+ FKDR */
+  .stat.fk-rainbow .v, .stat.fk-god .v { background: linear-gradient(90deg, #f55, #fa0, #ff5, #5f5, #5ff, #55f, #f5f, #f55); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; text-shadow: none; animation: rainbowSlide 2.5s linear infinite; }
+  .bw .stat.fk-rainbow { border-color: rgba(255,255,255,.28); background: linear-gradient(135deg, rgba(255,85,85,.08), rgba(85,85,255,.08)); }
+  /* 1000+ FKDR: rainbow text that breathes, a colour-cycling border, sparkles */
+  .stat.fk-god .v { animation: rainbowSlide 1.4s linear infinite, godPulse 1.8s ease-in-out infinite; filter: drop-shadow(0 0 6px rgba(255,255,255,.55)); transform-origin: center; }
+  .bw .stat.fk-god { border-color: transparent; background: linear-gradient(135deg, rgba(255,85,85,.1), rgba(85,255,85,.08), rgba(85,85,255,.1)); animation: godBorder 3s linear infinite; }
+  .stat.fk-god::after { content: '✦'; position: absolute; right: 8px; top: 6px; font-size: 11px; color: #fff; pointer-events: none; animation: sparkle 1.6s ease-in-out infinite; }
+  .stat.fk-god .k::after { content: '✦'; margin-left: 6px; font-size: 9px; color: #fff; animation: sparkle 1.6s ease-in-out infinite .8s; }
+  body.fa .stat.fk-god .k::after { margin-left: 0; margin-right: 6px; }
+  body.fa .stat.fk-god::after { right: auto; left: 8px; }
+  @keyframes glowPulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.35); } }
+  @keyframes tileSweep { 0% { left: -60%; } 60%, 100% { left: 120%; } }
+  @keyframes rainbowSlide { to { background-position: -200% 0; } }
+  @keyframes godPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  @keyframes sparkle { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); } 50% { opacity: 1; transform: scale(1.2) rotate(45deg); } }
+  @keyframes godBorder { 0% { box-shadow: 0 0 0 1px #f55, 0 0 16px rgba(255,85,85,.35); } 33% { box-shadow: 0 0 0 1px #5f5, 0 0 16px rgba(85,255,85,.35); } 66% { box-shadow: 0 0 0 1px #55f, 0 0 16px rgba(85,85,255,.35); } 100% { box-shadow: 0 0 0 1px #f55, 0 0 16px rgba(255,85,85,.35); } }
+  @media (prefers-reduced-motion: reduce) { .stat, .stat .v, .stat::before, .stat::after, .stat .k::after { animation: none !important; } .pts { display: none; } }
   .bl { border-radius: 12px; padding: 14px; border: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
   .bl[hidden], .box[hidden] { display: none; }
   .bl.clean { border-color: rgba(63,185,80,.45); background: rgba(63,185,80,.07); }
