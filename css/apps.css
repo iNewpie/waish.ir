@@ -54,3 +54,65 @@ body.fa .seg button { font-family: var(--fa); }
 *::-webkit-scrollbar-thumb { background: #262b36; border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
 *::-webkit-scrollbar-thumb:hover { background: #363c4a; background-clip: padding-box; border: 2px solid transparent; }
 *::-webkit-scrollbar-corner { background: transparent; }
+
+/* ============================================================
+   TOOL APPS — Hypixel Tools folder (prestige / ratio / compare / server status / guild leaderboard),
+   Notepad, CPS Test. Forms, stat tiles (same look as User Lookup), sections, chips, messages.
+   ============================================================ */
+.tool { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 14px; align-items: stretch; justify-content: flex-start; }
+.tool > * { flex: none; }
+.inp { font-family: var(--mono); font-size: 14px; padding: 10px 13px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); outline: none; direction: ltr; min-width: 0; width: 100%; box-sizing: border-box; transition: border-color .15s; }
+.inp:focus { border-color: rgba(255,59,59,.5); }
+.inp::placeholder { color: var(--term-dim); }
+.inp[type=number] { -moz-appearance: textfield; } .inp::-webkit-outer-spin-button, .inp::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field label { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--term-dim); }
+body.fa .field label { font-family: var(--fa); text-transform: none; letter-spacing: 0; }
+.fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.search { display: flex; gap: 8px; align-items: stretch; }
+.search .inp { flex: 1; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--card); display: flex; flex-direction: column; gap: 10px; }
+.card h3 { font-family: var(--mono); font-size: 11px; letter-spacing: .6px; text-transform: uppercase; color: var(--accent-soft); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+body.fa .card h3 { font-family: var(--fa); text-transform: none; letter-spacing: 0; }
+.card h3 .sp { flex: 1; }
+.sec-title { font-family: var(--mono); font-size: 11px; color: var(--accent-soft); letter-spacing: .5px; text-transform: uppercase; font-weight: 600; }
+body.fa .sec-title { font-family: var(--fa); text-transform: none; letter-spacing: 0; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; align-items: start; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: rgba(255,255,255,.02); min-width: 0; }
+.stat .k { font-family: var(--mono); font-size: 10px; color: var(--term-dim); text-transform: uppercase; letter-spacing: .4px; }
+body.fa .stat .k { font-family: var(--fa); text-transform: none; letter-spacing: 0; }
+.stat .v { font-family: var(--sans); font-size: 19px; font-weight: 700; color: var(--ink); margin-top: 2px; letter-spacing: -.4px; overflow-wrap: normal; word-break: keep-all; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat .v.tight { overflow-wrap: anywhere; word-break: normal; }
+.stat .v small { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+.stat.hi { border-color: rgba(255,59,59,.22); background: rgba(255,59,59,.04); }
+.stat.hi .v { color: var(--accent-soft); }
+.stat.good { border-color: rgba(63,185,80,.35); background: rgba(63,185,80,.06); } .stat.good .v { color: #3fb950; }
+.stat.warn { border-color: rgba(227,179,65,.35); background: rgba(227,179,65,.06); } .stat.warn .v { color: var(--term-yellow); }
+/* FKDR tiers (same as User Lookup) */
+.stat.fk-gray .v { color: #9A9A9A; } .stat.fk-white .v { color: #FFF; } .stat.fk-green .v { color: #5F5; } .stat.fk-yellow .v { color: #FF5; } .stat.fk-red .v { color: #FF5C5C; } .stat.fk-purple .v { color: #E066FF; } .stat.fk-aqua .v { color: #5FF; }
+.stat.fk-green .v, .stat.fk-yellow .v { text-shadow: 0 0 10px currentColor; }
+.stat.fk-red .v, .stat.fk-purple .v, .stat.fk-aqua .v { text-shadow: 0 0 10px currentColor, 0 0 22px currentColor; }
+.stat.fk-rainbow .v, .stat.fk-god .v, .rainbow { background: linear-gradient(90deg, #f55, #fa0, #ff5, #5f5, #5ff, #55f, #f5f, #f55); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: rainbowSlide 2.5s linear infinite; }
+@keyframes rainbowSlide { to { background-position: -200% 0; } }
+.chip { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--muted); white-space: nowrap; }
+body.fa .chip { font-family: var(--fa); }
+.chip.ok { border-color: rgba(63,185,80,.45); color: #3fb950; background: rgba(63,185,80,.08); }
+.chip.bad { border-color: rgba(255,59,59,.55); color: var(--accent-soft); background: rgba(255,59,59,.1); }
+.chip.warn { border-color: rgba(227,179,65,.5); color: var(--term-yellow); background: rgba(227,179,65,.08); }
+.chip.info { border-color: rgba(88,166,255,.45); color: #58a6ff; background: rgba(88,166,255,.08); }
+button.chip { cursor: pointer; transition: border-color .15s, color .15s; } button.chip:hover { border-color: rgba(255,59,59,.45); color: var(--ink); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.msg { padding: 26px 14px; text-align: center; font-family: var(--mono); font-size: 13px; color: var(--muted); line-height: 1.7; }
+body.fa .msg { font-family: var(--fa); }
+.msg b { color: var(--accent-soft); } .msg.err { color: var(--accent-soft); }
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -3px; margin-right: 6px; }
+body.fa .spin { margin-right: 0; margin-left: 6px; }
+@keyframes sp { to { transform: rotate(360deg); } }
+.bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.07); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), #ff9f43); transition: width .5s ease; }
+.big { font-family: var(--sans); font-size: 34px; font-weight: 700; letter-spacing: -1px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.dim { color: var(--muted); }
+.mono { font-family: var(--mono); }
+.note { font-family: var(--mono); font-size: 11px; color: var(--term-dim); line-height: 1.6; }
+body.fa .note { font-family: var(--fa); }
+.head-img { width: 32px; height: 32px; border-radius: 6px; image-rendering: pixelated; background: rgba(255,255,255,.04); flex: none; }

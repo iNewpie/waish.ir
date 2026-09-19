@@ -178,12 +178,30 @@
   .msg b { color: var(--accent-soft); } .msg.err { color: var(--accent-soft); }
   .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -3px; margin-right: 6px; }
   @keyframes sp { to { transform: rotate(360deg); } }
+  /* ping tab */
+  .ping { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .ping-top { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .ping-top p { font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 1.6; max-width: 60ch; margin: 0; }
+  body.fa .ping-top p { font-family: var(--fa); }
+  .ping-list { display: flex; flex-direction: column; gap: 6px; }
+  .pr { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
+  .pr .ico { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; background: rgba(255,255,255,.04); }
+  .pr .nm { font-family: var(--mono); font-size: 13px; font-weight: 600; min-width: 0; }
+  .pr .nm small { display: block; font-size: 10.5px; color: var(--term-dim); font-weight: 500; margin-top: 2px; direction: ltr; text-align: start; }
+  .pr .ms { font-family: var(--sans); font-size: 22px; font-weight: 700; letter-spacing: -.5px; font-variant-numeric: tabular-nums; text-align: end; }
+  .pr .ms small { font-family: var(--mono); font-size: 10px; color: var(--term-dim); font-weight: 500; display: block; letter-spacing: 0; }
+  .pr .bar { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .pr .bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: currentColor; transition: width .4s ease; }
+  .pr.g { color: #3fb950; } .pr.y { color: var(--term-yellow); } .pr.r { color: var(--accent-soft); } .pr.x { color: var(--muted); }
+  .pr .ms, .pr .bar i { color: inherit; }
+  .ping-sum { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .ping-sum b { color: var(--ink); }
   @media (max-width: 560px) { .viewer { width: 100%; } .viewer .stage { height: 340px; } }
 </style>
 </head>
 <body class="app">
 <div class="app-bar"><b>🔍 <span data-t="User Lookup">User Lookup</span></b><span class="sp"></span>
-  <div class="seg" id="tabs"><button class="on" data-tab="user" data-t="User Lookup">User Lookup</button><button data-tab="guild" data-t="Guild Lookup">Guild Lookup</button></div></div>
+  <div class="seg" id="tabs"><button class="on" data-tab="user" data-t="User Lookup">User Lookup</button><button data-tab="guild" data-t="Guild Lookup">Guild Lookup</button><button data-tab="ping" data-t="Ping">Ping</button></div></div>
 <div class="app-main">
 
   <!-- ================= USER LOOKUP ================= -->
@@ -227,6 +245,16 @@
     <div class="result gres" id="gResult"></div>
   </div>
 
+
+  <!-- ================= PING ================= -->
+  <div class="panel" id="panel-ping">
+    <div class="ping">
+      <div class="ping-top"><p data-t="Your connection from this browser to the servers people here play on. Four HTTP round-trips per target — the first one (DNS + TLS) is dropped.">Your connection from this browser to the servers people here play on. Four HTTP round-trips per target — the first one (DNS + TLS) is dropped.</p><button class="abtn primary" id="pingRun" data-t="Run again">Run again</button></div>
+      <div class="ping-list" id="pingList"></div>
+      <div class="ping-sum" id="pingSum"></div>
+      <p class="vhint" style="text-align:start" data-t="This is web latency, not the in-game ping you see on the tab list — game servers answer on a different port and path, but a high number here usually means a high number there too. Iran → Hypixel is what ClutchPing was built to lower.">This is web latency, not the in-game ping you see on the tab list — game servers answer on a different port and path, but a high number here usually means a high number there too. Iran → Hypixel is what ClutchPing was built to lower.</p>
+    </div>
+  </div>
 </div>
 
 <script src="../js/vendor/skinview3d.bundle.js?v=20260916c"></script>
@@ -264,7 +292,7 @@ const STATIC_HOST = location.protocol === 'file:' || /(^|\.)(waish\.ir|github\.i
 const PROXY_DEFAULT = STATIC_HOST ? WORKER : (WORKER && !/^(localhost|127\.0\.0\.1|155\.117\.127\.81)$/.test(location.hostname) ? WORKER : '/api');
 const PROXY_URL = (new URLSearchParams(location.search).get('proxy') || PROXY_DEFAULT).replace(/\/$/, '');
 
-const FA = { 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Look up': 'جستجو', 'Guild Lookup': 'جستجوی گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.': 'یه گیلد هایپیکسل رو با اسمش جستجو کن، یا گیلد یه بازیکن رو پیدا کن: لول، XP، اعضا و فعالیت هفتگی‌شون، رنک‌ها و بازی‌های محبوب.', 'Load': 'بارگذاری', 'copy': 'کپی', 'copied': 'کپی شد', 'model': 'مدل', 'created': 'ساخته‌شده', 'past names': 'اسم‌های قبلی', 'Capes': 'شنل‌ها', 'checking…': 'در حال بررسی…', 'auto-rotate': 'چرخش خودکار', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'still': 'ثابت', 'elytra': 'الیترا',
+const FA = { 'Ping': 'پینگ', 'Run again': 'دوباره', 'avg': 'میانگین', 'no answer': 'جواب نداد', 'great — you should feel no lag': 'عالی — لگی حس نمی‌کنی', 'playable, a bit of delay in fights': 'قابل بازی، یه کم تأخیر توی فایت‌ها', 'high — fights will feel delayed; a relay like ClutchPing may help': 'بالا — فایت‌ها با تأخیر حس می‌شن؛ یه رله مثل ClutchPing می‌تونه کمک کنه', 'Your connection from this browser to the servers people here play on. Four HTTP round-trips per target — the first one (DNS + TLS) is dropped.': 'اتصال تو از همین مرورگر به سرورهایی که بچه‌های اینجا توشون بازی می‌کنن. چهار رفت‌وبرگشت HTTP برای هر مقصد — اولی (DNS + TLS) حساب نمی‌شه.', 'This is web latency, not the in-game ping you see on the tab list — game servers answer on a different port and path, but a high number here usually means a high number there too. Iran → Hypixel is what ClutchPing was built to lower.': 'این تأخیر وبه، نه پینگ داخل بازی که توی تب‌لیست می‌بینی — سرور بازی روی پورت و مسیر دیگه‌ای جواب می‌ده، ولی عدد بالا اینجا معمولاً یعنی عدد بالا اونجا هم. ایران → هایپیکسل همون چیزیه که ClutchPing برای پایین آوردنش ساخته شد.', 'User Lookup': 'جستجوی کاربر', 'Skin Lookup': 'جستجوی اسکین', 'Look up': 'جستجو', 'Guild Lookup': 'جستجوی گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'Search a Hypixel guild by name, or find the guild a player is in: level, XP, members and their weekly activity, ranks and favourite games.': 'یه گیلد هایپیکسل رو با اسمش جستجو کن، یا گیلد یه بازیکن رو پیدا کن: لول، XP، اعضا و فعالیت هفتگی‌شون، رنک‌ها و بازی‌های محبوب.', 'Load': 'بارگذاری', 'copy': 'کپی', 'copied': 'کپی شد', 'model': 'مدل', 'created': 'ساخته‌شده', 'past names': 'اسم‌های قبلی', 'Capes': 'شنل‌ها', 'checking…': 'در حال بررسی…', 'auto-rotate': 'چرخش خودکار', 'idle': 'ایستاده', 'walk': 'راه رفتن', 'run': 'دویدن', 'still': 'ثابت', 'elytra': 'الیترا',
   'drag to rotate · scroll to zoom': 'بکش تا بچرخه · اسکرول برای زوم', 'file': 'فایل', 'front / back': 'جلو / پشت', 'auto': 'خودکار', 'classic (Steve)': 'کلاسیک (Steve)', 'slim (Alex)': 'باریک (Alex)', 'Upload skin PNG': 'آپلود اسکین PNG', 'drag to rotate · scroll to zoom · ← → keys': 'بکش تا بچرخه · اسکرول برای زوم · کلیدهای ← →', 'Download PNG': 'دانلود PNG',
   'Type a Minecraft username to see their 3D skin, capes, Hypixel rank and BedWars stats, UUID and whether they\'re blacklisted on Seraph or Urchin.': 'یه یوزرنیم ماینکرفت بنویس تا اسکین سه‌بعدی، شنل‌ها، رنک هایپیکسل و آمار بدوارز، UUID و وضعیت بلک‌لیست Seraph و Urchin رو ببینی.',
   'Drop a skin PNG here, or use the buttons →': 'یه فایل PNG اسکین اینجا بنداز، یا از دکمه‌ها استفاده کن ←', 'Preview any skin in 3D: upload your own design, or pull a player\'s current skin. Switch between the classic (Steve) and slim (Alex) models.': 'هر اسکینی رو سه‌بعدی ببین: طرح خودت رو آپلود کن یا اسکین فعلی یه بازیکن رو بگیر. بین مدل کلاسیک (Steve) و باریک (Alex) سوییچ کن.',
@@ -300,8 +328,38 @@ let fitRaf = 0; const fitSoon = () => { cancelAnimationFrame(fitRaf); fitRaf = r
 new MutationObserver(fitSoon).observe(document.body, { childList: true, subtree: true });
 addEventListener('resize', fitSoon);
 
+/* ---------- ping tab: HTTP round-trips from this browser (mode: no-cors, so any host works; the first sample is a warm-up) ---------- */
+const PING_TARGETS = [
+  { id: 'hypixel', name: 'Hypixel', host: 'hypixel.net', url: 'https://hypixel.net/favicon.ico', ico: '🟨' },
+  { id: 'hyapi', name: 'Hypixel API', host: 'api.hypixel.net', url: 'https://api.hypixel.net/', ico: '🧩' },
+  { id: 'proxy', name: 'waish.ir proxy', host: 'Cloudflare worker', url: (PROXY_URL.startsWith('http') ? PROXY_URL : location.origin + PROXY_URL) + '/', ico: '🛰️' },
+  { id: 'cf', name: 'Cloudflare', host: '1.1.1.1', url: 'https://1.1.1.1/cdn-cgi/trace', ico: '☁️' },
+  { id: 'google', name: 'Google', host: 'google.com', url: 'https://www.google.com/generate_204', ico: '🔎' },
+];
+let pingRan = false;
+async function sample(url) { const t0 = performance.now(); try { await fetch(`${url}${url.includes('?') ? '&' : '?'}_=${Date.now()}`, { mode: 'no-cors', cache: 'no-store', credentials: 'omit' }); } catch (e) { return null; } return performance.now() - t0; }
+const pingClass = ms => ms == null ? 'x' : ms < 80 ? 'g' : ms < 160 ? 'y' : 'r';
+async function runPing() {
+  pingRan = true; const btn = $('#pingRun'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  const list = $('#pingList'); list.innerHTML = PING_TARGETS.map(p => `<div class="pr x" id="pr-${p.id}"><span class="ico">${p.ico}</span><span class="nm">${esc(p.name)}<small>${esc(p.host)}</small></span><span class="ms"><span class="spin"></span></span><div class="bar"><i></i></div></div>`).join('');
+  const results = {};
+  for (const p of PING_TARGETS) {
+    const row = $('#pr-' + p.id); const times = [];
+    await sample(p.url);   // warm-up: DNS + TLS
+    for (let i = 0; i < 3; i++) { const ms = await sample(p.url); if (ms != null) times.push(ms); }
+    const ok = times.length > 0, min = ok ? Math.round(Math.min(...times)) : null, avg = ok ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : null;
+    results[p.id] = min; row.className = 'pr ' + pingClass(min);
+    row.querySelector('.ms').innerHTML = ok ? `${fmtN(min)} ms<small>${t('avg')} ${fmtN(avg)} ms</small>` : `—<small>${t('no answer')}</small>`;
+    row.querySelector('.bar i').style.width = ok ? Math.min(100, Math.round(100 * min / 400)) + '%' : '0';
+  }
+  const hy = results.hypixel;
+  $('#pingSum').innerHTML = hy != null ? `Hypixel: <b>${fmtN(hy)} ms</b> · ${hy < 80 ? t('great — you should feel no lag') : hy < 160 ? t('playable, a bit of delay in fights') : t('high — fights will feel delayed; a relay like ClutchPing may help')}` : '';
+  btn.disabled = false; btn.textContent = t('Run again');
+}
+$('#pingRun').addEventListener('click', runPing);
+
 /* ---------- tabs ---------- */
-$('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'user' && VU) VU.resize(); fitSoon(); });
+$('#tabs').addEventListener('click', e => { const tab = e.target.dataset.tab; if (!tab) return; document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab)); if (tab === 'user' && VU) VU.resize(); if (tab === 'ping' && !pingRan) runPing(); fitSoon(); });
 
 /* ---------- 3D viewer (skinview3d) ---------- */
 function makeViewer(stage, ctl) {

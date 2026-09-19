@@ -4,6 +4,7 @@
    ============================================================ */
 window.DESKTOP = (function () {
   const ICONS = {
+    hypixel: '<svg viewBox="0 0 24 24"><path d="M12 1.2 21.4 6.6v10.8L12 22.8 2.6 17.4V6.6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 7h2.5v3.6h3V7H16v10h-2.5v-4.1h-3V17H8z"/></svg>',
     // brand marks for the Social card buttons (24×24 paths, filled with currentColor)
     youtube: '<svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>',
     aparat: '<svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm-3.9 4.8a2.4 2.4 0 1 1-1.2 4.6 2.4 2.4 0 0 1 1.2-4.6zm10.5 3.4a2.4 2.4 0 1 1-4.6-1.2 2.4 2.4 0 0 1 4.6 1.2zM12 10.4a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zm-6.6 5.4a2.4 2.4 0 1 1 4.6 1.2 2.4 2.4 0 0 1-4.6-1.2zm10.5 3.4a2.4 2.4 0 1 1 1.2-4.6 2.4 2.4 0 0 1-1.2 4.6z"/></svg>',
@@ -39,10 +40,19 @@ window.DESKTOP = (function () {
     minicraft:  { title: 'Mini Minecraft', tile: 'minicraft', icon: '⛏️', kind: 'page', src: 'apps/minicraft.html?v=20260916b', w: .72, h: .8 },
     calculator: { title: 'Calculator', tile: 'calc', icon: '🧮', kind: 'page', src: 'apps/calculator.html?v=20260916b', w: .26, h: .74, minW: 340 },
     calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
-    userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260919a', w: .58, h: .88, minW: 520 },
+    userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260919b', w: .58, h: .88, minW: 520 },
+    // Hypixel Tools folder (apps/*.html, all sharing apps/tools.js)
+    hyptools:   { title: 'Hypixel Tools', tile: 'hyp', icon: ICONS.hypixel, kind: 'folder', items: ['prestige', 'ratio', 'compare', 'serverstatus', 'guildboard'], w: .5, h: .5, minW: 440 },
+    prestige:   { title: 'Prestige Calculator', tile: 'prestige', icon: '✫', kind: 'page', src: 'apps/prestige-calc.html?v=20260919a', w: .54, h: .86, minW: 470 },
+    ratio:      { title: 'Ratio Calculator', tile: 'ratio', icon: '÷', kind: 'page', src: 'apps/ratio-calc.html?v=20260919a', w: .62, h: .86, minW: 480 },
+    compare:    { title: 'Compare Players', tile: 'compare', icon: '⚔️', kind: 'page', src: 'apps/compare.html?v=20260919a', w: .58, h: .88, minW: 500 },
+    serverstatus: { title: 'Server Status', tile: 'status', icon: '📡', kind: 'page', src: 'apps/server-status.html?v=20260919a', w: .5, h: .84, minW: 440 },
+    guildboard: { title: 'Guild Leaderboard', tile: 'guildboard', icon: '🏆', kind: 'page', src: 'apps/guild-leaderboard.html?v=20260919a', w: .52, h: .88, minW: 460 },
+    cpstest:    { title: 'CPS Test', tile: 'cps', icon: '🖱️', kind: 'page', src: 'apps/cps-test.html?v=20260919a', w: .42, h: .74, minW: 380 },
+    notepad:    { title: 'Notepad', tile: 'notepad', icon: '📝', kind: 'page', src: 'apps/notepad.html?v=20260919a', w: .58, h: .78, minW: 460 },
     skineditor: { title: 'Skin Editor', tile: 'skined', icon: '🎨', kind: 'page', src: 'apps/skin-editor.html?v=20260917d', w: .72, h: .88, minW: 560 },
   };
-  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'gamesFolder', 'social', 'aboutme', 'music', 'calculator', 'calendar', 'userlookup', 'skineditor']; // desktop icons, top-left down
+  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'gamesFolder', 'hyptools', 'social', 'aboutme', 'music', 'calculator', 'calendar', 'userlookup', 'skineditor', 'cpstest', 'notepad']; // desktop icons, top-left down
   const PINNED = ['thispc'];                                                                             // taskbar
   // every launchable app, for the start menu and the terminal's /apps (folder contents included, no duplicates)
   const ALL = [...new Set(ORDER.flatMap(id => APPS[id].kind === 'folder' ? [id, ...APPS[id].items] : [id]).concat(PINNED))];
@@ -64,6 +74,13 @@ window.DESKTOP = (function () {
       { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Hypixel · Seraph · Urchin', app: 'userlookup' },
       { type: 'run', name: 'Skin Editor', icon: '🎨', sub: 'paint & preview skins', app: 'skineditor' },
       { type: 'run', name: 'Music', icon: '🎵', sub: 'mp3 player', app: 'music' },
+      { type: 'run', name: 'Notepad', icon: '📝', sub: 'notes, saved in your browser', app: 'notepad' },
+      { type: 'run', name: 'CPS Test', icon: '🖱️', sub: 'clicks per second', app: 'cpstest' },
+      { type: 'run', name: 'Prestige Calculator', icon: '✫', sub: 'BedWars stars & XP', app: 'prestige' },
+      { type: 'run', name: 'Ratio Calculator', icon: '÷', sub: 'FKDR · WLR · BBLR · KDR', app: 'ratio' },
+      { type: 'run', name: 'Compare Players', icon: '⚔️', sub: 'two players side by side', app: 'compare' },
+      { type: 'run', name: 'Server Status', icon: '📡', sub: 'any Minecraft server', app: 'serverstatus' },
+      { type: 'run', name: 'Guild Leaderboard', icon: '🏆', sub: 'weekly XP ranking', app: 'guildboard' },
       { type: 'app', name: 'Cinema 4D', icon: '🎬', sub: '3D · ~6 years' },
       { type: 'app', name: 'Blender', icon: '🧊', sub: '3D' },
       { type: 'app', name: 'Python', icon: '🐍', sub: 'scripts' },
@@ -234,7 +251,7 @@ window.DESKTOP = (function () {
   }
 
   /* ---------- windows ---------- */
-  const ALIAS = { youtube: 'social', aparat: 'social', folder: 'projectsFolder', games: 'gamesFolder', recycle: 'bin', trash: 'bin', skin: 'skineditor', skinlookup: 'skineditor' };   // old / alternative ids used in links and terminal commands
+  const ALIAS = { youtube: 'social', aparat: 'social', folder: 'projectsFolder', games: 'gamesFolder', recycle: 'bin', trash: 'bin', skin: 'skineditor', skinlookup: 'skineditor', hypixel: 'hyptools', tools: 'hyptools', cps: 'cpstest', notes: 'notepad', status: 'serverstatus', server: 'serverstatus', leaderboard: 'guildboard', guild: 'guildboard', fkdr: 'ratio' };   // old / alternative ids used in links and terminal commands
   function open(id, from, query) {   // query: extra URL params for a page app, e.g. 'u=Notch' opens the Skin Editor on that player
     id = ALIAS[id] || id;
     const a = APPS[id]; if (!a) return false;

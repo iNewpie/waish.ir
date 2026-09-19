@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Server Status</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260919a">
+<link rel="stylesheet" href="../css/apps.css?v=20260919a">
+<style>
+  .app-main { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; }
+  .srv { display: flex; gap: 14px; align-items: flex-start; }
+  .srv .ico { width: 64px; height: 64px; border-radius: 12px; image-rendering: pixelated; background: rgba(255,255,255,.04); border: 1px solid var(--line); flex: none; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .srv .ico img { width: 100%; height: 100%; border-radius: 12px; }
+  .srv .t { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .srv .host { font-family: var(--mono); font-size: 17px; font-weight: 700; letter-spacing: -.3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; direction: ltr; }
+  .srv .host .copy { font-size: 10px; padding: 3px 8px; }
+  .motd { font-family: var(--mono); font-size: 13px; line-height: 1.55; padding: 10px 12px; border-radius: 10px; background: #0b0d12; border: 1px solid var(--line); direction: ltr; white-space: pre-wrap; overflow-wrap: anywhere; color: #AAA; }
+  .motd .l { font-weight: 700; } .motd .o { font-style: italic; } .motd .n { text-decoration: underline; } .motd .m { text-decoration: line-through; } .motd .k { opacity: .6; }
+  .players { display: flex; flex-direction: column; gap: 8px; }
+  .players .cnt { display: flex; align-items: baseline; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .players .cnt b { font-family: var(--sans); font-size: 26px; font-weight: 700; color: var(--ink); letter-spacing: -1px; }
+  .plist { display: flex; flex-wrap: wrap; gap: 6px; }
+  .plist .p { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px 4px 4px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.03); font-family: var(--mono); font-size: 11.5px; direction: ltr; }
+  .plist .p img { width: 18px; height: 18px; border-radius: 4px; image-rendering: pixelated; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-family: var(--mono); font-size: 12px; direction: ltr; }
+  .kv span { color: var(--term-dim); text-transform: uppercase; font-size: 10.5px; letter-spacing: .4px; padding-top: 2px; }
+  .kv b { font-weight: 500; color: var(--ink); overflow-wrap: anywhere; }
+  .list { display: flex; flex-wrap: wrap; gap: 5px; }
+  .auto { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .auto input { accent-color: var(--accent); }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>📡 <span data-t="Server Status">Server Status</span></b><span class="sp"></span><span class="pill" id="checked"></span></div>
+<div class="app-main">
+<div class="tool">
+  <div class="search">
+    <input class="inp" id="q" placeholder="play.lunamc.ir  ·  mc.hypixel.net  ·  ip:port" maxlength="120" autocomplete="off" spellcheck="false">
+    <div class="seg" id="ed"><button class="on" data-e="java">Java</button><button data-e="bedrock">Bedrock</button></div>
+    <button class="abtn primary" id="go" data-t="Check">Check</button>
+  </div>
+  <div class="chips" id="quick"></div>
+  <div class="msg" id="msg" data-t="Type a server address to see if it's online, the MOTD, who's playing, version, software and more.">Type a server address to see if it's online, the MOTD, who's playing, version, software and more.</div>
+  <div id="out" hidden>
+    <div class="card"><div class="srv"><div class="ico" id="ico">🧊</div><div class="t"><div class="host" id="host"></div><div class="chips" id="chips"></div></div></div><div class="motd" id="motd"></div></div>
+    <div class="card" style="margin-top:12px"><h3><span data-t="Players">Players</span><span class="sp"></span><label class="auto"><input type="checkbox" id="auto"> <span data-t="auto-refresh every minute">auto-refresh every minute</span></label></h3><div class="players"><div class="cnt"><b id="pOn">0</b><span>/ <span id="pMax">0</span> <span data-t="online">online</span></span></div><div class="bar"><i id="pBar" style="width:0%"></i></div><div class="plist" id="plist"></div></div></div>
+    <div class="card" style="margin-top:12px"><h3 data-t="Details">Details</h3><div class="kv" id="kv"></div><div id="extra"></div></div>
+  </div>
+</div>
+</div>
+<script src="tools.js?v=20260919a"></script>
+<script>
+const { t, addFA, applyLang, esc, fmtN, faDigits, recent, fa } = TOOLS;
+addFA({ 'Server Status': 'وضعیت سرور', 'Check': 'بررسی', "Type a server address to see if it's online, the MOTD, who's playing, version, software and more.": 'آدرس یه سرور رو بنویس تا ببینی آنلاینه یا نه، MOTD، کیا دارن بازی می‌کنن، ورژن، نرم‌افزار و بیشتر.', 'Players': 'بازیکن‌ها', 'auto-refresh every minute': 'هر دقیقه تازه‌سازی', 'online': 'آنلاین', 'offline': 'آفلاین', 'Details': 'جزئیات', 'checking…': 'در حال بررسی…', 'checked in': 'بررسی شد در', 'copy': 'کپی', 'copied': 'کپی شد', 'no player list': 'لیست بازیکن‌ها در دسترس نیست', 'version': 'ورژن', 'protocol': 'پروتکل', 'address': 'آدرس', 'resolved IP': 'IP', 'port': 'پورت', 'SRV record': 'رکورد SRV', 'software': 'نرم‌افزار', 'plugins': 'پلاگین‌ها', 'mods': 'مادها', 'EULA': 'EULA', 'blocked by Mojang': 'مسدود توسط Mojang', 'fine': 'اوکی', 'checked': 'بررسی‌شده', 'cached until': 'کش تا', 'gamemode': 'گیم‌مود', 'edition': 'اِدیشن', 'server id': 'آی‌دی سرور', 'Server is offline or unreachable.': 'سرور آفلاینه یا در دسترس نیست.', 'Status API failed — try again in a moment.': 'API وضعیت جواب نداد — یه لحظه دیگه دوباره تلاش کن.', 'Type a server address.': 'آدرس سرور رو بنویس.', 'recent': 'اخیر', 'latency': 'تأخیر', 'from the status API, not your game ping': 'از API وضعیت، نه پینگ بازی‌ت', 'Some big networks block status pings from data centers — the server may still be up in-game.': 'بعضی شبکه‌های بزرگ پینگ وضعیت از دیتاسنترها رو بلاک می‌کنن — ممکنه سرور توی بازی بالا باشه.' });
+applyLang();
+const el = id => document.getElementById(id);
+const RC = recent('server'); let edition = 'java', timer = null;
+const QUICK = ['play.lunamc.ir', 'mc.hypixel.net'];
+const CODE = { 0: '#000', 1: '#00A', 2: '#0A0', 3: '#0AA', 4: '#A00', 5: '#A0A', 6: '#FA0', 7: '#AAA', 8: '#555', 9: '#55F', a: '#5F5', b: '#5FF', c: '#F55', d: '#F5F', e: '#FF5', f: '#FFF' };
+// § colour codes → spans (bold/italic/underline/strike, hex via §x§R§R§G§G§B§B); anything else is escaped text
+function motdHTML(raw) {
+  let out = '', color = null, fx = new Set(); const flush = txt => { if (!txt) return; out += `<span class="${[...fx].join(' ')}" style="${color ? `color:${color}` : ''}">${esc(txt)}</span>`; };
+  const s = String(raw || '').replace(/&/g, '&'); let buf = '';
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '§' && i + 1 < s.length) {
+      const c = s[i + 1].toLowerCase(); flush(buf); buf = '';
+      if (c === 'x' && /^(§[0-9a-f]){6}$/i.test(s.slice(i + 2, i + 14))) { color = '#' + s.slice(i + 2, i + 14).replace(/§/g, ''); i += 13; continue; }
+      if (CODE[c]) { color = TOOLS.vivid(CODE[c]); fx.clear(); } else if (c === 'r') { color = null; fx.clear(); } else if ('lonmk'.includes(c)) fx.add(c);
+      i++; continue;
+    }
+    buf += s[i];
+  }
+  flush(buf); return out;
+}
+// mcsrvstat.us v3 → the mcstatus.io shape render() expects
+const fromMcsrvstat = d => ({ online: !!d.online, host: d.hostname || d.ip, port: d.port, ip_address: d.ip, eula_blocked: !!d.eula_blocked, retrieved_at: d.debug && d.debug.cachetime ? d.debug.cachetime * 1000 : null, expires_at: d.debug && d.debug.cacheexpire ? d.debug.cacheexpire * 1000 : null, srv_record: null,
+  version: d.version ? { name_clean: d.version, protocol: d.protocol && d.protocol.version } : null, players: d.players ? { online: d.players.online, max: d.players.max, list: (d.players.list || []).map(p => ({ uuid: p.uuid, name_clean: p.name })) } : null,
+  motd: d.motd ? { raw: (d.motd.raw || []).join('\n') } : null, icon: d.icon || null, software: d.software || null, plugins: (d.plugins || []).map(p => ({ name: p.name, version: p.version })), mods: (d.mods || []).map(p => ({ name: p.name, version: p.version })), gamemode: d.gamemode, server_id: d.serverid });
+const chip = (txt, cls) => `<span class="chip ${cls || ''}">${txt}</span>`;
+function render(d, ms) {
+  const host = el('q').value.trim();
+  el('host').innerHTML = `<span>${esc(d.host || host)}${d.port && d.port !== 25565 && d.port !== 19132 ? `:${d.port}` : ''}</span><button class="abtn sm copy" id="copy">${t('copy')}</button>`;
+  el('copy').addEventListener('click', () => { try { navigator.clipboard.writeText(host); el('copy').textContent = t('copied'); setTimeout(() => el('copy').textContent = t('copy'), 1200); } catch (e) {} });
+  el('ico').innerHTML = d.icon ? `<img src="${d.icon}" alt="">` : '🧊';
+  const ver = d.version ? (d.version.name_clean || d.version.name || '') : '';
+  el('chips').innerHTML = chip(d.online ? '● ' + t('online') : '○ ' + t('offline'), d.online ? 'ok' : 'bad') + (ver ? chip(esc(ver), 'info') : '') + (d.eula_blocked ? chip('EULA ' + t('blocked by Mojang'), 'warn') : '') + chip(`${faDigits(ms)} ms`, '');
+  el('motd').innerHTML = d.motd ? motdHTML(d.motd.raw) : '';
+  el('motd').hidden = !d.motd;
+  const on = (d.players && d.players.online) || 0, max = (d.players && d.players.max) || 0;
+  el('pOn').textContent = fmtN(on); el('pMax').textContent = fmtN(max); el('pBar').style.width = (max ? Math.min(100, 100 * on / max) : 0) + '%';
+  const list = (d.players && d.players.list) || [];
+  el('plist').innerHTML = list.length ? list.slice(0, 60).map(p => `<span class="p">${p.uuid ? `<img src="https://mc-heads.net/avatar/${esc(p.uuid)}/18" alt="">` : ''}${esc(p.name_clean || p.name || '?')}</span>`).join('') + (list.length > 60 ? chip(`+${fmtN(list.length - 60)}`) : '') : `<span class="note">${on ? t('no player list') : ''}</span>`;
+  const kv = [];
+  const add = (k, v) => v != null && v !== '' && kv.push(`<span>${esc(t(k))}</span><b>${v}</b>`);
+  add('address', esc(host)); add('resolved IP', d.ip_address ? esc(d.ip_address) : null); add('port', d.port != null ? faDigits(d.port) : null);
+  add('version', ver ? esc(ver) : null); add('protocol', d.version && d.version.protocol != null ? faDigits(d.version.protocol) : null);
+  if (d.srv_record) add('SRV record', `${esc(d.srv_record.host)}:${faDigits(d.srv_record.port)}`);
+  add('software', d.software ? esc(d.software) : null);
+  add('gamemode', d.gamemode ? esc(d.gamemode) : null); add('edition', d.edition ? esc(d.edition) : null); add('server id', d.server_id ? esc(d.server_id) : null);
+  add('EULA', d.eula_blocked != null ? (d.eula_blocked ? `<span style="color:var(--accent-soft)">${t('blocked by Mojang')}</span>` : t('fine')) : null);
+  add('latency', `${faDigits(ms)} ms <span class="dim">· ${t('from the status API, not your game ping')}</span>`);
+  add('checked', d.retrieved_at ? new Date(d.retrieved_at).toLocaleTimeString(fa ? 'fa-IR' : 'en-GB') : null); add('cached until', d.expires_at ? new Date(d.expires_at).toLocaleTimeString(fa ? 'fa-IR' : 'en-GB') : null);
+  el('kv').innerHTML = kv.join('');
+  const extra = [];
+  const listOf = (title, arr) => arr && arr.length ? `<div class="sec-title" style="margin-top:10px">${esc(t(title))} · ${fmtN(arr.length)}</div><div class="list" style="margin-top:6px">${arr.slice(0, 80).map(x => chip(esc(x.name + (x.version ? ' ' + x.version : '')))).join('')}</div>` : '';
+  extra.push(listOf('plugins', d.plugins), listOf('mods', d.mods)); el('extra').innerHTML = extra.join('');
+  el('checked').textContent = `${t('checked in')} ${faDigits(ms)} ms`;
+  el('out').hidden = false; el('msg').hidden = true;
+}
+async function check(quiet) {
+  const q = el('q').value.trim().toLowerCase(); if (!q) { el('msg').hidden = false; el('msg').className = 'msg err'; el('msg').textContent = t('Type a server address.'); return; }
+  if (!/^[a-z0-9.\-_:\[\]]+$/i.test(q)) { el('msg').hidden = false; el('msg').className = 'msg err'; el('msg').textContent = t('Type a server address.'); return; }
+  if (!quiet) { el('go').disabled = true; el('go').innerHTML = '<span class="spin"></span>'; el('msg').hidden = false; el('msg').className = 'msg'; el('msg').innerHTML = `<span class="spin"></span>${t('checking…')}`; el('out').hidden = true; }
+  const t0 = performance.now();
+  try {
+    let r = await fetch(`https://api.mcstatus.io/v2/status/${edition}/${encodeURIComponent(q)}`, { cache: 'no-store' });
+    let ms = Math.round(performance.now() - t0); let d = await r.json().catch(() => null);
+    if (!r.ok || !d) throw new Error(t('Status API failed — try again in a moment.'));
+    // big networks (Hypixel among them) block datacenter pings now and then — ask mcsrvstat.us before calling it offline
+    if (!d.online) { try { const t1 = performance.now(); const r2 = await fetch(`https://api.mcsrvstat.us/${edition === 'bedrock' ? 'bedrock/' : ''}3/${encodeURIComponent(q)}`, { cache: 'no-store' }); const d2 = await r2.json().catch(() => null); if (d2 && d2.online) { d = fromMcsrvstat(d2); ms = Math.round(performance.now() - t1); } } catch (e) {} }
+    RC.add(q); quickChips(); render(d, ms);
+    if (!d.online) { el('msg').hidden = false; el('msg').className = 'msg'; el('msg').innerHTML = `${t('Server is offline or unreachable.')}<br><span class="note">${t('Some big networks block status pings from data centers — the server may still be up in-game.')}</span>`; }
+    history.replaceState(null, '', `?s=${encodeURIComponent(q)}${edition === 'bedrock' ? '&e=bedrock' : ''}`);
+  } catch (e) { el('msg').hidden = false; el('msg').className = 'msg err'; el('msg').textContent = e.message; }
+  el('go').disabled = false; el('go').textContent = t('Check');
+}
+function quickChips() { const rc = RC.get().filter(x => !QUICK.includes(x)); el('quick').innerHTML = QUICK.map(s => `<button class="chip info" data-s="${s}">${s}</button>`).join('') + rc.map(s => `<button class="chip" data-s="${esc(s)}">${esc(s)}</button>`).join(''); }
+el('quick').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { el('q').value = b.dataset.s; check(); } });
+el('go').addEventListener('click', () => check()); el('q').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+el('ed').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; edition = b.dataset.e; el('ed').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); if (!el('out').hidden) check(); });
+el('auto').addEventListener('change', () => { clearInterval(timer); timer = null; if (el('auto').checked) timer = setInterval(() => check(true), 60000); });
+quickChips();
+const qs = new URLSearchParams(location.search);
+if (qs.get('e') === 'bedrock') el('ed').querySelector('[data-e=bedrock]').click();
+if (qs.get('s')) { el('q').value = qs.get('s'); check(); }
+</script>
+</body>
+</html>

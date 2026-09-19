@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compare Players</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260919a">
+<link rel="stylesheet" href="../css/apps.css?v=20260919a">
+<style>
+  .app-main { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; }
+  .search .swap { padding: 0 12px; font-size: 16px; }
+  .heads { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; }
+  .pl { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .pl.r { flex-direction: row-reverse; text-align: right; }
+  body.fa .pl { flex-direction: row-reverse; text-align: right; } body.fa .pl.r { flex-direction: row; text-align: left; }
+  .pl img { width: 44px; height: 44px; border-radius: 9px; image-rendering: pixelated; background: rgba(255,255,255,.04); flex: none; }
+  .pl .n { font-family: var(--mono); font-weight: 700; font-size: 14px; letter-spacing: -.3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pl .s { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .score { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: center; }
+  .score b { font-family: var(--sans); font-size: 26px; font-weight: 700; color: var(--ink); letter-spacing: -1px; display: block; line-height: 1; }
+  .score .lead { color: var(--accent-soft); }
+  .rows { display: flex; flex-direction: column; gap: 5px; }
+  .row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
+  .row .lbl { font-family: var(--mono); font-size: 10px; color: var(--term-dim); text-transform: uppercase; letter-spacing: .4px; text-align: center; min-width: 74px; }
+  body.fa .row .lbl { font-family: var(--fa); text-transform: none; }
+  .row .val { font-family: var(--sans); font-weight: 700; font-size: 16px; letter-spacing: -.3px; font-variant-numeric: tabular-nums; color: var(--muted); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .row .val.r { align-items: flex-end; text-align: right; } .row .val.l { align-items: flex-start; }
+  body.fa .row .val.r { align-items: flex-start; text-align: left; } body.fa .row .val.l { align-items: flex-end; text-align: right; }
+  .row .val.win { color: #3fb950; } .row .val.win .num::before { content: '▲ '; font-size: 10px; vertical-align: 2px; }
+  .row .val.tie { color: var(--ink); }
+  .row .val .num { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .row .val .b { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .row .val .b i { display: block; height: 100%; background: currentColor; opacity: .55; border-radius: 2px; }
+  .row .val.l .b i { margin-left: auto; } body.fa .row .val.l .b i { margin-left: 0; margin-right: auto; } body.fa .row .val.r .b i { margin-left: auto; }
+  .row.sec { grid-template-columns: 1fr; background: transparent; border: 0; padding: 8px 0 0; }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>⚔️ <span data-t="Compare Players">Compare Players</span></b><span class="sp"></span><span class="pill">BedWars · SkyWars · Duels</span></div>
+<div class="app-main">
+<div class="tool">
+  <div class="search">
+    <input class="inp" id="a" data-tp="player one" placeholder="player one" maxlength="36" autocomplete="off" spellcheck="false">
+    <button class="abtn swap" id="swap" title="swap">⇄</button>
+    <input class="inp" id="b" data-tp="player two" placeholder="player two" maxlength="36" autocomplete="off" spellcheck="false">
+    <button class="abtn primary" id="go" data-t="Compare">Compare</button>
+  </div>
+  <div class="chips" id="recent"></div>
+  <div class="msg" id="msg" data-t="Two usernames → who's ahead on stars, FKDR, WLR, wins, finals and more. Green means that player leads the row.">Two usernames → who's ahead on stars, FKDR, WLR, wins, finals and more. Green means that player leads the row.</div>
+  <div id="out" hidden>
+    <div class="card"><div class="heads" id="heads"></div></div>
+    <div class="rows" id="rows" style="margin-top:12px"></div>
+  </div>
+</div>
+</div>
+<script src="tools.js?v=20260919a"></script>
+<script>
+const { $, t, addFA, applyLang, esc, fmtN, faDigits, R, lookup, recent, starColor, bwStar, netLevel, rankOf, head, fa } = TOOLS;
+addFA({ 'Compare Players': 'مقایسهٔ بازیکن‌ها', 'player one': 'بازیکن اول', 'player two': 'بازیکن دوم', 'Compare': 'مقایسه', "Two usernames → who's ahead on stars, FKDR, WLR, wins, finals and more. Green means that player leads the row.": 'دو تا یوزرنیم → کی توی استار، FKDR، WLR، برد، فاینال و بقیه جلوتره. سبز یعنی اون بازیکن توی اون ردیف جلوتره.', 'leads': 'جلوتره', 'tie': 'مساوی', 'stars': 'استار', 'FKDR': 'FKDR', 'WLR': 'WLR', 'BBLR': 'BBLR', 'KDR': 'KDR', 'final kills': 'فاینال کیل', 'wins': 'برد', 'beds broken': 'تخت شکسته', 'games': 'بازی‌ها', 'winstreak': 'وین‌استریک', 'index': 'ایندکس', 'win rate': 'درصد برد', 'network level': 'لول شبکه', 'karma': 'کارما', 'achievement points': 'امتیاز دستاورد', 'SkyWars level': 'لول اسکای‌وارز', 'SkyWars wins': 'برد اسکای‌وارز', 'SkyWars KDR': 'KDR اسکای‌وارز', 'Duels wins': 'برد دوئل', 'Duels WLR': 'WLR دوئل', 'Duels best streak': 'بهترین استریک دوئل', 'BedWars': 'بدوارز', 'Hypixel': 'هایپیکسل', 'SkyWars': 'اسکای‌وارز', 'Duels': 'دوئل', 'rows': 'ردیف', 'Type two usernames.': 'دو تا یوزرنیم بنویس.' });
+applyLang();
+const el = id => document.getElementById(id);
+const RC = recent('compare');
+const swLevel = xp => { const T = [0, 20, 70, 150, 250, 500, 1000, 2000, 3500, 6000, 10000, 15000]; xp = xp || 0; if (xp >= 15000) return 12 + (xp - 15000) / 10000; let i = 0; while (i < T.length - 1 && xp >= T[i + 1]) i++; return i + (xp - T[i]) / (T[i + 1] - T[i]); };
+
+// [label, value(player) → number|null, format, higherIsBetter] — sections start with a string
+const ROWS = [
+  'BedWars',
+  ['stars', p => bwStar(p), (v, p) => `<span style="color:${starColor(v)}">${fmtN(v)}✫</span>`],
+  ['FKDR', p => R(bw(p).final_kills_bedwars, bw(p).final_deaths_bedwars), v => faDigits(v.toFixed(2))],
+  ['WLR', p => R(bw(p).wins_bedwars, bw(p).losses_bedwars), v => faDigits(v.toFixed(2))],
+  ['BBLR', p => R(bw(p).beds_broken_bedwars, bw(p).beds_lost_bedwars), v => faDigits(v.toFixed(2))],
+  ['KDR', p => R(bw(p).kills_bedwars, bw(p).deaths_bedwars), v => faDigits(v.toFixed(2))],
+  ['final kills', p => bw(p).final_kills_bedwars || 0],
+  ['wins', p => bw(p).wins_bedwars || 0],
+  ['beds broken', p => bw(p).beds_broken_bedwars || 0],
+  ['win rate', p => { const g = bw(p).games_played_bedwars || ((bw(p).wins_bedwars || 0) + (bw(p).losses_bedwars || 0)); return g ? 100 * (bw(p).wins_bedwars || 0) / g : 0; }, v => faDigits(Math.round(v) + '%')],
+  ['index', p => { const s = bwStar(p) || 0, f = R(bw(p).final_kills_bedwars, bw(p).final_deaths_bedwars); return Math.round(s * f * f); }],
+  ['games', p => bw(p).games_played_bedwars || 0],
+  ['winstreak', p => bw(p).winstreak ?? null],
+  'Hypixel',
+  ['network level', p => Math.floor(netLevel(p.networkExp))],
+  ['karma', p => p.karma ?? null],
+  ['achievement points', p => p.achievementPoints ?? null],
+  'SkyWars',
+  ['SkyWars level', p => sw(p).skywars_experience != null ? Math.floor(swLevel(sw(p).skywars_experience)) : null, v => fmtN(v) + '⋆'],
+  ['SkyWars wins', p => sw(p).wins ?? null],
+  ['SkyWars KDR', p => sw(p).kills != null ? R(sw(p).kills, sw(p).deaths) : null, v => faDigits(v.toFixed(2))],
+  'Duels',
+  ['Duels wins', p => du(p).wins ?? null],
+  ['Duels WLR', p => du(p).wins != null ? R(du(p).wins, du(p).losses) : null, v => faDigits(v.toFixed(2))],
+  ['Duels best streak', p => du(p).best_overall_winstreak ?? null],
+];
+const bw = p => (p.stats || {}).Bedwars || {}, sw = p => (p.stats || {}).SkyWars || {}, du = p => (p.stats || {}).Duels || {};
+
+function playerHead(x, right) {
+  const p = x.player, star = bwStar(p), r = rankOf(p);
+  return `<div class="pl${right ? ' r' : ''}"><img src="${head(x.uuid, 44)}" alt=""><div style="min-width:0"><div class="n">${TOOLS.nameHTML(p)}</div><div class="s">${star != null ? `<span style="color:${starColor(star)}">${fmtN(star)}✫</span> · ` : ''}${t('network level')} ${fmtN(Math.floor(netLevel(p.networkExp)))}</div></div></div>`;
+}
+function render(A, B) {
+  let wa = 0, wb = 0; const rows = [];
+  ROWS.forEach(r => {
+    if (typeof r === 'string') { rows.push(`<div class="row sec"><div class="sec-title">${esc(t(r))}</div></div>`); return; }
+    const [label, get, fmt] = r; const va = get(A.player), vb = get(B.player);
+    if (va == null && vb == null) return;
+    const f = v => v == null ? '—' : (fmt ? fmt(v) : fmtN(v));
+    const a = va ?? 0, b = vb ?? 0, max = Math.max(a, b, 1e-9);
+    const cls = a === b ? 'tie' : a > b ? 'a' : 'b'; if (cls === 'a') wa++; else if (cls === 'b') wb++;
+    rows.push(`<div class="row"><div class="val l${cls === 'a' ? ' win' : cls === 'tie' ? ' tie' : ''}"><span class="num">${f(va)}</span><div class="b"><i style="width:${Math.round(100 * a / max)}%"></i></div></div><div class="lbl">${esc(t(label))}</div><div class="val r${cls === 'b' ? ' win' : cls === 'tie' ? ' tie' : ''}"><span class="num">${f(vb)}</span><div class="b"><i style="width:${Math.round(100 * b / max)}%"></i></div></div></div>`);
+  });
+  const lead = wa === wb ? t('tie') : `${esc(wa > wb ? A.name : B.name)} ${t('leads')}`;
+  el('heads').innerHTML = `${playerHead(A)}<div class="score"><b>${faDigits(wa)} – ${faDigits(wb)}</b><span class="${wa === wb ? '' : 'lead'}">${lead}</span></div>${playerHead(B, true)}`;
+  el('rows').innerHTML = rows.join('');
+  el('out').hidden = false; el('msg').hidden = true;
+}
+async function go() {
+  const a = el('a').value.trim(), b = el('b').value.trim();
+  if (!a || !b) { el('msg').hidden = false; el('msg').className = 'msg err'; el('msg').textContent = t('Type two usernames.'); return; }
+  el('go').disabled = true; el('go').innerHTML = '<span class="spin"></span>'; el('msg').hidden = false; el('msg').className = 'msg'; el('msg').innerHTML = `<span class="spin"></span>${t('loading…')}`; el('out').hidden = true;
+  try {
+    const [A, B] = await Promise.all([lookup(a), lookup(b)]);
+    RC.add(`${A.name} vs ${B.name}`); showRecent(); render(A, B);
+    history.replaceState(null, '', `?a=${encodeURIComponent(A.name)}&b=${encodeURIComponent(B.name)}`);
+  } catch (e) { el('msg').className = 'msg err'; el('msg').textContent = e.message; }
+  el('go').disabled = false; el('go').textContent = t('Compare');
+}
+function showRecent() { el('recent').innerHTML = RC.get().map(n => `<button class="chip info" data-n="${esc(n)}">${esc(n)}</button>`).join(''); }
+el('recent').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const [x, y] = b.dataset.n.split(' vs '); el('a').value = x; el('b').value = y; go(); });
+el('go').addEventListener('click', go); ['a', 'b'].forEach(id => el(id).addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+el('swap').addEventListener('click', () => { const x = el('a').value; el('a').value = el('b').value; el('b').value = x; if (!el('out').hidden) go(); });
+showRecent();
+const qs = new URLSearchParams(location.search); if (qs.get('a')) el('a').value = qs.get('a'); if (qs.get('b')) el('b').value = qs.get('b'); if (qs.get('a') && qs.get('b')) go();
+</script>
+</body>
+</html>

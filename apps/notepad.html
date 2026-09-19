@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notepad</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260919a">
+<link rel="stylesheet" href="../css/apps.css?v=20260919a">
+<style>
+  body.app { user-select: text; -webkit-user-select: text; }
+  .app-main { padding: 0; align-items: stretch; justify-content: flex-start; }
+  .np { flex: 1; min-height: 0; display: flex; }
+  .side { width: 220px; flex: none; border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--term-chrome); }
+  body.fa .side { border-right: 0; border-left: 1px solid var(--line); }
+  .side .top { display: flex; gap: 6px; padding: 10px; border-bottom: 1px solid var(--line); }
+  .side .top .inp { padding: 7px 10px; font-size: 12px; }
+  .side .top .abtn { padding: 6px 10px; flex: none; }
+  .list { flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .note-b { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--ink); text-align: start; cursor: pointer; font-family: var(--sans); transition: background .12s; }
+  .note-b:hover { background: rgba(255,255,255,.04); }
+  .note-b.on { background: rgba(255,59,59,.1); border-color: rgba(255,59,59,.3); }
+  .note-b .tt { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-b .ts { font-family: var(--mono); font-size: 10px; color: var(--term-dim); }
+  .list .empty { padding: 20px 10px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--term-dim); line-height: 1.6; }
+  .ed { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .ed textarea { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; resize: none; border: 0; outline: none; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.7; padding: 18px 20px; }
+  .ed textarea.mono { font-family: var(--mono); font-size: 13.5px; }
+  .ed textarea.big { font-size: 18px; }
+  .ed textarea::placeholder { color: var(--term-dim); }
+  .ed textarea[dir=rtl] { font-family: var(--fa); }
+  .foot { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--muted); flex-wrap: wrap; background: var(--term-chrome); }
+  .foot .sp { flex: 1; }
+  .foot .abtn { padding: 4px 9px; font-size: 11px; }
+  .foot .abtn.danger:hover { border-color: rgba(255,59,59,.6); color: var(--accent-soft); }
+  .foot .saved { color: #3fb950; }
+  @media (max-width: 560px) { .side { position: absolute; inset: 0; width: auto; z-index: 3; display: none; } .side.open { display: flex; } }
+  .app-bar .abtn { padding: 4px 9px; font-size: 11px; }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>📝 <span data-t="Notepad">Notepad</span></b><span class="pill" id="count"></span><span class="sp"></span><button class="abtn" id="toggle" data-t="notes">notes</button><button class="abtn" id="mono" data-tt="monospace" title="monospace">mono</button><button class="abtn" id="bigf" data-tt="bigger text" title="bigger text">A+</button></div>
+<div class="app-main">
+<div class="np">
+  <div class="side" id="side">
+    <div class="top"><input class="inp" id="search" data-tp="search…" placeholder="search…"><button class="abtn primary" id="new" data-tt="new note (Ctrl+N)" title="new note (Ctrl+N)">+</button></div>
+    <div class="list" id="list"></div>
+  </div>
+  <div class="ed">
+    <textarea id="ta" data-tp="Start typing… the first line becomes the title. Everything is saved in this browser automatically." placeholder="Start typing… the first line becomes the title. Everything is saved in this browser automatically." spellcheck="false"></textarea>
+    <div class="foot"><span id="words"></span><span id="chars"></span><span class="sp"></span><span id="status"></span><button class="abtn" id="dl" data-t="download .txt">download .txt</button><button class="abtn" id="copy" data-t="copy">copy</button><button class="abtn danger" id="del" data-t="delete">delete</button></div>
+  </div>
+</div>
+</div>
+<script src="tools.js?v=20260919a"></script>
+<script>
+const { t, addFA, applyLang, esc, fmtN, faDigits, fa } = TOOLS;
+addFA({ 'Notepad': 'دفترچه', 'notes': 'یادداشت‌ها', 'monospace': 'مونواسپیس', 'bigger text': 'متن بزرگ‌تر', 'search…': 'جستجو…', 'new note (Ctrl+N)': 'یادداشت جدید (Ctrl+N)', 'Start typing… the first line becomes the title. Everything is saved in this browser automatically.': 'شروع کن به نوشتن… خط اول عنوان می‌شه. همه‌چیز خودکار توی همین مرورگر ذخیره می‌شه.', 'download .txt': 'دانلود .txt', 'copy': 'کپی', 'copied': 'کپی شد', 'delete': 'حذف', 'words': 'کلمه', 'chars': 'حرف', 'saved': 'ذخیره شد', 'saving…': 'در حال ذخیره…', 'Untitled': 'بدون عنوان', 'No notes yet — press + to write one.': 'هنوز یادداشتی نیست — + رو بزن و بنویس.', 'nothing matches': 'چیزی پیدا نشد', 'Delete this note?': 'این یادداشت حذف بشه؟', 'just now': 'همین الان' });
+applyLang();
+const el = id => document.getElementById(id);
+let NOTES = []; try { NOTES = JSON.parse(localStorage.getItem('waish-notes') || '[]'); } catch (e) {}
+let cur = null, saveT = 0;
+const save = () => { try { localStorage.setItem('waish-notes', JSON.stringify(NOTES)); } catch (e) {} };
+const title = n => (n.text.split('\n').find(l => l.trim()) || '').trim().slice(0, 60) || t('Untitled');
+const when = ts => { const d = Date.now() - ts; if (d < 60000) return t('just now'); return new Date(ts).toLocaleString(fa ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+const rtl = s => /[؀-ۿ]/.test((s || '').replace(/\s/g, '').slice(0, 20));
+function list() {
+  const q = el('search').value.trim().toLowerCase();
+  const items = NOTES.filter(n => !q || n.text.toLowerCase().includes(q)).sort((a, b) => b.updated - a.updated);
+  el('list').innerHTML = items.length ? items.map(n => `<button class="note-b${n.id === cur ? ' on' : ''}" data-id="${n.id}"><span class="tt" dir="${rtl(n.text) ? 'rtl' : 'ltr'}">${esc(title(n))}</span><span class="ts">${when(n.updated)}</span></button>`).join('') : `<div class="empty">${t(NOTES.length ? 'nothing matches' : 'No notes yet — press + to write one.')}</div>`;
+  el('count').textContent = `${fmtN(NOTES.length)} ${t('notes')}`;
+}
+function open(id) {
+  cur = id; const n = NOTES.find(x => x.id === id); const ta = el('ta');
+  ta.value = n ? n.text : ''; ta.disabled = !n; ta.dir = rtl(ta.value) ? 'rtl' : 'ltr';
+  list(); counts(); el('status').textContent = ''; if (n) ta.focus();
+  if (matchMedia('(max-width: 560px)').matches) el('side').classList.remove('open');
+}
+function counts() { const s = el('ta').value; el('words').textContent = `${fmtN((s.match(/\S+/g) || []).length)} ${t('words')}`; el('chars').textContent = `${fmtN(s.length)} ${t('chars')}`; }
+function newNote() { const n = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: '', updated: Date.now() }; NOTES.push(n); save(); open(n.id); }
+el('ta').addEventListener('input', () => {
+  let n = NOTES.find(x => x.id === cur);
+  if (!n) { n = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: '', updated: Date.now() }; NOTES.push(n); cur = n.id; }   // typing into the empty pad starts a note
+  n.text = el('ta').value; n.updated = Date.now(); el('ta').dir = rtl(n.text) ? 'rtl' : 'ltr'; counts();
+  el('status').textContent = t('saving…'); el('status').className = '';
+  clearTimeout(saveT); saveT = setTimeout(() => { save(); list(); el('status').textContent = '✔ ' + t('saved'); el('status').className = 'saved'; }, 350);
+});
+el('list').addEventListener('click', e => { const b = e.target.closest('button'); if (b) open(b.dataset.id); });
+el('search').addEventListener('input', list);
+el('new').addEventListener('click', newNote);
+el('del').addEventListener('click', () => { const n = NOTES.find(x => x.id === cur); if (!n) return; if (n.text.trim() && !confirm(t('Delete this note?'))) return; NOTES = NOTES.filter(x => x.id !== cur); save(); const next = NOTES.sort((a, b) => b.updated - a.updated)[0]; open(next ? next.id : null); });
+el('dl').addEventListener('click', () => { const n = NOTES.find(x => x.id === cur); if (!n) return; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([n.text], { type: 'text/plain;charset=utf-8' })); a.download = title(n).replace(/[\\/:*?"<>|]+/g, '-') + '.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+el('copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(el('ta').value); el('copy').textContent = t('copied'); setTimeout(() => el('copy').textContent = t('copy'), 1200); } catch (e) {} });
+el('toggle').addEventListener('click', () => el('side').classList.toggle('open'));
+el('mono').addEventListener('click', () => { el('ta').classList.toggle('mono'); el('mono').classList.toggle('on'); try { localStorage.setItem('waish-notes-mono', el('ta').classList.contains('mono') ? '1' : ''); } catch (e) {} });
+el('bigf').addEventListener('click', () => { el('ta').classList.toggle('big'); el('bigf').classList.toggle('on'); try { localStorage.setItem('waish-notes-big', el('ta').classList.contains('big') ? '1' : ''); } catch (e) {} });
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); newNote(); } if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); el('dl').click(); } if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); el('side').classList.add('open'); el('search').focus(); } });
+try { if (localStorage.getItem('waish-notes-mono')) el('mono').click(); if (localStorage.getItem('waish-notes-big')) el('bigf').click(); } catch (e) {}
+const first = NOTES.slice().sort((a, b) => b.updated - a.updated)[0];
+if (first) open(first.id); else { list(); counts(); el('ta').disabled = false; }
+</script>
+</body>
+</html>

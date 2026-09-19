@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guild Leaderboard</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260919a">
+<link rel="stylesheet" href="../css/apps.css?v=20260919a">
+<style>
+  .app-main { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; }
+  .ghead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ghead .gn { font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+  .ghead .gt { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  .ghead .sub { font-family: var(--mono); font-size: 12px; color: var(--muted); width: 100%; }
+  .podium { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 8px; align-items: end; }
+  .pod { border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px 10px; text-align: center; background: rgba(255,255,255,.02); display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; position: relative; }
+  .pod img { width: 44px; height: 44px; border-radius: 9px; image-rendering: pixelated; background: rgba(255,255,255,.04); }
+  .pod.first { border-color: rgba(255,200,60,.55); background: rgba(255,200,60,.07); padding-top: 16px; } .pod.first img { width: 56px; height: 56px; }
+  .pod.second { border-color: rgba(200,200,210,.35); background: rgba(200,200,210,.05); } .pod.third { border-color: rgba(205,127,50,.45); background: rgba(205,127,50,.06); }
+  .pod .place { position: absolute; top: 6px; left: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); } body.fa .pod .place { left: auto; right: 8px; }
+  .pod .n { font-family: var(--mono); font-weight: 700; font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; }
+  .pod .v { font-family: var(--sans); font-weight: 700; font-size: 18px; letter-spacing: -.5px; }
+  .pod.first .v { color: #ffc83c; } .pod.second .v { color: #d0d3da; } .pod.third .v { color: #e0955a; }
+  .pod .r { font-family: var(--mono); font-size: 10px; color: var(--term-dim); }
+  .lb { display: flex; flex-direction: column; gap: 4px; }
+  .lrow { display: grid; grid-template-columns: 30px 28px 1fr auto; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255,255,255,.02); position: relative; overflow: hidden; }
+  .lrow .fill { position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, rgba(255,59,59,.14), rgba(255,59,59,.02)); pointer-events: none; }
+  body.fa .lrow .fill { background: linear-gradient(270deg, rgba(255,59,59,.14), rgba(255,59,59,.02)); margin-left: auto; right: 0; left: auto; }
+  .lrow > * { position: relative; }
+  .lrow .i { font-family: var(--mono); font-size: 11px; color: var(--term-dim); }
+  .lrow img { width: 24px; height: 24px; border-radius: 5px; image-rendering: pixelated; background: rgba(255,255,255,.04); }
+  .lrow .n { font-family: var(--mono); font-size: 12.5px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; text-align: start; display: flex; align-items: center; gap: 6px; }
+  .lrow .n .rk { font-size: 10px; color: var(--term-dim); font-weight: 500; }
+  .lrow .n.me { color: var(--accent-soft); }
+  .lrow .v { font-family: var(--sans); font-weight: 700; font-size: 14px; letter-spacing: -.3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lrow .v small { font-family: var(--mono); font-size: 10px; color: var(--term-dim); font-weight: 500; margin-left: 5px; }
+  .modes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .more { align-self: center; }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>🏆 <span data-t="Guild Leaderboard">Guild Leaderboard</span></b><span class="sp"></span><span class="pill" id="pill"></span></div>
+<div class="app-main">
+<div class="tool">
+  <div class="search">
+    <div class="seg" id="by"><button class="on" data-b="name" data-t="Guild name">Guild name</button><button data-b="player" data-t="Player">Player</button></div>
+    <input class="inp" id="q" data-tp="guild name" placeholder="guild name" maxlength="36" autocomplete="off" spellcheck="false">
+    <button class="abtn primary" id="go" data-t="Look up">Look up</button>
+  </div>
+  <div class="chips" id="recent"></div>
+  <div class="msg" id="msg" data-t="Rank a guild's members by weekly XP, today's XP, quest participation or how long they've been in. Search by guild name, or by any player in it.">Rank a guild's members by weekly XP, today's XP, quest participation or how long they've been in. Search by guild name, or by any player in it.</div>
+  <div id="out" hidden>
+    <div class="card"><div class="ghead" id="ghead"></div></div>
+    <div class="modes" style="margin-top:12px"><div class="seg" id="modes"><button class="on" data-m="weekly" data-t="weekly XP">weekly XP</button><button data-m="today" data-t="today">today</button><button data-m="quests" data-t="quests">quests</button><button data-m="oldest" data-t="longest in guild">longest in guild</button><button data-m="newest" data-t="newest">newest</button></div><span class="sp"></span><span class="note" id="tot"></span></div>
+    <div class="podium" id="podium" style="margin-top:12px"></div>
+    <div class="lb" id="lb" style="margin-top:12px"></div>
+    <button class="abtn more" id="more" hidden data-t="show more">show more</button>
+  </div>
+</div>
+</div>
+<script src="tools.js?v=20260919a"></script>
+<script>
+const { t, addFA, applyLang, esc, fmtN, faDigits, dt, head, guild, profile, names, guildLevel, MC, vivid, recent, fa } = TOOLS;
+addFA({ 'Guild Leaderboard': 'جدول گیلد', 'Guild name': 'اسم گیلد', 'Player': 'بازیکن', 'guild name': 'اسم گیلد', 'player name': 'اسم بازیکن', 'Look up': 'جستجو', "Rank a guild's members by weekly XP, today's XP, quest participation or how long they've been in. Search by guild name, or by any player in it.": 'اعضای یه گیلد رو بر اساس XP هفتگی، XP امروز، شرکت توی کوئست‌ها یا مدت عضویت رتبه‌بندی کن. با اسم گیلد یا هر بازیکنی که توشه جستجو کن.', 'weekly XP': 'XP هفتگی', 'today': 'امروز', 'quests': 'کوئست‌ها', 'longest in guild': 'قدیمی‌ترین', 'newest': 'جدیدترین', 'show more': 'بیشتر', 'level': 'لول', 'members': 'عضو', 'total this week': 'کل این هفته', 'avg / member': 'میانگین هر عضو', 'XP': 'XP', 'days': 'روز', 'joined': 'عضو شده', 'Type a guild name.': 'اسم گیلد رو بنویس.', 'Not in a guild.': 'توی گیلدی نیست.', 'active this week': 'فعال این هفته', 'quest participation': 'شرکت توی کوئست' });
+applyLang();
+const el = id => document.getElementById(id);
+const RC = recent('guildlb'); let by = 'name', G = null, mode = 'weekly', shown = 30; const NAME = {};
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const weekly = m => m.expHistory ? Object.values(m.expHistory).reduce((a, b) => a + (b || 0), 0) : 0;
+const today = m => (m.expHistory && (m.expHistory[todayKey()] || 0)) || 0;
+const VAL = {
+  weekly: { get: weekly, fmt: v => fmtN(v) + ' XP' },
+  today: { get: today, fmt: v => fmtN(v) + ' XP' },
+  quests: { get: m => m.questParticipation || 0, fmt: v => fmtN(v) },
+  oldest: { get: m => m.joined ? Math.floor((Date.now() - m.joined) / 86400000) : 0, fmt: v => fmtN(v) + ' ' + t('days'), sub: m => dt(m.joined) },
+  newest: { get: m => m.joined ? -m.joined : 0, fmt: (v, m) => dt(m.joined), bar: m => Math.max(0, 1 - (Date.now() - m.joined) / (365 * 86400000)) },
+};
+const nm = u => NAME[u] || '…';
+function render() {
+  const g = G, V = VAL[mode]; const ms = (g.members || []).slice().sort((a, b) => V.get(b) - V.get(a));
+  const top = V.get(ms[0]) || 1;
+  const color = vivid(MC[g.tagColor] || '#AAA'), lvl = guildLevel(g.exp), tot = ms.reduce((a, m) => a + weekly(m), 0), active = ms.filter(m => weekly(m) > 0).length;
+  el('ghead').innerHTML = `<span class="gn" style="color:${color}">${esc(g.name)}</span>${g.tag ? `<span class="gt" style="color:${color}">[${esc(g.tag)}]</span>` : ''}<span class="chip">${t('level')} ${fmtN(Math.floor(lvl))}</span><span class="chip">${fmtN(ms.length)} ${t('members')}</span><span class="chip ok">${fmtN(active)} ${t('active this week')}</span><div class="sub">${t('total this week')}: <b>${fmtN(tot)} XP</b> · ${t('avg / member')}: <b>${fmtN(Math.round(tot / Math.max(1, ms.length)))} XP</b></div>`;
+  el('pill').textContent = `${esc(g.name)} · ${fmtN(ms.length)}`;
+  const pod = (m, cls, place) => m ? `<div class="pod ${cls}"><span class="place">#${faDigits(place)}</span><img src="${head(m.uuid, 56)}" alt=""><div class="n" data-u="${m.uuid}">${esc(nm(m.uuid))}</div><div class="v">${V.fmt(V.get(m), m)}</div><div class="r">${esc(m.rank || '')}</div></div>` : '<div></div>';
+  el('podium').innerHTML = pod(ms[1], 'second', 2) + pod(ms[0], 'first', 1) + pod(ms[2], 'third', 3);
+  const rows = ms.slice(3, 3 + shown);
+  el('lb').innerHTML = rows.map((m, i) => { const v = V.get(m); const w = V.bar ? V.bar(m) * 100 : Math.round(100 * Math.max(0, v) / top); return `<div class="lrow"><div class="fill" style="width:${w}%"></div><span class="i">#${faDigits(i + 4)}</span><img src="${head(m.uuid, 24)}" alt="" loading="lazy"><span class="n" data-u="${m.uuid}">${esc(nm(m.uuid))}<span class="rk">${esc(m.rank || '')}</span></span><span class="v">${V.fmt(v, m)}${mode === 'weekly' && tot ? `<small>${faDigits(Math.round(100 * v / tot))}%</small>` : ''}</span></div>`; }).join('');
+  el('more').hidden = ms.length <= 3 + shown;
+  el('tot').textContent = mode === 'weekly' || mode === 'today' ? `${fmtN(ms.reduce((a, m) => a + V.get(m), 0))} XP` : '';
+  el('out').hidden = false; el('msg').hidden = true;
+}
+function setName(u, n) { NAME[u] = n || '?'; document.querySelectorAll(`[data-u="${u}"]`).forEach(x => { x.firstChild.nodeValue = n || '?'; }); }
+async function go() {
+  const q = el('q').value.trim(); if (!q) { el('msg').hidden = false; el('msg').className = 'msg err'; el('msg').textContent = t('Type a guild name.'); return; }
+  el('go').disabled = true; el('go').innerHTML = '<span class="spin"></span>'; el('msg').hidden = false; el('msg').className = 'msg'; el('msg').innerHTML = `<span class="spin"></span>${t('loading…')}`; el('out').hidden = true;
+  try {
+    let params = `name=${encodeURIComponent(q)}`;
+    if (by === 'player') { const p = await profile(q); params = `uuid=${p.uuid}`; }
+    G = await guild(params); shown = 30; render();
+    RC.add(G.name); showRecent(); history.replaceState(null, '', `?g=${encodeURIComponent(G.name)}`);
+    // names arrive progressively, 40 per call, top of the board first
+    const V = VAL[mode]; const order = (G.members || []).slice().sort((a, b) => V.get(b) - V.get(a)).map(m => m.uuid);
+    names(order, setName);
+  } catch (e) { el('msg').className = 'msg err'; el('msg').textContent = e.code === 'notfound' && by === 'player' ? t('Not in a guild.') : e.message; }
+  el('go').disabled = false; el('go').textContent = t('Look up');
+}
+function showRecent() { el('recent').innerHTML = RC.get().map(n => `<button class="chip info" data-n="${esc(n)}">${esc(n)}</button>`).join(''); }
+el('recent').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { by = 'name'; el('by').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.b === 'name')); el('q').value = b.dataset.n; go(); } });
+el('by').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; by = b.dataset.b; el('by').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); el('q').placeholder = t(by === 'name' ? 'guild name' : 'player name'); });
+el('modes').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.m; shown = 30; el('modes').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); if (G) render(); });
+el('more').addEventListener('click', () => { shown += 40; render(); });
+el('go').addEventListener('click', go); el('q').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+showRecent();
+const qs = new URLSearchParams(location.search); if (qs.get('g')) { el('q').value = qs.get('g'); go(); } else if (qs.get('u')) { by = 'player'; el('by').querySelector('[data-b=player]').click(); el('q').value = qs.get('u'); go(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPS Test</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260919a">
+<link rel="stylesheet" href="../css/apps.css?v=20260919a">
+<style>
+  .app-main { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 12px; gap: 10px; }
+  .ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: none; }
+  .ctl .lbl { font-family: var(--mono); font-size: 11px; color: var(--term-dim); text-transform: uppercase; letter-spacing: .4px; }
+  body.fa .ctl .lbl { font-family: var(--fa); text-transform: none; }
+  .zone { flex: 1; min-height: 220px; border-radius: 16px; border: 1px solid var(--line); background: radial-gradient(ellipse at 50% 40%, rgba(255,59,59,.10), transparent 60%), var(--card); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; user-select: none; touch-action: manipulation; transition: border-color .15s; outline: none; }
+  .zone:hover { border-color: rgba(255,59,59,.35); }
+  .zone.live { border-color: rgba(255,59,59,.6); box-shadow: 0 0 0 3px rgba(255,59,59,.12) inset; }
+  .zone.done { cursor: default; }
+  .zone .big { font-size: 74px; color: var(--ink); }
+  .zone .big small { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 6px; }
+  .zone .sub { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: center; line-height: 1.6; padding: 0 20px; }
+  body.fa .zone .sub { font-family: var(--fa); }
+  .zone .sub b { color: var(--ink); }
+  .zone .timer { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(255,255,255,.06); }
+  .zone .timer i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), #ff9f43); }
+  .ripple { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; border: 2px solid var(--accent-soft); pointer-events: none; animation: rip .5s ease-out forwards; }
+  @keyframes rip { to { transform: scale(5); opacity: 0; } }
+  .tier { font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 46px; width: min(90%, 360px); margin-top: 6px; }
+  .chart i { flex: 1; background: rgba(255,59,59,.5); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; flex: none; }
+  .zone .again { margin-top: 4px; }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>🖱️ <span data-t="CPS Test">CPS Test</span></b><span class="sp"></span><span class="pill"><span data-t="best">best</span> <i id="bestPill">—</i></span></div>
+<div class="app-main">
+  <div class="ctl">
+    <span class="lbl" data-t="duration">duration</span>
+    <div class="seg" id="dur"><button data-d="1">1s</button><button data-d="5" class="on">5s</button><button data-d="10">10s</button><button data-d="15">15s</button><button data-d="30">30s</button></div>
+    <span class="lbl" data-t="input">input</span>
+    <div class="seg" id="mode"><button data-m="mouse" class="on" data-t="mouse">mouse</button><button data-m="key" data-t="keyboard">keyboard</button></div>
+    <span class="sp"></span>
+    <button class="abtn sm" id="reset" data-t="reset best">reset best</button>
+  </div>
+  <div class="zone" id="zone" tabindex="0">
+    <div class="big" id="big">0<small>CPS</small></div>
+    <div class="sub" id="sub"></div>
+    <div class="timer"><i id="tbar"></i></div>
+  </div>
+  <div class="stats" id="stats"></div>
+</div>
+<script src="tools.js?v=20260919a"></script>
+<script>
+const { t, addFA, applyLang, esc, fmtN, faDigits, stat, fa } = TOOLS;
+addFA({ 'CPS Test': 'تست CPS', 'best': 'بهترین', 'duration': 'مدت', 'input': 'ورودی', 'mouse': 'ماوس', 'keyboard': 'کیبورد', 'reset best': 'پاک کردن رکورد', 'Click here to start': 'برای شروع اینجا کلیک کن', 'Press any key to start': 'برای شروع یه کلید بزن', 'the timer starts on your first click': 'تایمر با اولین کلیکت شروع می‌شه', 'the timer starts on your first key press': 'تایمر با اولین کلیدت شروع می‌شه', 'clicks': 'کلیک', 'seconds': 'ثانیه', 'CPS': 'CPS', 'best this mode': 'بهترین این حالت', 'runs': 'دفعات', 'peak second': 'بهترین ثانیه', 'again': 'دوباره', 'new best!': 'رکورد جدید!', 'Turtle': 'لاک‌پشت', 'Normal': 'معمولی', 'Good': 'خوب', 'Fast': 'سریع', 'Insane': 'دیوونه', 'Godlike': 'خدایی', 'left': 'مونده' });
+applyLang();
+const el = id => document.getElementById(id);
+let dur = 5, mode = 'mouse', state = 'idle', clicks = 0, t0 = 0, raf = 0, stamps = [];
+let BEST = {}; try { BEST = JSON.parse(localStorage.getItem('waish-cps') || '{}'); } catch (e) {}
+const key = () => `${mode}-${dur}`;
+const TIERS = [[4, 'Turtle', '🐢', '#9A9A9A'], [7, 'Normal', '🙂', '#FFF'], [10, 'Good', '👍', '#5F5'], [13, 'Fast', '⚡', '#FF5'], [16, 'Insane', '🔥', '#FF5C5C'], [Infinity, 'Godlike', '👑', '#E066FF']];
+const tierOf = cps => TIERS.find(x => cps < x[0]);
+function idle() {
+  state = 'idle'; clicks = 0; stamps = []; cancelAnimationFrame(raf);
+  el('zone').className = 'zone'; el('tbar').style.width = '0%';
+  el('big').innerHTML = `0<small>CPS</small>`;
+  el('sub').innerHTML = `<b>${t(mode === 'mouse' ? 'Click here to start' : 'Press any key to start')}</b><br>${t(mode === 'mouse' ? 'the timer starts on your first click' : 'the timer starts on your first key press')} · ${faDigits(dur)}${fa ? ' ثانیه' : 's'}`;
+  el('bestPill').textContent = BEST[key()] ? faDigits(BEST[key()].cps.toFixed(1)) + ' CPS' : '—';
+  showStats(null);
+}
+function showStats(res) {
+  const b = BEST[key()];
+  el('stats').innerHTML = [
+    res ? stat(t('clicks'), fmtN(res.clicks)) : '',
+    res ? stat(t('peak second'), faDigits(res.peak) + ' CPS') : '',
+    stat(t('best this mode'), b ? faDigits(b.cps.toFixed(2)) + ' CPS' : '—', true),
+    stat(t('runs'), fmtN(b ? b.runs : 0)),
+  ].join('');
+}
+function start() { state = 'live'; t0 = performance.now(); el('zone').classList.add('live'); tick(); }
+function tick() {
+  const e = (performance.now() - t0) / 1000;
+  if (e >= dur) return finish();
+  el('big').innerHTML = `${faDigits((clicks / Math.max(e, .05)).toFixed(1))}<small>CPS</small>`;
+  el('sub').innerHTML = `<b>${fmtN(clicks)}</b> ${t('clicks')} · <b>${faDigits((dur - e).toFixed(1))}</b>${fa ? ' ثانیه' : 's'} ${t('left')}`;
+  el('tbar').style.width = (100 * e / dur) + '%';
+  raf = requestAnimationFrame(tick);
+}
+function hit(x, y) {
+  if (state === 'done') return;
+  if (state === 'idle') start();
+  clicks++; stamps.push(performance.now() - t0);
+  if (x != null) { const r = document.createElement('i'); r.className = 'ripple'; r.style.left = x + 'px'; r.style.top = y + 'px'; el('zone').appendChild(r); setTimeout(() => r.remove(), 520); }
+}
+function finish() {
+  state = 'done'; cancelAnimationFrame(raf); el('zone').className = 'zone done'; el('tbar').style.width = '100%';
+  const cps = clicks / dur, tier = tierOf(cps);
+  const bins = 10, per = Array.from({ length: bins }, () => 0); stamps.forEach(s => { per[Math.min(bins - 1, Math.floor(s / (dur * 1000 / bins)))]++; });
+  const peakSec = Math.max(...Array.from({ length: Math.max(1, Math.ceil(dur)) }, (_, i) => stamps.filter(s => s >= i * 1000 && s < (i + 1) * 1000).length));
+  const k = key(), prev = BEST[k]; const isBest = !prev || cps > prev.cps;
+  BEST[k] = { cps: isBest ? cps : prev.cps, runs: (prev ? prev.runs : 0) + 1 }; try { localStorage.setItem('waish-cps', JSON.stringify(BEST)); } catch (e) {}
+  const mx = Math.max(1, ...per);
+  el('big').innerHTML = `${faDigits(cps.toFixed(2))}<small>CPS</small>`;
+  el('sub').innerHTML = `<span class="tier" style="color:${tier[3]}">${tier[2]} ${t(tier[1])}</span>${isBest ? ` <span class="chip ok">${t('new best!')}</span>` : ''}<br>${fmtN(clicks)} ${t('clicks')} · ${faDigits(dur)} ${t('seconds')}<div class="chart">${per.map(v => `<i style="height:${Math.round(100 * v / mx)}%" title="${v}"></i>`).join('')}</div><button class="abtn primary again" id="again">${t('again')}</button>`;
+  el('again').addEventListener('click', e => { e.stopPropagation(); idle(); });
+  el('bestPill').textContent = faDigits(BEST[k].cps.toFixed(1)) + ' CPS';
+  showStats({ clicks, peak: peakSec });
+}
+const zone = el('zone');
+zone.addEventListener('mousedown', e => { if (mode !== 'mouse') return; if (e.target.closest('button')) return; e.preventDefault(); const R = zone.getBoundingClientRect(); hit(e.clientX - R.left, e.clientY - R.top); });
+zone.addEventListener('touchstart', e => { if (mode !== 'mouse') return; if (e.target.closest('button')) return; e.preventDefault(); const R = zone.getBoundingClientRect(); for (const tch of e.changedTouches) hit(tch.clientX - R.left, tch.clientY - R.top); }, { passive: false });
+zone.addEventListener('contextmenu', e => e.preventDefault());
+addEventListener('keydown', e => { if (mode !== 'key' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return; if (e.target.tagName === 'BUTTON') e.preventDefault(); if (state === 'done') { if (e.key === 'Enter' || e.key === ' ') idle(); return; } e.preventDefault(); hit(); });
+el('dur').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; dur = +b.dataset.d; el('dur').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); idle(); });
+el('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.m; el('mode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); idle(); zone.focus(); });
+el('reset').addEventListener('click', () => { delete BEST[key()]; try { localStorage.setItem('waish-cps', JSON.stringify(BEST)); } catch (e) {} idle(); });
+idle();
+addEventListener('load', () => { try { window.focus(); zone.focus(); } catch (e) {} });
+</script>
+</body>
+</html>

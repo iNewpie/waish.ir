@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prestige Calculator</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260919a">
+<link rel="stylesheet" href="../css/apps.css?v=20260919a">
+<style>
+  .app-main { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; }
+  .hero { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .hero .star { font-family: var(--mono); font-size: 44px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+  .hero .pname { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .hero .pname b { font-weight: 600; }
+  .hero .right { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
+  .hero .togo { font-family: var(--mono); font-size: 12.5px; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .hero .togo b { color: var(--ink); }
+  .ladder { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
+  .ladder .p { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.02); min-width: 74px; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; transition: border-color .15s; }
+  .ladder .p b { font-size: 14px; font-weight: 700; }
+  .ladder .p.done { opacity: .45; }
+  .ladder .p.now { border-color: rgba(255,59,59,.6); background: rgba(255,59,59,.08); opacity: 1; }
+  .ladder .p.target { border-color: rgba(88,166,255,.6); background: rgba(88,166,255,.08); opacity: 1; }
+  .ladder .p:hover { border-color: rgba(255,255,255,.25); }
+  .who { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  .who b { color: var(--ink); }
+  .stat.p .v { font-size: 16px; }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>✫ <span data-t="Prestige Calculator">Prestige Calculator</span></b><span class="sp"></span><span class="pill">BedWars</span></div>
+<div class="app-main">
+<div class="tool">
+  <div class="card">
+    <h3><span data-t="Your stats">Your stats</span><span class="sp"></span><span class="chip" id="src" data-t="manual">manual</span></h3>
+    <div class="search"><input class="inp" id="q" data-tp="Load from a username (optional)" placeholder="Load from a username (optional)" maxlength="36" autocomplete="off" spellcheck="false"><button class="abtn primary" id="load" data-t="Load">Load</button></div>
+    <div class="who" id="who" hidden></div>
+    <div class="fields">
+      <div class="field"><label data-t="current star">current star</label><input class="inp" type="number" id="star" min="0" max="10000" value="0"></div>
+      <div class="field"><label data-t="XP into this star">XP into this star</label><input class="inp" type="number" id="into" min="0" value="0"></div>
+      <div class="field"><label data-t="target star">target star</label><input class="inp" type="number" id="target" min="1" max="10000" value="100"></div>
+      <div class="field"><label data-t="avg XP per game">avg XP per game</label><input class="inp" type="number" id="xpg" min="1" value="120"></div>
+      <div class="field"><label data-t="games per day">games per day</label><input class="inp" type="number" id="gpd" min="0" step="0.1" value="10"></div>
+    </div>
+    <div class="chips" id="quick"></div>
+  </div>
+
+  <div class="card">
+    <div class="hero">
+      <div><div class="star" id="bigStar">0✫</div><div class="pname" id="pname"></div></div>
+      <div class="right">
+        <div class="togo"><span><span data-t="to">to</span> <b id="tgtLabel"></b></span><span><b id="pct">0%</b></span></div>
+        <div class="bar"><i id="barFill" style="width:0%"></i></div>
+        <div class="togo"><span><b id="starsToGo">0</b> <span data-t="stars to go">stars to go</span></span><span><b id="xpToGo">0</b> XP</span></div>
+      </div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="note" id="noteEta"></div>
+  </div>
+
+  <div class="card">
+    <h3><span data-t="Prestige ladder">Prestige ladder</span><span class="sp"></span><span class="note" data-t="click one to make it the target">click one to make it the target</span></h3>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="note" data-t="XP per star: 500 · 1,000 · 2,000 · 3,500 for the first four stars of every prestige, then 5,000 each — 487,000 XP per prestige. Estimates use your average XP per game and games per day.">XP per star: 500 · 1,000 · 2,000 · 3,500 for the first four stars of every prestige, then 5,000 each — 487,000 XP per prestige. Estimates use your average XP per game and games per day.</div>
+</div>
+</div>
+<script src="tools.js?v=20260919a"></script>
+<script>
+const { $, t, addFA, applyLang, esc, fmtN, faDigits, xpForStar, xpForNextStar, bwLevel, prestige, starColor, PRESTIGES, lookup, bwStar, recent, fa } = TOOLS;
+addFA({ 'Prestige Calculator': 'ماشین‌حساب پرستیژ', 'Your stats': 'آمار تو', 'manual': 'دستی', 'Load from a username (optional)': 'از روی یوزرنیم (اختیاری)', 'Load': 'بارگذاری', 'current star': 'استار فعلی', 'XP into this star': 'XP توی این استار', 'target star': 'استار هدف', 'avg XP per game': 'میانگین XP هر بازی', 'games per day': 'بازی در روز', 'to': 'تا', 'stars to go': 'استار مونده', 'Prestige ladder': 'نردبان پرستیژ', 'click one to make it the target': 'روی یکی بزن تا هدف بشه', 'next prestige': 'پرستیژ بعدی', 'current prestige': 'پرستیژ فعلی', 'XP for next star': 'XP تا استار بعدی', 'games needed': 'بازی لازم', 'days at this pace': 'روز با این سرعت', 'ETA': 'تاریخ رسیدن', 'total XP': 'XP کل', 'loaded from Hypixel': 'از هایپیکسل', 'games played': 'بازی‌ها', 'already there': 'همین الان رسیدی', 'XP per star: 500 · 1,000 · 2,000 · 3,500 for the first four stars of every prestige, then 5,000 each — 487,000 XP per prestige. Estimates use your average XP per game and games per day.': 'XP هر استار: ۵۰۰ · ۱٬۰۰۰ · ۲٬۰۰۰ · ۳٬۵۰۰ برای چهار استار اول هر پرستیژ، بعدش هر کدوم ۵٬۰۰۰ — هر پرستیژ ۴۸۷٬۰۰۰ XP. تخمین‌ها با میانگین XP هر بازی و تعداد بازی در روز محاسبه می‌شن.', 'Next prestige': 'پرستیژ بعدی', 'next 100': '۱۰۰ بعدی', 'Rainbow (1000)': 'رینبو (۱۰۰۰)', 'next star': 'استار بعدی', 'game': 'بازی', 'games': 'بازی', 'day': 'روز', 'days': 'روز' });
+applyLang();
+
+const el = id => document.getElementById(id);
+const num = id => Math.max(0, +el(id).value || 0);
+const pColor = p => p.color === 'rainbow' ? null : p.color;
+const pName = (p, cls) => `<span class="${p.color === 'rainbow' ? 'rainbow' : ''}${cls ? ' ' + cls : ''}" style="${p.color !== 'rainbow' ? `color:${p.color}` : ''}">${esc(p.name)}</span>`;
+const RC = recent('prestige');
+
+function ladder(star, target) {
+  const wrap = el('ladder'); wrap.innerHTML = '';
+  const maxI = Math.max(PRESTIGES.length - 1, Math.floor(target / 100) + 1, Math.floor(star / 100) + 1);
+  for (let i = 1; i <= maxI; i++) {
+    const p = prestige(i * 100); const b = document.createElement('button'); b.type = 'button';
+    b.className = 'p' + (i * 100 <= star ? ' done' : '') + (Math.floor(star / 100) + 1 === i ? ' now' : '') + (target === i * 100 ? ' target' : '');
+    b.innerHTML = `<b class="${p.color === 'rainbow' ? 'rainbow' : ''}" style="${p.color !== 'rainbow' ? `color:${p.color}` : ''}">${fmtN(i * 100)}✫</b><span>${esc(p.name)}</span>`;
+    b.title = fmtN(xpForStar(i * 100)) + ' XP'; b.addEventListener('click', () => { el('target').value = i * 100; calc(); });
+    wrap.appendChild(b);
+  }
+  const tg = wrap.querySelector('.target'); if (tg) wrap.scrollLeft = tg.offsetLeft - wrap.clientWidth / 2 + tg.offsetWidth / 2;   // horizontal only — scrollIntoView would also scroll the page
+}
+
+function calc() {
+  const star = Math.floor(num('star')), into = Math.min(num('into'), xpForNextStar(star) - 1), target = Math.max(1, Math.floor(num('target'))), xpg = Math.max(1, num('xpg')), gpd = num('gpd');
+  const now = xpForStar(star) + into, tgt = xpForStar(target), toGo = Math.max(0, tgt - now);
+  const cur = prestige(star), next = prestige(star + 100);
+  el('bigStar').innerHTML = `<span class="${cur.color === 'rainbow' ? 'rainbow' : ''}" style="${cur.color !== 'rainbow' ? `color:${cur.color}` : ''}">${fmtN(star)}✫</span>`;
+  el('pname').innerHTML = `${t('current prestige')}: ${pName(cur)} · ${t('next prestige')}: ${pName(next)} (${fmtN(next.start)}✫)`;
+  el('tgtLabel').textContent = fmtN(target) + '✫';
+  // progress bar: XP from the start of the current star to the target star
+  const from = xpForStar(Math.min(star, target));
+  const pct = toGo === 0 ? 100 : Math.round(100 * (now - from) / Math.max(1, tgt - from));
+  el('pct').textContent = faDigits(Math.min(100, Math.max(0, pct)) + '%'); el('barFill').style.width = Math.min(100, Math.max(0, pct)) + '%';
+  el('starsToGo').textContent = fmtN(Math.max(0, target - star)); el('xpToGo').textContent = fmtN(toGo);
+  const games = Math.ceil(toGo / xpg), days = gpd > 0 ? games / gpd : null;
+  const eta = days != null && toGo > 0 ? new Date(Date.now() + days * 86400000) : null;
+  const S = TOOLS.stat;
+  el('tiles').innerHTML = [
+    S(t('total XP'), fmtN(now)),
+    S(t('XP for next star'), fmtN(xpForNextStar(star) - into) + `<small>/ ${fmtN(xpForNextStar(star))}</small>`),
+    S(t('next prestige'), `${pName(next)}<small>${fmtN(xpForStar(next.start) - now)} XP</small>`, false, null, 'p'),
+    S(t('games needed'), toGo > 0 ? fmtN(games) : t('already there'), true),
+    days != null ? S(t('days at this pace'), toGo > 0 ? fmtN(Math.ceil(days)) : '0') : '',
+    eta ? S(t('ETA'), eta.toLocaleDateString(fa ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })) : '',
+  ].join('');
+  el('noteEta').textContent = toGo > 0 ? `${fmtN(toGo)} XP ÷ ${fmtN(xpg)} XP/${t('game')} ≈ ${fmtN(games)} ${t('games')}${gpd > 0 ? ` · ÷ ${fmtN(gpd)}/${t('day')} ≈ ${fmtN(Math.ceil(days))} ${t('days')}` : ''}` : '';
+  ladder(star, target);
+  quick(star);
+}
+function quick(star) {
+  const items = [[t('next star'), star + 1], [t('next 100'), (Math.floor(star / 100) + 1) * 100], [t('Rainbow (1000)'), 1000], ['2000✫', 2000], ['3000✫', 3000]];
+  el('quick').innerHTML = items.filter(([, v]) => v > star).map(([l, v]) => `<button class="chip" data-v="${v}">${esc(l)} · ${fmtN(v)}✫</button>`).join('') + RC.get().map(n => `<button class="chip info" data-n="${esc(n)}">${esc(n)}</button>`).join('');
+}
+el('quick').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.v) { el('target').value = b.dataset.v; calc(); } else if (b.dataset.n) { el('q').value = b.dataset.n; load(); } });
+['star', 'into', 'target', 'xpg', 'gpd'].forEach(id => el(id).addEventListener('input', () => { el('src').textContent = t('manual'); calc(); }));
+
+async function load() {
+  const q = el('q').value.trim(); if (!q) return;
+  const btn = el('load'); btn.disabled = true; btn.innerHTML = `<span class="spin"></span>`;
+  el('who').hidden = false; el('who').innerHTML = `<span class="spin"></span>${t('loading…')}`;
+  try {
+    const { player: pl, name, uuid } = await lookup(q); const bw = (pl.stats || {}).Bedwars || {};
+    const xp = bw.Experience || 0, star = bwStar(pl) ?? Math.floor(bwLevel(xp)), games = bw.games_played_bedwars || ((bw.wins_bedwars || 0) + (bw.losses_bedwars || 0)) || 0;
+    const days = pl.firstLogin ? Math.max(1, (Date.now() - pl.firstLogin) / 86400000) : null;
+    el('star').value = star; el('into').value = Math.max(0, xp - xpForStar(star));
+    if (games) el('xpg').value = Math.max(1, Math.round(xp / games));
+    if (days && games) el('gpd').value = (games / days).toFixed(1);
+    if (+el('target').value <= star) el('target').value = (Math.floor(star / 100) + 1) * 100;
+    el('src').textContent = t('loaded from Hypixel');
+    el('who').innerHTML = `<img class="head-img" src="${TOOLS.head(uuid, 32)}" alt=""><span>${TOOLS.nameHTML(pl)} · <b style="color:${starColor(star)}">${fmtN(star)}✫</b> · ${fmtN(games)} ${t('games played')}</span>`;
+    RC.add(name); calc();
+  } catch (e) { el('who').innerHTML = `<span class="chip bad">${esc(e.message)}</span>`; }
+  btn.disabled = false; btn.textContent = t('Load');
+}
+el('load').addEventListener('click', load); el('q').addEventListener('keydown', e => { if (e.key === 'Enter') load(); });
+const qs = new URLSearchParams(location.search); if (qs.get('u')) { el('q').value = qs.get('u'); load(); }
+calc();
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ratio Calculator</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916c">
+<link rel="stylesheet" href="../css/site.css?v=20260919a">
+<link rel="stylesheet" href="../css/apps.css?v=20260919a">
+<style>
+  .app-main { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .rc .fields { grid-template-columns: repeat(3, 1fr); }
+  .rc .now { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .rc .now .big { font-size: 30px; }
+  .rc .now .lbl { font-family: var(--mono); font-size: 11px; color: var(--term-dim); text-transform: uppercase; letter-spacing: .4px; }
+  body.fa .rc .now .lbl { font-family: var(--fa); text-transform: none; }
+  .rc .res { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rc .line { font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 1.6; }
+  body.fa .rc .line { font-family: var(--fa); }
+  .rc .line b { color: var(--ink); }
+  .rc .bar { margin-top: 2px; }
+  .who { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  .mode { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body class="app">
+<div class="app-bar"><b>÷ <span data-t="Ratio Calculator">Ratio Calculator</span></b><span class="sp"></span><span class="pill">FKDR · WLR · BBLR · KDR</span></div>
+<div class="app-main">
+<div class="tool">
+  <div class="card">
+    <h3><span data-t="Fill from Hypixel">Fill from Hypixel</span><span class="sp"></span><span class="chip" id="src" data-t="manual">manual</span></h3>
+    <div class="search"><input class="inp" id="q" data-tp="username (optional)" placeholder="username (optional)" maxlength="36" autocomplete="off" spellcheck="false">
+      <select class="inp" id="mode" style="width:auto"><option value="">Overall</option><option value="eight_one_">Solo</option><option value="eight_two_">Doubles</option><option value="four_three_">3v3v3v3</option><option value="four_four_">4v4v4v4</option><option value="two_four_">4v4</option></select>
+      <button class="abtn primary" id="load" data-t="Load">Load</button></div>
+    <div class="who" id="who" hidden></div>
+    <div class="chips" id="recent"></div>
+  </div>
+  <div class="grid2" id="cards"></div>
+  <div class="note" data-t="“In a row” is how many you need without a single death / loss / lost bed to hit the target. “Can afford” is how many deaths you can take before dropping under it.">“In a row” is how many you need without a single death / loss / lost bed to hit the target. “Can afford” is how many deaths you can take before dropping under it.</div>
+</div>
+</div>
+<script src="tools.js?v=20260919a"></script>
+<script>
+const { $, t, addFA, applyLang, esc, fmtN, faDigits, fkdrTier, lookup, recent, stat } = TOOLS;
+addFA({ 'Ratio Calculator': 'ماشین‌حساب نسبت‌ها', 'Fill from Hypixel': 'پر کردن از هایپیکسل', 'manual': 'دستی', 'username (optional)': 'یوزرنیم (اختیاری)', 'Load': 'بارگذاری', 'final kills': 'فاینال کیل', 'final deaths': 'فاینال دث', 'wins': 'برد', 'losses': 'باخت', 'beds broken': 'تخت شکسته', 'beds lost': 'تخت ازدست‌رفته', 'kills': 'کیل', 'deaths': 'دث', 'target': 'هدف', 'current': 'فعلی', 'in a row': 'پشت سر هم', 'can afford': 'می‌تونی بدی', 'to reach': 'برای رسیدن به', 'already above target': 'همین الان بالاتر از هدفی', 'more before dropping under': 'تا از هدف بیای پایین‌تر', 'loaded from Hypixel': 'از هایپیکسل', '“In a row” is how many you need without a single death / loss / lost bed to hit the target. “Can afford” is how many deaths you can take before dropping under it.': '«پشت سر هم» یعنی چند تا لازم داری بدون حتی یک دث / باخت / تخت ازدست‌رفته تا به هدف برسی. «می‌تونی بدی» یعنی چند تا دث می‌تونی بدی قبل از اینکه از هدف بیای پایین‌تر.', 'per game': 'هر بازی' });
+applyLang();
+
+const DEFS = [
+  { id: 'fkdr', title: 'FKDR', a: 'final kills', b: 'final deaths', ka: 'final_kills_bedwars', kb: 'final_deaths_bedwars', tier: true },
+  { id: 'wlr', title: 'WLR', a: 'wins', b: 'losses', ka: 'wins_bedwars', kb: 'losses_bedwars' },
+  { id: 'bblr', title: 'BBLR', a: 'beds broken', b: 'beds lost', ka: 'beds_broken_bedwars', kb: 'beds_lost_bedwars' },
+  { id: 'kdr', title: 'KDR', a: 'kills', b: 'deaths', ka: 'kills_bedwars', kb: 'deaths_bedwars' },
+];
+const el = id => document.getElementById(id);
+const RC = recent('ratio');
+const cards = el('cards');
+cards.innerHTML = DEFS.map(d => `<div class="card rc" id="c-${d.id}">
+  <h3>${d.title}<span class="sp"></span><span class="chip" id="chip-${d.id}"></span></h3>
+  <div class="fields">
+    <div class="field"><label>${esc(t(d.a))}</label><input class="inp" type="number" min="0" id="${d.id}-a" value="0"></div>
+    <div class="field"><label>${esc(t(d.b))}</label><input class="inp" type="number" min="0" id="${d.id}-b" value="0"></div>
+    <div class="field"><label>${esc(t('target'))}</label><input class="inp" type="number" min="0" step="0.1" id="${d.id}-t" value="1"></div>
+  </div>
+  <div class="now"><span class="lbl">${esc(t('current'))}</span><span class="big" id="${d.id}-now">0.00</span><span class="lbl">→ ${esc(t('target'))}</span><span class="big dim" id="${d.id}-tgt">1.00</span></div>
+  <div class="bar"><i id="${d.id}-bar" style="width:0%"></i></div>
+  <div class="res" id="${d.id}-res"></div>
+</div>`).join('');
+
+function calcOne(d, autoTarget) {
+  const a = Math.max(0, +el(d.id + '-a').value || 0), b = Math.max(0, +el(d.id + '-b').value || 0);
+  const now = a / Math.max(1, b);
+  if (autoTarget) el(d.id + '-t').value = Math.floor(now) + 1;
+  const tgt = Math.max(0, +el(d.id + '-t').value || 0);
+  const nowEl = el(d.id + '-now'); nowEl.textContent = faDigits(now.toFixed(2));
+  const card = el('c-' + d.id); card.className = 'card rc' + (d.tier ? ' ' + fkdrTier(now) : '');
+  nowEl.className = 'big' + (d.tier ? ' fkv' : '');
+  if (d.tier) { const tier = fkdrTier(now).split(' ')[1]; nowEl.style.color = { 'fk-gray': '#9A9A9A', 'fk-white': '#FFF', 'fk-green': '#5F5', 'fk-yellow': '#FF5', 'fk-red': '#FF5C5C', 'fk-purple': '#E066FF', 'fk-aqua': '#5FF' }[tier] || ''; if (tier === 'fk-rainbow' || tier === 'fk-god') nowEl.classList.add('rainbow'); else nowEl.classList.remove('rainbow'); }
+  el(d.id + '-tgt').textContent = faDigits(tgt.toFixed(2));
+  el(d.id + '-bar').style.width = (tgt > 0 ? Math.min(100, 100 * now / tgt) : 100) + '%';
+  const need = Math.max(0, Math.ceil(tgt * Math.max(1, b) - a));           // A needed with zero more B
+  const afford = now >= tgt && tgt > 0 ? Math.floor(a / tgt - b) : 0;       // extra B allowed before dropping under target
+  const chip = el('chip-' + d.id); chip.textContent = now >= tgt ? '✔ ' + t('already above target') : `${fmtN(need)} ${t(d.a)} ${t('in a row')}`; chip.className = 'chip ' + (now >= tgt ? 'ok' : 'warn');
+  el(d.id + '-res').innerHTML = [
+    stat(`${t(d.a)} ${t('in a row')}`, now >= tgt ? '0' : fmtN(need), !(now >= tgt)),
+    stat(`${t(d.b)} ${t('can afford')}`, now >= tgt ? fmtN(afford) : '0', now >= tgt, now >= tgt ? '#3fb950' : null),
+  ].join('');
+}
+const calcAll = auto => DEFS.forEach(d => calcOne(d, auto));
+DEFS.forEach(d => ['a', 'b'].forEach(k => el(`${d.id}-${k}`).addEventListener('input', () => { el('src').textContent = t('manual'); calcOne(d, true); })));
+DEFS.forEach(d => el(`${d.id}-t`).addEventListener('input', () => calcOne(d, false)));
+
+function showRecent() { el('recent').innerHTML = RC.get().map(n => `<button class="chip info" data-n="${esc(n)}">${esc(n)}</button>`).join(''); }
+el('recent').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { el('q').value = b.dataset.n; load(); } });
+let LAST = null;
+function fill() {
+  if (!LAST) return; const P = el('mode').value, bw = LAST.bw;
+  DEFS.forEach(d => { el(d.id + '-a').value = bw[P + d.ka] || 0; el(d.id + '-b').value = bw[P + d.kb] || 0; });
+  el('src').textContent = t('loaded from Hypixel'); calcAll(true);
+}
+async function load() {
+  const q = el('q').value.trim(); if (!q) return;
+  const btn = el('load'); btn.disabled = true; btn.innerHTML = `<span class="spin"></span>`; el('who').hidden = false; el('who').innerHTML = `<span class="spin"></span>${t('loading…')}`;
+  try {
+    const { player: pl, name, uuid } = await lookup(q); LAST = { bw: (pl.stats || {}).Bedwars || {} };
+    el('who').innerHTML = `<img class="head-img" src="${TOOLS.head(uuid, 32)}" alt=""><span>${TOOLS.nameHTML(pl)}${TOOLS.bwStar(pl) != null ? ` · <b style="color:${TOOLS.starColor(TOOLS.bwStar(pl))}">${fmtN(TOOLS.bwStar(pl))}✫</b>` : ''}</span>`;
+    RC.add(name); showRecent(); fill();
+  } catch (e) { el('who').innerHTML = `<span class="chip bad">${esc(e.message)}</span>`; }
+  btn.disabled = false; btn.textContent = t('Load');
+}
+el('load').addEventListener('click', load); el('q').addEventListener('keydown', e => { if (e.key === 'Enter') load(); }); el('mode').addEventListener('change', fill);
+showRecent(); calcAll(true);
+const qs = new URLSearchParams(location.search); if (qs.get('u')) { el('q').value = qs.get('u'); load(); }
+</script>
+</body>
+</html>
