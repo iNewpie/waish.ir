@@ -3,6 +3,7 @@
    No always-on process: Discord POSTs every command to <worker-url>/discord, the worker answers and goes back to sleep.
    Free on the Workers free plan (100,000 requests/day).
 
+   Hypixel Tools commands (/compare /prestige /ratio /leaderboard /status) mirror the site's apps in apps/*.html.
    The lookup commands reuse the worker's own routes (/convert, /urchin, /player, /guild, /mojang), so the bot and the
    site terminal (/check on waish.ir) give the same answer from the same code.
 
@@ -84,7 +85,8 @@ async function renderCard(env, kind, data) {
 const STATIC = {
   help: () => ({ embeds: [{ color: COLOR.blue, title: 'waish bot', description: 'The same commands as the terminal on waish.ir.', fields: [
     { name: 'Minecraft', value: '`/user <player>` — full profile: skin, Hypixel, guild, blacklists\n`/check <player>` — is a player blacklisted? (Seraph + Urchin)\n`/stats <player>` — Hypixel level, rank, BedWars & SkyWars\n`/skin <player>` — current skin + 3D viewer\n`/guild <player or guild>` — Hypixel guild' },
-    { name: 'Waish', value: '`/about` · `/projects` · `/lunamc` · `/socials` · `/site`' },
+    { name: 'Hypixel tools', value: '`/compare <a> <b>` — two players side by side\n`/prestige <player> [target]` — stars & XP to the next prestige, games and days at your pace\n`/ratio <player> [mode] [target]` — FKDR / WLR / BBLR / KDR: how many in a row to the next number\n`/leaderboard <guild>` — top members by weekly XP, today, quests or time in guild\n`/status <server>` — any Minecraft server: players, MOTD, version' },
+    { name: 'Waish', value: '`/about` · `/projects` · `/lunamc` · `/socials` · `/site` · `/tools`' },
     { name: 'Use it anywhere', value: 'Add the app to your own account and these commands work in every server and in DMs — no need for the bot to be in the server.' },
   ], footer }], components: [row(btn('Open the terminal', `${SITE}/terminal.html`, '➜'), btn('Add to my apps', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=1&scope=applications.commands`, '👤'), btn('Add to a server', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=0&scope=applications.commands`, '🏠'))] }),
   about: () => ({ embeds: [{ color: COLOR.blue, title: 'Waish', description: 'Server admin, builder, content creator.\nRuns LunaMC, builds ClutchPing, streams on Aparat & YouTube, and the infra behind all of it.', thumbnail: { url: `${SITE}/assets/avatar.jpg` }, footer }], components: [row(btn('About me', `${SITE}/about-me.html`), btn('The full story', `${SITE}/terminal.html`, '📖'))] }),
@@ -99,6 +101,11 @@ const STATIC = {
     '▶️ [youtube.com/@WaishChannel](https://www.youtube.com/@WaishChannel)', '🎥 [aparat.com/waish](https://aparat.com/waish)', '📸 [instagram.com/asunawaish](https://instagram.com/asunawaish)',
     '✈️ [t.me/wishingcommunity](https://t.me/wishingcommunity)', `💬 [discord.gg/8HVsMqucZ2](${INVITE})`, '🟣 [play.lunamc.ir](https://play.lunamc.ir)', '⚡ [clutchping.com](https://clutchping.com)',
   ].join('\n'), footer }] }),
+  tools: () => ({ embeds: [{ color: COLOR.yellow, title: 'Hypixel Tools on waish.ir', description: 'The apps behind the bot\'s commands — open them on the computer.', fields: [
+    { name: '✫ Prestige Calculator', value: 'XP curve, games and days to any star, clickable prestige ladder', inline: true }, { name: '÷ Ratio Calculator', value: 'FKDR · WLR · BBLR · KDR targets, per BedWars mode', inline: true },
+    { name: '⚔️ Compare Players', value: 'two players side by side, leader per row', inline: true }, { name: '🏆 Guild Leaderboard', value: 'weekly XP, today, quests, longest in guild', inline: true },
+    { name: '📡 Server Status', value: 'any Java or Bedrock server', inline: true }, { name: '🖱️ CPS Test · 📝 Notepad', value: 'on the desktop', inline: true },
+  ], footer }], components: [row(btn('Hypixel Tools', `${SITE}/computer.html#hyptools`, '🧰'), btn('User Lookup', `${SITE}/computer.html#userlookup`, '🔍'), btn('CPS Test', `${SITE}/computer.html#cpstest`, '🖱️'))] }),
   site: () => ({ embeds: [{ color: COLOR.blue, title: 'waish.ir', description: 'Home · Projects · About me · Contact · Donate — and the Computer: a desktop with apps, games, music and a terminal that answers questions in English or Persian.', footer }], components: [row(btn('waish.ir', SITE), btn('Computer', `${SITE}/computer.html`, '🖥️'), btn('Terminal', `${SITE}/terminal.html`, '➜'))] }),
 };
 
@@ -239,6 +246,117 @@ const LOOKUP = {
   },
 };
 
+// ---------- BedWars maths shared with the site's Hypixel Tools (apps/tools.js) ----------
+const xpForStar = s => { s = Math.max(0, Math.floor(s)); const p = Math.floor(s / 100), l = s % 100; const first = [0, 500, 1500, 3500, 7000]; return p * 487000 + (l < 5 ? first[l] : 7000 + (l - 4) * 5000); };
+const PRESTIGES = ['Stone', 'Iron', 'Gold', 'Diamond', 'Emerald', 'Sapphire', 'Ruby', 'Crystal', 'Opal', 'Amethyst', 'Rainbow', 'Iron Prime', 'Gold Prime', 'Diamond Prime', 'Emerald Prime', 'Sapphire Prime', 'Ruby Prime', 'Crystal Prime', 'Opal Prime', 'Amethyst Prime', 'Mirror', 'Light', 'Dawn', 'Dusk', 'Air', 'Wind', 'Nebula', 'Thunder', 'Earth', 'Water', 'Fire'];
+const prestigeName = s => PRESTIGES[Math.floor(s / 100)] || `Prestige ${Math.floor(s / 100)}`;
+// FKDR tiers, same thresholds as User Lookup ('rainbow' past 100 — the card draws a gradient)
+const fkdrColor = f => f >= 100 ? 'rainbow' : f >= 60 ? '#55FFFF' : f >= 30 ? '#FF55FF' : f >= 10 ? '#FF5555' : f >= 7 ? '#FFFF55' : f >= 3 ? '#55FF55' : f >= 1 ? '#FFFFFF' : '#AAAAAA';
+const bwOf = pl => (pl.stats || {}).Bedwars || {}, swOf = pl => (pl.stats || {}).SkyWars || {}, duOf = pl => (pl.stats || {}).Duels || {};
+const starOf = pl => (pl.achievements && pl.achievements.bedwars_level) || (bwOf(pl).Experience != null ? Math.floor(bwLevel(bwOf(pl).Experience)) : 0);
+const swLevel = xp => { const T = [0, 20, 70, 150, 250, 500, 1000, 2000, 3500, 6000, 10000, 15000]; xp = xp || 0; if (xp >= 15000) return 12 + (xp - 15000) / 10000; let i = 0; while (i < T.length - 1 && xp >= T[i + 1]) i++; return i + (xp - T[i]) / (T[i + 1] - T[i]); };
+// resolve + Hypixel player in one go → { ign, uuid, pl, snapshot } or { err }
+async function loadPlayer(api, who) {
+  const p = await resolve(api, String(who || '').trim()); if (p.err) return p;
+  const r = await api(`/player?uuid=${p.uuid}`); const pl = r.d && r.d.success && r.d.player;
+  if (!pl) return { err: r.status === 404 ? `No Hypixel stats cached for **${p.ign}** yet — look them up on the site once: ${SITE}/computer.html#userlookup?u=${p.ign}` : `Stats lookup failed for **${p.ign}** (${r.d && r.d.cause || r.status}).` };
+  return { ...p, ign: pl.displayname || p.ign, pl, snapshot: day(r.d.lastUpdated) };
+}
+const headerOf = x => ({ ign: x.ign, uuid: x.uuid, rank: rankInfo(x.pl), star: starOf(x.pl), starColor: starColor(starOf(x.pl)), level: Math.floor(netLevel(x.pl.networkExp)) });
+// rows for /compare: [label, value(pl), format]
+const CMP = [
+  ['Stars', pl => starOf(pl), v => `${n(v)}✫`], ['FKDR', pl => +ratio(bwOf(pl).final_kills_bedwars, bwOf(pl).final_deaths_bedwars), v => v.toFixed(2)],
+  ['WLR', pl => +ratio(bwOf(pl).wins_bedwars, bwOf(pl).losses_bedwars), v => v.toFixed(2)], ['BBLR', pl => +ratio(bwOf(pl).beds_broken_bedwars, bwOf(pl).beds_lost_bedwars), v => v.toFixed(2)],
+  ['KDR', pl => +ratio(bwOf(pl).kills_bedwars, bwOf(pl).deaths_bedwars), v => v.toFixed(2)], ['Final kills', pl => bwOf(pl).final_kills_bedwars || 0], ['Wins', pl => bwOf(pl).wins_bedwars || 0],
+  ['Beds broken', pl => bwOf(pl).beds_broken_bedwars || 0], ['Win rate', pl => { const b = bwOf(pl), g = b.games_played_bedwars || ((b.wins_bedwars || 0) + (b.losses_bedwars || 0)); return g ? 100 * (b.wins_bedwars || 0) / g : 0; }, v => `${Math.round(v)}%`],
+  ['Network level', pl => Math.floor(netLevel(pl.networkExp))], ['SkyWars level', pl => swOf(pl).skywars_experience != null ? Math.floor(swLevel(swOf(pl).skywars_experience)) : 0, v => `${n(v)}⋆`], ['Duels wins', pl => duOf(pl).wins || 0],
+];
+const RATIOS = [['FKDR', 'final kills', 'final deaths', 'final_kills_bedwars', 'final_deaths_bedwars', 'final death'], ['WLR', 'wins', 'losses', 'wins_bedwars', 'losses_bedwars', 'loss'], ['BBLR', 'beds broken', 'beds lost', 'beds_broken_bedwars', 'beds_lost_bedwars', 'lost bed'], ['KDR', 'kills', 'deaths', 'kills_bedwars', 'deaths_bedwars', 'death']];
+const MODES = { '': 'Overall', eight_one_: 'Solo', eight_two_: 'Doubles', four_three_: '3v3v3v3', four_four_: '4v4v4v4', two_four_: '4v4' };
+// mcsrvstat.us v3 → the mcstatus.io shape
+const fromMcsrvstat = d => ({ online: !!d.online, host: d.hostname || d.ip, port: d.port, ip_address: d.ip, eula_blocked: !!d.eula_blocked, version: d.version ? { name_clean: d.version, protocol: d.protocol && d.protocol.version } : null,
+  players: d.players ? { online: d.players.online, max: d.players.max, list: (d.players.list || []).map(p => ({ uuid: p.uuid, name_clean: p.name })) } : null, motd: d.motd ? { raw: (d.motd.raw || []).join('\n'), clean: (d.motd.clean || []).join('\n') } : null, icon: d.icon || null, software: d.software || null, plugins: d.plugins || [], mods: d.mods || [], gamemode: d.gamemode, srv_record: null });
+
+const TOOLS = {
+  // /compare — two players side by side, the leader of each row highlighted
+  async compare(api, opts) {
+    const [A, B] = await Promise.all([loadPlayer(api, opts.player1), loadPlayer(api, opts.player2)]);
+    if (A.err) return { content: A.err }; if (B.err) return { content: B.err };
+    let wa = 0, wb = 0;
+    const rows = CMP.map(([label, get, fmt]) => { const a = get(A.pl), b = get(B.pl); const win = a === b ? 0 : a > b ? 1 : 2; if (win === 1) wa++; else if (win === 2) wb++; const f = fmt || n; return { label, a: f(a), b: f(b), pa: Math.round(100 * a / Math.max(a, b, 1e-9)), pb: Math.round(100 * b / Math.max(a, b, 1e-9)), win }; });
+    const lead = wa === wb ? 'dead even' : `${wa > wb ? A.ign : B.ign} leads ${Math.max(wa, wb)}–${Math.min(wa, wb)}`;
+    const pad = (s, w) => String(s).padStart(w);
+    const table = '```\n' + `${'stat'.padEnd(14)}${pad(A.ign.slice(0, 12), 13)}${pad(B.ign.slice(0, 12), 13)}\n` + rows.map(r => `${r.label.padEnd(14)}${pad(r.a, 12)}${r.win === 1 ? '◀' : ' '}${pad(r.b, 12)}${r.win === 2 ? '◀' : ' '}`).join('\n') + '\n```';
+    return { card: ['compare', { a: headerOf(A), b: headerOf(B), rows, score: [wa, wb], lead, snapshot: A.snapshot || B.snapshot }],
+      embeds: [{ color: COLOR.blue, title: `${A.ign} vs ${B.ign}`, description: `**${lead}**\n${table}`, footer }],
+      components: [row(btn('Open in Compare Players', `${SITE}/computer.html#compare?a=${encodeURIComponent(A.ign)}&b=${encodeURIComponent(B.ign)}`, '⚔️'))] };
+  },
+  // /prestige — how far to the next prestige (or any target star), at the player's real XP-per-game pace
+  async prestige(api, opts) {
+    const x = await loadPlayer(api, opts.player); if (x.err) return { content: x.err };
+    // XP is the truth (the achievement star can lag behind it)
+    const bw = bwOf(x.pl), xp = bw.Experience != null ? bw.Experience : xpForStar(starOf(x.pl)), star = bw.Experience != null ? Math.floor(bwLevel(xp)) : starOf(x.pl);
+    const games = bw.games_played_bedwars || ((bw.wins_bedwars || 0) + (bw.losses_bedwars || 0)) || 0, xpg = games ? Math.max(1, Math.round(xp / games)) : 120;
+    const days = x.pl.firstLogin ? Math.max(1, (Date.now() - x.pl.firstLogin) / 86400000) : null, gpd = days && games ? games / days : 0;
+    let target = Number(opts.target); if (!Number.isFinite(target) || target <= star) target = (Math.floor(star / 100) + 1) * 100; target = Math.min(10000, Math.floor(target));
+    const toGo = Math.max(0, xpForStar(target) - xp), from = xpForStar(star), pct = Math.min(100, Math.max(0, Math.round(100 * (xp - from) / Math.max(1, xpForStar(target) - from))));
+    const need = Math.ceil(toGo / xpg), dNeed = gpd > 0 ? need / gpd : null, eta = dNeed != null ? day(Date.now() + dNeed * 86400000) : null;
+    const d = { ...headerOf(x), star, starColor: starColor(star), prestige: prestigeName(star), next: { name: prestigeName(target), star: target, color: starColor(target) }, toGoStars: target - star, toGoXP: toGo, pct, games: need, days: dNeed != null ? Math.ceil(dNeed) : null, eta, xpg, gpd: +gpd.toFixed(1), xpNext: xpForStar(star + 1) - xp, xpNextFull: xpForStar(star + 1) - from, totalXP: xp, played: games, snapshot: x.snapshot };
+    return { card: ['prestige', d],
+      embeds: [{ color: COLOR.yellow, title: `${lobbyName(x.pl, x.ign)} — ${n(star)}✫ → ${n(target)}✫`, description: `${prestigeName(star)} now · **${n(target - star)} stars** and **${n(toGo)} XP** to ${prestigeName(target)}\n${pct}% of the way`, fields: [
+        { name: 'Games needed', value: `**${n(need)}** at ${n(xpg)} XP/game`, inline: true }, { name: 'At your pace', value: dNeed != null ? `**${n(Math.ceil(dNeed))} days** (${gpd.toFixed(1)} games/day) · ETA ${eta}` : '—', inline: true }, { name: 'Next star', value: `${n(d.xpNext)} XP`, inline: true }], thumbnail: { url: `https://crafatar.com/avatars/${x.uuid}?overlay&size=128` }, footer }],
+      components: [row(btn('Open in Prestige Calculator', `${SITE}/computer.html#prestige?u=${encodeURIComponent(x.ign)}`, '✫'))] };
+  },
+  // /ratio — FKDR / WLR / BBLR / KDR with "how many in a row" to the next whole number (or a target)
+  async ratio(api, opts) {
+    const x = await loadPlayer(api, opts.player); if (x.err) return { content: x.err };
+    const P = MODES[opts.mode] ? opts.mode : '', bw = bwOf(x.pl), tgt = Number(opts.target);
+    const items = RATIOS.map(([title, la, lb, ka, kb, lb1]) => { const a = bw[P + ka] || 0, b = bw[P + kb] || 0, cur = a / Math.max(1, b); const target = Number.isFinite(tgt) && tgt > 0 ? tgt : Math.floor(cur) + 1; const need = Math.max(0, Math.ceil(target * Math.max(1, b) - a)), afford = cur >= target ? Math.floor(a / target - b) : 0; return { title, la, lb, lb1, a, b, cur: cur.toFixed(2), target: target.toFixed(2), need, afford, above: cur >= target, pct: Math.min(100, Math.round(100 * cur / target)), color: title === 'FKDR' ? fkdrColor(cur) : null }; });
+    return { card: ['ratio', { ...headerOf(x), mode: MODES[P], items, snapshot: x.snapshot }],
+      embeds: [{ color: COLOR.yellow, title: `${lobbyName(x.pl, x.ign)} · ${MODES[P]}`, fields: items.map(i => ({ name: `${i.title} ${i.cur} → ${i.target}`, value: i.above ? `✅ above target · can take **${n(i.afford)}** more ${i.lb}` : `**${n(i.need)}** ${i.la} in a row`, inline: false })), thumbnail: { url: `https://crafatar.com/avatars/${x.uuid}?overlay&size=128` }, footer }],
+      components: [row(btn('Open in Ratio Calculator', `${SITE}/computer.html#ratio?u=${encodeURIComponent(x.ign)}`, '÷'))] };
+  },
+  // /status — any Minecraft server (mcstatus.io, mcsrvstat.us as the second opinion)
+  async status(api, opts) {
+    const host = String(opts.server || '').trim().toLowerCase(), edition = opts.edition === 'bedrock' ? 'bedrock' : 'java';
+    if (!/^[a-z0-9.\-_:]{1,120}$/.test(host)) return { content: 'Give a server address like `play.lunamc.ir` or `ip:port`.' };
+    const t0 = Date.now(); let d = null;
+    try { const r = await fetch(`https://api.mcstatus.io/v2/status/${edition}/${encodeURIComponent(host)}`, { headers: { 'User-Agent': 'waish.ir bot' } }); d = await r.json().catch(() => null); } catch (e) {}
+    if (!d) return { content: 'The status API did not answer — try again in a moment.' };
+    if (!d.online) { try { const r = await fetch(`https://api.mcsrvstat.us/${edition === 'bedrock' ? 'bedrock/' : ''}3/${encodeURIComponent(host)}`, { headers: { 'User-Agent': 'waish.ir bot' } }); const d2 = await r.json().catch(() => null); if (d2 && d2.online) d = fromMcsrvstat(d2); } catch (e) {} }
+    const ms = Date.now() - t0, ver = d.version ? (d.version.name_clean || d.version.name || '') : '', on = d.players ? d.players.online || 0 : 0, max = d.players ? d.players.max || 0 : 0;
+    const list = ((d.players && d.players.list) || []).map(p => p.name_clean || p.name).filter(Boolean);
+    const data = { host, edition, online: !!d.online, icon: d.icon && d.icon.startsWith('data:') ? d.icon : null, version: ver, protocol: d.version && d.version.protocol, on, max, list: list.slice(0, 24), more: Math.max(0, list.length - 24), motd: d.motd ? d.motd.raw || d.motd.clean || '' : '', ip: d.ip_address || null, port: d.port || null, software: d.software || null, plugins: (d.plugins || []).length, mods: (d.mods || []).length, srv: d.srv_record ? `${d.srv_record.host}:${d.srv_record.port}` : null, eula: !!d.eula_blocked, gamemode: d.gamemode || null, ms, checked: new Date().toISOString().slice(11, 16) + ' UTC' };
+    const fields = [{ name: 'Players', value: `**${n(on)}** / ${n(max)}${list.length ? `\n${list.slice(0, 15).join(', ')}${list.length > 15 ? ` +${list.length - 15}` : ''}` : ''}`, inline: false }];
+    if (ver) fields.push({ name: 'Version', value: ver, inline: true }); if (d.ip_address) fields.push({ name: 'IP', value: `${d.ip_address}:${d.port}`, inline: true }); if (d.software) fields.push({ name: 'Software', value: d.software, inline: true });
+    if (d.motd && (d.motd.clean || d.motd.raw)) fields.push({ name: 'MOTD', value: '```\n' + String(d.motd.clean || d.motd.raw).replace(/§./g, '').slice(0, 300) + '\n```', inline: false });
+    return { card: ['status', data],
+      embeds: [{ color: d.online ? COLOR.green : COLOR.red, title: `${host} — ${d.online ? '🟢 online' : '🔴 offline'}`, description: d.online ? undefined : 'Offline or unreachable. Big networks sometimes block status pings — it may still be up in-game.', fields, footer: { ...footer, text: `waish.ir · mcstatus.io · ${ms} ms` } }],
+      components: [row(btn('Open in Server Status', `${SITE}/computer.html#serverstatus?s=${encodeURIComponent(host)}${edition === 'bedrock' ? '&e=bedrock' : ''}`, '📡'))] };
+  },
+  // /leaderboard — a guild's top members by weekly XP (or today / quests / longest in guild)
+  async leaderboard(api, opts) {
+    const q = String(opts.guild || '').trim(); if (!q) return { content: 'Give a guild name, or a player who is in it.' };
+    let r = null, byPlayer = null;
+    if (/^([A-Za-z0-9_]{1,16}|[0-9a-fA-F-]{32,36})$/.test(q)) { byPlayer = await resolve(api, q); if (!byPlayer.err) r = await api(`/guild?uuid=${byPlayer.uuid}`); }
+    if (!r || !(r.d && r.d.success && r.d.guild)) r = await api(`/guild?name=${encodeURIComponent(q.slice(0, 32))}`);
+    const g = r.d && r.d.success && r.d.guild;
+    if (!g) return { content: r.d && r.d.success === true ? `No guild found for **${q}**.` : `Guild lookup failed (${r.d && r.d.cause || r.status}).` };
+    const today = new Date().toISOString().slice(0, 10), weekly = m => m.expHistory ? Object.values(m.expHistory).reduce((a, b) => a + (b || 0), 0) : 0;
+    const BY = { weekly: ['weekly XP', weekly, v => `${n(v)} XP`], today: ["today's XP", m => (m.expHistory && m.expHistory[today]) || 0, v => `${n(v)} XP`], quests: ['quest participation', m => m.questParticipation || 0, v => n(v)], longest: ['longest in guild', m => m.joined ? Math.floor((Date.now() - m.joined) / 86400000) : 0, v => `${n(v)} days`] };
+    const by = BY[opts.by] ? opts.by : 'weekly', [label, get, fmt] = BY[by];
+    const members = (g.members || []).slice().sort((a, b) => get(b) - get(a)), top = members.slice(0, 10), best = get(top[0] || {}) || 1;
+    const nm = top.length ? await api(`/names?uuids=${top.map(m => m.uuid).join(',')}`) : { d: null }; const names = (nm.d && nm.d.names) || {};
+    const total = members.reduce((a, m) => a + weekly(m), 0), active = members.filter(m => weekly(m) > 0).length;
+    const rows = top.map((m, i) => ({ i: i + 1, uuid: m.uuid, name: names[m.uuid] || m.uuid.slice(0, 8) + '…', rank: m.rank || '', value: fmt(get(m)), pct: Math.round(100 * get(m) / best), share: total && by === 'weekly' ? Math.round(100 * get(m) / total) : null }));
+    const card = ['leaderboard', { query: q, name: g.name, tag: g.tag || null, color: MC[g.tagColor] || '#FFAA00', level: Math.floor(guildLevel(g.exp)), members: members.length, active, total, by: label, rows }];
+    const medal = i => ['🥇', '🥈', '🥉'][i - 1] || `**${i}.**`;
+    return { card, embeds: [{ color: COLOR.yellow, title: `${g.name}${g.tag ? ` [${g.tag}]` : ''} — top ${label}`, description: rows.map(x => `${medal(x.i)} ${x.name} — **${x.value}**${x.share != null ? ` (${x.share}%)` : ''}`).join('\n') || 'no members', fields: [{ name: 'This week', value: `${n(total)} XP · ${active}/${members.length} members active`, inline: false }], footer }],
+      components: [row(btn('Open in Guild Leaderboard', `${SITE}/computer.html#guildboard?g=${encodeURIComponent(g.name)}`, '🏆'))] };
+  },
+};
+Object.assign(LOOKUP, TOOLS);
+
 // Discord edits the deferred message through the interaction token — no bot token needed for that.
 async function followUp(env, token, data) {
   const url = `https://discord.com/api/v10/webhooks/${env.DISCORD_APP_ID}/${token}/messages/@original`;
@@ -253,6 +371,8 @@ async function followUp(env, token, data) {
   }
   await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rest) });
 }
+
+export const _test = { LOOKUP, STATIC };   // for local test scripts only
 
 /** POST /discord — `api(path)` calls the worker's own routes in-process and returns {status, d}. */
 export async function handleInteraction(request, env, ctx, api) {
