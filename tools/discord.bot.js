@@ -88,7 +88,7 @@ const STATIC = {
     { name: 'Hypixel tools', value: '`/compare <a> <b>` — two players side by side\n`/prestige <player> [target]` — stars & XP to the next prestige, games and days at your pace\n`/ratio <player> [mode] [target]` — FKDR / WLR / BBLR / KDR: how many in a row to the next number\n`/leaderboard <guild>` — top members by weekly XP, today, quests or time in guild\n`/status <server>` — any Minecraft server: players, MOTD, version' },
     { name: 'Waish', value: '`/about` · `/projects` · `/lunamc` · `/socials` · `/site` · `/tools`' },
     { name: 'Use it anywhere', value: 'Add the app to your own account and these commands work in every server and in DMs — no need for the bot to be in the server.' },
-  ], footer }], components: [row(btn('Open the terminal', `${SITE}/terminal.html`, '➜'), btn('Add to my apps', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=1&scope=applications.commands`, '👤'), btn('Add to a server', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=0&scope=applications.commands`, '🏠'))] }),
+  ], footer }], components: [row(btn('Open the terminal', `${SITE}/terminal.html`, '⌨️'), btn('Add to my apps', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=1&scope=applications.commands`, '👤'), btn('Add to a server', `https://discord.com/oauth2/authorize?client_id=${APP_ID}&integration_type=0&scope=applications.commands`, '🏠'))] }),
   about: () => ({ embeds: [{ color: COLOR.blue, title: 'Waish', description: 'Server admin, builder, content creator.\nRuns LunaMC, builds ClutchPing, streams on Aparat & YouTube, and the infra behind all of it.', thumbnail: { url: `${SITE}/assets/avatar.jpg` }, footer }], components: [row(btn('About me', `${SITE}/about-me.html`), btn('The full story', `${SITE}/terminal.html`, '📖'))] }),
   projects: () => ({ embeds: [{ color: COLOR.red, title: 'Projects', fields: [
     { name: '🟣 LunaMC', value: 'Persian-language Minecraft server — `Play.LunaMC.iR`' },
@@ -106,7 +106,7 @@ const STATIC = {
     { name: '⚔️ Compare Players', value: 'two players side by side, leader per row', inline: true }, { name: '🏆 Guild Leaderboard', value: 'weekly XP, today, quests, longest in guild', inline: true },
     { name: '📡 Server Status', value: 'any Java or Bedrock server', inline: true }, { name: '🖱️ CPS Test · 📝 Notepad', value: 'on the desktop', inline: true },
   ], footer }], components: [row(btn('Hypixel Tools', `${SITE}/computer.html#hyptools`, '🧰'), btn('User Lookup', `${SITE}/computer.html#userlookup`, '🔍'), btn('CPS Test', `${SITE}/computer.html#cpstest`, '🖱️'))] }),
-  site: () => ({ embeds: [{ color: COLOR.blue, title: 'waish.ir', description: 'Home · Projects · About me · Contact · Donate — and the Computer: a desktop with apps, games, music and a terminal that answers questions in English or Persian.', footer }], components: [row(btn('waish.ir', SITE), btn('Computer', `${SITE}/computer.html`, '🖥️'), btn('Terminal', `${SITE}/terminal.html`, '➜'))] }),
+  site: () => ({ embeds: [{ color: COLOR.blue, title: 'waish.ir', description: 'Home · Projects · About me · Contact · Donate — and the Computer: a desktop with apps, games, music and a terminal that answers questions in English or Persian.', footer }], components: [row(btn('waish.ir', SITE), btn('Computer', `${SITE}/computer.html`, '🖥️'), btn('Terminal', `${SITE}/terminal.html`, '⌨️'))] }),
 };
 
 // ---------- lookup commands: deferred (Discord gives 3 s; upstream APIs can take longer), then edited in ----------
@@ -305,7 +305,7 @@ const TOOLS = {
     return { card: ['prestige', d],
       embeds: [{ color: COLOR.yellow, title: `${lobbyName(x.pl, x.ign)} — ${n(star)}✫ → ${n(target)}✫`, description: `${prestigeName(star)} now · **${n(target - star)} stars** and **${n(toGo)} XP** to ${prestigeName(target)}\n${pct}% of the way`, fields: [
         { name: 'Games needed', value: `**${n(need)}** at ${n(xpg)} XP/game`, inline: true }, { name: 'At your pace', value: dNeed != null ? `**${n(Math.ceil(dNeed))} days** (${gpd.toFixed(1)} games/day) · ETA ${eta}` : '—', inline: true }, { name: 'Next star', value: `${n(d.xpNext)} XP`, inline: true }], thumbnail: { url: `https://crafatar.com/avatars/${x.uuid}?overlay&size=128` }, footer }],
-      components: [row(btn('Open in Prestige Calculator', `${SITE}/computer.html#prestige?u=${encodeURIComponent(x.ign)}`, '✫'))] };
+      components: [row(btn('Open in Prestige Calculator', `${SITE}/computer.html#prestige?u=${encodeURIComponent(x.ign)}`, '⭐'))] };
   },
   // /ratio — FKDR / WLR / BBLR / KDR with "how many in a row" to the next whole number (or a target)
   async ratio(api, opts) {
@@ -314,7 +314,7 @@ const TOOLS = {
     const items = RATIOS.map(([title, la, lb, ka, kb, lb1]) => { const a = bw[P + ka] || 0, b = bw[P + kb] || 0, cur = a / Math.max(1, b); const target = Number.isFinite(tgt) && tgt > 0 ? tgt : Math.floor(cur) + 1; const need = Math.max(0, Math.ceil(target * Math.max(1, b) - a)), afford = cur >= target ? Math.floor(a / target - b) : 0; return { title, la, lb, lb1, a, b, cur: cur.toFixed(2), target: target.toFixed(2), need, afford, above: cur >= target, pct: Math.min(100, Math.round(100 * cur / target)), color: title === 'FKDR' ? fkdrColor(cur) : null }; });
     return { card: ['ratio', { ...headerOf(x), mode: MODES[P], items, snapshot: x.snapshot }],
       embeds: [{ color: COLOR.yellow, title: `${lobbyName(x.pl, x.ign)} · ${MODES[P]}`, fields: items.map(i => ({ name: `${i.title} ${i.cur} → ${i.target}`, value: i.above ? `✅ above target · can take **${n(i.afford)}** more ${i.lb}` : `**${n(i.need)}** ${i.la} in a row`, inline: false })), thumbnail: { url: `https://crafatar.com/avatars/${x.uuid}?overlay&size=128` }, footer }],
-      components: [row(btn('Open in Ratio Calculator', `${SITE}/computer.html#ratio?u=${encodeURIComponent(x.ign)}`, '÷'))] };
+      components: [row(btn('Open in Ratio Calculator', `${SITE}/computer.html#ratio?u=${encodeURIComponent(x.ign)}`, '🧮'))] };
   },
   // /status — any Minecraft server (mcstatus.io, mcsrvstat.us as the second opinion)
   async status(api, opts) {
