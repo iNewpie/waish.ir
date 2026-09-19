@@ -373,6 +373,7 @@ async function followUp(env, token, data) {
 }
 
 export const _test = { LOOKUP, STATIC };   // for local test scripts only
+export const COMMANDS = () => [...Object.keys(STATIC), ...Object.keys(LOOKUP)];   // what this build answers — shown by GET /discord
 
 /** POST /discord — `api(path)` calls the worker's own routes in-process and returns {status, d}. */
 export async function handleInteraction(request, env, ctx, api) {
@@ -383,6 +384,7 @@ export async function handleInteraction(request, env, ctx, api) {
   if (it.type !== 2) return reply({ content: 'Unsupported interaction.' }, true);
   const name = (it.data && it.data.name || '').toLowerCase();
   const opts = Object.fromEntries(((it.data && it.data.options) || []).map(o => [o.name, o.value]));
+  console.log(`/${name}`, JSON.stringify(opts));   // visible in `wrangler tail`
   if (STATIC[name]) return reply(STATIC[name]());
   if (LOOKUP[name]) {
     ctx.waitUntil((async () => {

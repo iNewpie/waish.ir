@@ -57,14 +57,14 @@ const convert = async player => {
   return { status: 200, d: { success: true, ign: j.name, uuid: j.id.replace(/-/g, '').toLowerCase() } };
 };
 
-import { handleInteraction } from './discord.bot.js';
+import { handleInteraction, COMMANDS as BOT_COMMANDS } from './discord.bot.js';
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // Discord slash commands (tools/discord.bot.js). The bot reaches the routes below in-process — a worker can't fetch its own URL.
     if (url.pathname === '/discord') {
-      if (request.method !== 'POST') return json({ success: false, cause: 'Discord posts interactions here' }, 405, {});
+      if (request.method !== 'POST') return json({ success: false, cause: 'Discord posts interactions here', bot: 'waish', commands: BOT_COMMANDS(), build: '2026-09-19b' }, 405, {});
       const call = async path => { const r = await api(new Request('https://waish-proxy.internal' + path, { headers: { Origin: 'https://waish.ir' } }), env); let d = null; try { d = await r.json(); } catch (e) {} return { status: r.status, d }; };
       return handleInteraction(request, env, ctx, call);
     }

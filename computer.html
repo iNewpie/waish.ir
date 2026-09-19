@@ -81,7 +81,7 @@
 </script>
 <script src="js/desktop.js?v=20260919d"></script>
 <script>
-  if (!matchMedia('(max-width: 760px)').matches) DESKTOP.open('terminal');   // phones start on the home screen
+  // the desktop starts empty — the terminal is one click away (icon, taskbar or the start menu)
   // deep link: computer.html#projects opens that app too; #userlookup?u=Notch opens User Lookup on that player (the Discord bot's buttons)
   if (location.hash) { const [app, query] = location.hash.slice(1).split('?'); DESKTOP.open(app, null, query || undefined); }
 </script>
