@@ -42,7 +42,7 @@ window.DESKTOP = (function () {
     calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
     userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260919b', w: .58, h: .88, minW: 520 },
     // Hypixel Tools folder (apps/*.html, all sharing apps/tools.js)
-    hyptools:   { title: 'Hypixel Tools', tile: 'hyp', icon: ICONS.hypixel, kind: 'folder', items: ['prestige', 'ratio', 'compare', 'serverstatus', 'guildboard'], w: .5, h: .5, minW: 440 },
+    hyptools:   { title: 'Hypixel Tools', tile: 'hyp', icon: ICONS.hypixel, kind: 'folder', items: ['prestige', 'ratio', 'compare', 'guildboard'], w: .5, h: .5, minW: 440 },
     prestige:   { title: 'Prestige Calculator', tile: 'prestige', icon: '✫', kind: 'page', src: 'apps/prestige-calc.html?v=20260919a', w: .54, h: .86, minW: 470 },
     ratio:      { title: 'Ratio Calculator', tile: 'ratio', icon: '÷', kind: 'page', src: 'apps/ratio-calc.html?v=20260919a', w: .62, h: .86, minW: 480 },
     compare:    { title: 'Compare Players', tile: 'compare', icon: '⚔️', kind: 'page', src: 'apps/compare.html?v=20260919a', w: .58, h: .88, minW: 500 },
@@ -52,7 +52,7 @@ window.DESKTOP = (function () {
     notepad:    { title: 'Notepad', tile: 'notepad', icon: '📝', kind: 'page', src: 'apps/notepad.html?v=20260919a', w: .58, h: .78, minW: 460 },
     skineditor: { title: 'Skin Editor', tile: 'skined', icon: '🎨', kind: 'page', src: 'apps/skin-editor.html?v=20260917d', w: .72, h: .88, minW: 560 },
   };
-  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'gamesFolder', 'hyptools', 'social', 'aboutme', 'music', 'calculator', 'calendar', 'userlookup', 'skineditor', 'cpstest', 'notepad']; // desktop icons, top-left down
+  const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'gamesFolder', 'hyptools', 'social', 'aboutme', 'music', 'calculator', 'calendar', 'userlookup', 'skineditor', 'serverstatus', 'cpstest', 'notepad']; // desktop icons, top-left down
   const PINNED = ['thispc'];                                                                             // taskbar
   // every launchable app, for the start menu and the terminal's /apps (folder contents included, no duplicates)
   const ALL = [...new Set(ORDER.flatMap(id => APPS[id].kind === 'folder' ? [id, ...APPS[id].items] : [id]).concat(PINNED))];
