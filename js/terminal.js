@@ -51,6 +51,13 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
     await sleep(i * step + 200);
   }
 
+  // Hypixel Tools apps — the same actions as the Discord bot's /compare /prestige /ratio /leaderboard /status.
+  // Inside the computer: open the app window on that query; on the plain terminal page: jump to computer.html#app?query.
+  const openTool = (app, label, query, shown) => {
+    if (window.DESKTOP) { window.DESKTOP.open(app, null, query || undefined); print(`<span class="out-green">✔</span> ${T('opened')} <span class="out-blue">${label}</span>${shown ? ` → <span class="out-cyan">${esc(shown)}</span>` : ''}`); return; }
+    print(`${T('opening')} <span class="out-blue">${label}</span>${shown ? ` → <span class="out-cyan">${esc(shown)}</span>` : ''}…`, 'out-dim');
+    setTimeout(() => location.href = `computer.html#${app}${query ? '?' + query : ''}`, 350);
+  };
   const COMMANDS = {
     help() {
       print(`${T('Commands start with')} <span class="out-red">/</span>${T('. Anything else is a question for the assistant (English or فارسی).')}`, 'out-dim');
@@ -68,9 +75,10 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         ['/clear', 'clear the screen'],
       ];
       rows.push(['/check <user>', 'is a Minecraft player blacklisted? (Seraph + Urchin)'], ['/user <user>', 'full profile: skin, Hypixel, guild, blacklists'], ['/discord', 'the Discord server + the waish bot']);
+      rows.push(['/compare <a> <b>', 'two Hypixel players side by side'], ['/prestige <user>', 'stars & XP to the next prestige'], ['/ratio <user>', 'FKDR / WLR / BBLR / KDR targets'], ['/leaderboard <guild>', 'top members by weekly XP'], ['/status <server>', 'is a Minecraft server online?'], ['/tools', 'the Hypixel Tools folder'], ['/cps', 'clicks-per-second test'], ['/notepad', 'notes, saved in your browser']);
       if (mode === 'full') rows.push(['/open <app>', 'open an app window (see /apps)'], ['/apps', 'list the apps on this computer'], ['/home', 'back to the main site']);
       else rows.push(['/computer', 'open the computer (desktop + full terminal)']);
-      rows.forEach(([c, d]) => print(`  <span class="out-blue">${esc(c.padEnd(14))}</span> ${T(d)}`));
+      rows.forEach(([c, d]) => print(`  <span class="out-blue">${esc(c.padEnd(20))}</span> ${T(d)}`));
       print(`\n${T('Example:')} <span class="out-yellow">what mouse do you use?</span>  ·  <span class="out-yellow">ستاپت چیه؟</span>  ·  <span class="out-yellow">how does tcp work</span>`, 'out-dim');
     },
     about() { print(`Waish — server admin, builder, content creator.`); print(`Runs LunaMC, builds ClutchPing, streams on Aparat & YouTube, and the infra behind all of it.`, 'out-dim'); },
@@ -180,6 +188,20 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       setTimeout(() => location.href = 'computer.html#userlookup?u=' + encodeURIComponent(who), 350);
     },
     lookup(arg) { return COMMANDS.user(arg); },
+    compare(arg) {
+      const [a, b] = (arg || '').trim().split(/[\s,]+|\s+vs\s+/i).filter(Boolean);
+      const ok = x => /^[A-Za-z0-9_]{1,16}$/.test(x || '');
+      if (!ok(a) || !ok(b)) { print(`${T('Usage:')} <span class="out-yellow">/compare &lt;player&gt; &lt;player&gt;</span> — ${T('two players side by side')}`, 'out-dim'); return; }
+      openTool('compare', 'Compare Players', `a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`, `${a} vs ${b}`);
+    },
+    prestige(arg) { const who = (arg || '').trim(); openTool('prestige', 'Prestige Calculator', /^[A-Za-z0-9_]{1,16}$/.test(who) ? 'u=' + encodeURIComponent(who) : '', who); },
+    ratio(arg) { const who = (arg || '').trim(); openTool('ratio', 'Ratio Calculator', /^[A-Za-z0-9_]{1,16}$/.test(who) ? 'u=' + encodeURIComponent(who) : '', who); },
+    fkdr(arg) { return COMMANDS.ratio(arg); },
+    status(arg) { const host = (arg || '').trim().toLowerCase(); openTool('serverstatus', 'Server Status', /^[a-z0-9.\-_:]{1,120}$/.test(host) ? 's=' + encodeURIComponent(host) : '', host); },
+    leaderboard(arg) { const g = (arg || '').trim(); openTool('guildboard', 'Guild Leaderboard', g ? 'g=' + encodeURIComponent(g.slice(0, 32)) : '', g); },
+    tools() { openTool('hyptools', 'Hypixel Tools', ''); },
+    cps() { openTool('cpstest', 'CPS Test', ''); },
+    notepad() { openTool('notepad', 'Notepad', ''); },
     socials() {
       const L = (t, u) => `<a class="out-blue" href="${u}" target="_blank" rel="noopener">→ ${t}</a>`;
       print(`youtube    ${L('youtube.com/@WaishChannel', 'https://www.youtube.com/@WaishChannel')}`);
