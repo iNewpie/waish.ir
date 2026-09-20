@@ -27,7 +27,7 @@
   const nav = document.createElement('nav');
   nav.innerHTML = `<div class="wrap">
     <a class="logo" href="${root}index.html"><span class="lw" data-split>waish</span><span data-split>.ir</span></a>
-    <div class="nav-links">${links.map(([t, h]) => `<a href="${root}${h}"${here === h || (h === 'projects.html' && root) ? ' class="on"' : ''}>${t}</a>`).join('')}</div>
+    <div class="nav-links">${links.map(([t, h]) => `<a href="${root}${h}"${here === h || (h === 'projects.html' && root && location.pathname.includes('/projects/')) ? ' class="on"' : ''}>${t}</a>`).join('')}</div>
   </div>`;
   if (window.I18N) nav.querySelector('.wrap').appendChild(I18N.button());
   document.body.prepend(nav);

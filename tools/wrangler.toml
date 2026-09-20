@@ -3,3 +3,12 @@ name = "waish-proxy"
 main = "proxy.worker.js"
 compatibility_date = "2026-09-01"
 workers_dev = true
+
+# Visitor analytics + admin (tools/admin.js): one Durable Object with SQLite storage — free plan, no D1/KV needed.
+[[durable_objects.bindings]]
+name = "ANALYTICS"
+class_name = "Analytics"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Analytics"]

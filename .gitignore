@@ -1,7 +1,11 @@
 # uploads kept next to the site but not published
 *.zip
+# …except the texture packs uploaded from waish.ir/admin (committed by the worker, pulled here)
+!assets/packs/*.zip
 # API keys for tools/site-server.py (BORDIC_KEY=…, HYPIXEL_KEY=…, URCHIN_KEY=…)
 tools/proxy.env
 debug*.png
 # the bot-render service installs Playwright locally (tools/bot-render/package.json)
 node_modules/
+# wrangler dev local state
+tools/.wrangler/

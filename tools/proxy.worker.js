@@ -10,6 +10,8 @@
      <worker-url>/guild?uuid=<uuid>    → netherapi.com/api/v2/guild (secret NETHER_KEY) or api.hypixel.net/v2/guild (secret HYPIXEL_KEY)
      <worker-url>/urchin?uuid=<uuid>   → api.urchin.gg/v3/player/tags (secret URCHIN_KEY) — the Urchin cheater blacklist, no CORS upstream
      POST <worker-url>/discord         → the Discord bot's slash commands (tools/discord.bot.js; secrets DISCORD_APP_ID + DISCORD_PUBLIC_KEY)
+   POST <worker-url>/hit             → visitor beacon from js/hit.js (tools/admin.js; stored in the Analytics Durable Object)
+   <worker-url>/admin/*              → waish.ir/admin: login, visitor stats, texture-pack uploads (secrets ADMIN_PASSWORD + GITHUB_TOKEN)
    FRESHNESS — api.bordic.xyz sits behind a 24 h Cloudflare edge cache, so a plain request can hand back a day-old
    copy even when Bordic already holds newer stats. Every Bordic call here carries a per-minute `t` param that skips
    that edge copy, and our own copy of a player lives only 60 s: what you see is Bordic's latest snapshot
@@ -58,15 +60,24 @@ const convert = async player => {
 };
 
 import { handleInteraction, COMMANDS as BOT_COMMANDS } from './discord.bot.js';
+import { handleAdmin, recordHit, Analytics } from './admin.js';
+export { Analytics };   // Durable Object class (SQLite) — binding ANALYTICS in wrangler.toml
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // Discord slash commands (tools/discord.bot.js). The bot reaches the routes below in-process — a worker can't fetch its own URL.
     if (url.pathname === '/discord') {
-      if (request.method !== 'POST') return json({ success: false, cause: 'Discord posts interactions here', bot: 'waish', commands: BOT_COMMANDS(), build: '2026-09-19c' }, 405, {});
+      if (request.method !== 'POST') return json({ success: false, cause: 'Discord posts interactions here', bot: 'waish', commands: BOT_COMMANDS(), build: '2026-09-20a' }, 405, {});
       const call = async path => { const r = await api(new Request('https://waish-proxy.internal' + path, { headers: { Origin: 'https://waish.ir' } }), env); let d = null; try { d = await r.json(); } catch (e) {} return { status: r.status, d }; };
       return handleInteraction(request, env, ctx, call);
+    }
+    if (url.pathname === '/hit' || url.pathname.startsWith('/admin')) {   // waish.ir/admin + the visitor beacon (tools/admin.js)
+      const origin = request.headers.get('Origin') || '';
+      const ok = ALLOWED.some(a => origin === a || origin.startsWith(a + ':'));
+      const cors = { 'Access-Control-Allow-Origin': ok ? origin : 'https://waish.ir', 'Access-Control-Max-Age': '86400', 'Vary': 'Origin' };
+      if (url.pathname === '/hit') return ok || !origin ? recordHit(request, env, ctx, cors) : new Response(null, { status: 403, headers: cors });
+      return handleAdmin(request, env, ctx, cors);
     }
     if (url.pathname === '/render-health') {   // can the worker reach the card renderer on the VPS? (tools/bot-render)
       if (!env.RENDER_URL) return json({ ok: false, cause: 'RENDER_URL not set' }, 200, {});

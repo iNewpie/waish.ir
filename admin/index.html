@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin — waish.ir</title>
+<link rel="icon" type="image/png" href="../assets/waish.png?v=20260916b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/site.css?v=20260917e">
+<style>
+  /* ---------- admin-only styles: same tokens as the rest of the site ---------- */
+  :root { --c-visitors: #ff3b3b; --c-views: #3b82f6; }   /* two-series palette, validated for the dark card surface */
+  .page-head { padding-bottom: 20px; }
+  .page-head .wrap { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .hidden { display: none !important; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; }
+  .card h3 { font-size: 15px; font-weight: 600; letter-spacing: -.2px; margin-bottom: 4px; }
+  .card .sub { color: var(--muted); font-size: 13px; }
+  .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+  .field span small { color: var(--term-dim); }
+  input[type=text], input[type=password], input[type=url], textarea {
+    width: 100%; background: var(--bg-2); border: 1px solid var(--line); color: var(--ink); border-radius: 9px; padding: 11px 13px; font: inherit; font-size: 14px; outline: none; transition: border-color .16s, box-shadow .16s; }
+  input:focus, textarea:focus { border-color: rgba(255,59,59,.55); box-shadow: 0 0 0 3px var(--accent-dim); }
+  textarea { min-height: 74px; resize: vertical; }
+  .file { border: 1px dashed var(--line); border-radius: 9px; padding: 12px 13px; background: var(--bg-2); color: var(--muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: border-color .16s; }
+  .file:hover, .file.drag { border-color: rgba(255,59,59,.5); color: var(--ink); }
+  .file input { display: none; }
+  .file b { color: var(--ink); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .msg { font-family: var(--mono); font-size: 13px; min-height: 20px; color: var(--term-dim); }
+  .msg.err { color: var(--accent-soft); } .msg.ok { color: var(--term-green); }
+  .btn.sm { padding: 7px 12px; font-size: 13px; border-radius: 8px; }
+  .btn.danger:hover { border-color: var(--accent); color: var(--accent-soft); }
+  .btn[disabled] { opacity: .5; cursor: default; transform: none; }
+  section { padding: 34px 0; }
+  section:first-of-type { padding-top: 14px; }
+
+  /* login */
+  .login { max-width: 420px; margin: 40px auto 80px; }
+  .login form { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+
+  /* filters row */
+  .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--bg-2); }
+  .seg button { background: transparent; border: 0; color: var(--muted); font: inherit; font-size: 13px; padding: 8px 14px; cursor: pointer; transition: .16s; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button:hover { color: var(--ink); }
+  .seg button.on { background: var(--accent-dim); color: var(--ink); }
+  .chip { font-family: var(--mono); font-size: 12px; color: var(--muted); padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; display: inline-flex; align-items: center; gap: 8px; }
+  .chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--term-green); box-shadow: 0 0 10px var(--term-green); display: inline-block; }
+  .filters .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+  /* stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 14px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+  .tile .lbl { font-size: 13px; color: var(--muted); }
+  .tile .val { font-size: 30px; font-weight: 600; letter-spacing: -1px; line-height: 1.15; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .tile.hero .val { font-size: 48px; letter-spacing: -2px; }
+  .tile .sub { font-size: 12px; color: var(--term-dim); margin-top: 6px; font-family: var(--mono); }
+  .tile .delta { font-family: var(--mono); font-size: 12px; margin-top: 6px; color: var(--muted); }
+  .tile .delta.up { color: var(--term-green); } .tile .delta.down { color: var(--accent-soft); }
+
+  /* chart */
+  .chart-card { margin-bottom: 14px; }
+  .chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  .legend { display: flex; gap: 18px; font-size: 13px; color: var(--muted); align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 18px; height: 2px; border-radius: 1px; display: inline-block; }
+  .chart { position: relative; width: 100%; height: 280px; outline: none; }
+  .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .chart .grid line { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+  .chart .axis text { fill: var(--term-dim); font-family: var(--mono); font-size: 11px; }
+  .chart .series path.line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .chart .series path.area { opacity: .10; }
+  .chart .end text { fill: var(--ink); font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .chart .cross line { stroke: var(--muted); stroke-width: 1; shape-rendering: crispEdges; }
+  .tip { position: absolute; pointer-events: none; background: #161b26; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; min-width: 150px; box-shadow: 0 16px 40px -18px rgba(0,0,0,.9); z-index: 5; }
+  .tip .d { font-family: var(--mono); font-size: 11px; color: var(--term-dim); margin-bottom: 6px; }
+  .tip .r { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .tip .r i { width: 12px; height: 2px; border-radius: 1px; display: inline-block; }
+  .tip .r b { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 42px; }
+  .tip .r span { color: var(--muted); }
+  details.tbl { margin-top: 10px; }
+  details.tbl summary { font-family: var(--mono); font-size: 12px; color: var(--term-dim); cursor: pointer; }
+  details.tbl table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  details.tbl th, details.tbl td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  details.tbl th:first-child, details.tbl td:first-child { text-align: left; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  details.tbl th { color: var(--term-dim); font-weight: 500; font-size: 12px; }
+
+  /* breakdown lists */
+  .breakdown { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .rows { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; position: relative; padding: 7px 10px; border-radius: 8px; overflow: hidden; font-size: 13px; }
+  .row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--w) * 1%); background: var(--accent-dim); border-radius: 8px; z-index: 0; }
+  .row > * { position: relative; z-index: 1; }
+  .row .k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .k small { color: var(--term-dim); font-family: var(--mono); font-size: 11px; margin-left: 6px; }
+  .row .n { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .row .n small { color: var(--term-dim); font-weight: 400; font-family: var(--mono); font-size: 11px; margin-left: 6px; }
+  .rows .empty { padding: 18px; font-size: 12px; }
+
+  /* packs */
+  .packs-grid { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .pack-form { display: flex; flex-direction: column; gap: 14px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .progress { height: 4px; background: var(--bg-2); border-radius: 2px; overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .pack-list { display: flex; flex-direction: column; gap: 10px; }
+  .pack-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .pack-row .thumb { width: 56px; height: 56px; border-radius: 8px; background: var(--bg-2); display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: var(--mono); font-size: 22px; overflow: hidden; }
+  .pack-row .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .pack-row h4 { font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+  .pack-row p { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pack-row .meta { font-family: var(--mono); font-size: 11px; color: var(--term-dim); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .pack-row .acts { display: flex; gap: 6px; }
+
+  @media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, 1fr); } .tile.hero { grid-column: 1 / -1; } .packs-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .breakdown { grid-template-columns: 1fr; } .two { grid-template-columns: 1fr; } .chart { height: 220px; } .pack-row { grid-template-columns: 44px minmax(0, 1fr); } .pack-row .acts { grid-column: 2; } }
+</style>
+</head>
+<body data-root="../">
+
+<header class="page-head">
+  <div class="wrap">
+    <div>
+      <div class="kicker" data-type="// admin"></div>
+      <h1 data-scramble>Control room.</h1>
+      <p>Who's visiting waish.ir, and the texture packs on About Me.</p>
+    </div>
+    <div id="who" class="hidden" style="display:flex;gap:8px;align-items:center">
+      <span class="chip" id="liveChip"><i></i><span id="liveN">0</span> online (30 min)</span>
+      <button class="btn btn-ghost sm" id="logout">Log out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ---------- login ---------- -->
+<section id="loginView">
+  <div class="wrap">
+    <div class="card login reveal">
+      <div class="kicker" style="margin-bottom:8px">// sign in</div>
+      <h3 style="font-size:20px">Admin password</h3>
+      <div class="sub">Only Waish gets past this door.</div>
+      <form id="loginForm" autocomplete="off">
+        <input type="password" id="pw" placeholder="password" autocomplete="current-password" required>
+        <button class="btn btn-primary" type="submit" id="loginBtn">Enter →</button>
+        <div class="msg" id="loginMsg"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- dashboard ---------- -->
+<div id="panel" class="hidden">
+<section id="visitors">
+  <div class="wrap">
+    <div class="sec-head reveal" style="margin-bottom:22px">
+      <div class="kicker" data-type="// visitors"></div>
+      <h2 data-scramble>Traffic</h2>
+    </div>
+    <div class="filters">
+      <div class="seg" id="range">
+        <button data-days="7">7 days</button>
+        <button data-days="30" class="on">30 days</button>
+        <button data-days="90">90 days</button>
+      </div>
+      <div class="right">
+        <span class="msg" id="statsMsg"></span>
+        <button class="btn btn-ghost sm" id="refresh">Refresh</button>
+      </div>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div><h3>Visitors and views per day</h3><div class="sub" id="chartSub">Asia/Tehran days · a visitor is counted once per day</div></div>
+        <div class="legend"><span><i style="background:var(--c-visitors)"></i>Visitors</span><span><i style="background:var(--c-views)"></i>Views</span></div>
+      </div>
+      <div class="chart" id="chart" tabindex="0" aria-label="Visitors and views per day"></div>
+      <details class="tbl"><summary>table view</summary><table id="tbl"></table></details>
+    </div>
+
+    <div class="breakdown">
+      <div class="card"><h3>Top pages</h3><div class="sub">visitors · views, selected range</div><div class="rows" id="pages"></div></div>
+      <div class="card"><h3>Countries</h3><div class="sub">where visitors come from</div><div class="rows" id="countries"></div></div>
+      <div class="card"><h3>Referrers</h3><div class="sub">sites that sent people here (direct visits not listed)</div><div class="rows" id="referrers"></div></div>
+      <div class="card"><h3>Devices &amp; languages</h3><div class="sub">browser device kind · browser language</div><div class="rows" id="devices"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="packs">
+  <div class="wrap">
+    <div class="sec-head reveal" style="margin-bottom:22px">
+      <div class="kicker" data-type="// texture packs"></div>
+      <h2 data-scramble>Packs</h2>
+    </div>
+    <div class="packs-grid">
+      <form class="card pack-form" id="packForm">
+        <div><h3 id="formTitle">Add a pack</h3><div class="sub">Saved into the GitHub repo — live on About Me about a minute later.</div></div>
+        <label class="field"><span>Name</span><input type="text" id="pName" maxlength="60" placeholder="Waish 16x" required></label>
+        <label class="field"><span>Description <small>· optional</small></span><textarea id="pDesc" maxlength="240" placeholder="what it is, what it's good for"></textarea></label>
+        <label class="field"><span>Tags <small>· comma separated</small></span><input type="text" id="pMeta" placeholder="16x, bedwars, low fire"></label>
+        <div class="two" id="fileFields">
+          <label class="field"><span>Pack file <small>· .zip, up to 40 MB</small></span>
+            <label class="file" id="fileDrop"><b id="fileName">choose .zip</b><span>↑</span><input type="file" id="pFile" accept=".zip,application/zip"></label></label>
+          <label class="field"><span>Cover <small>· png/jpg/webp, up to 3 MB</small></span>
+            <label class="file" id="imgDrop"><b id="imgName">choose image</b><span>↑</span><input type="file" id="pImg" accept="image/png,image/jpeg,image/webp,image/gif"></label></label>
+        </div>
+        <label class="field"><span>Download link <small>· instead of, or in addition to, the file</small></span><input type="url" id="pLink" placeholder="https://…"></label>
+        <div class="progress hidden" id="prog"><i></i></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" type="submit" id="packBtn">Add pack</button>
+          <button class="btn btn-ghost hidden" type="button" id="cancelEdit">Cancel</button>
+          <span class="msg" id="packMsg"></span>
+        </div>
+      </form>
+      <div>
+        <div class="pack-list" id="packList"><div class="empty">// loading…</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<script src="../js/i18n.js?v=20260917d"></script>
+<script src="../js/layout.js?v=20260917e"></script>
+<script src="../js/fx.js?v=20260917a"></script>
+<script>
+/* ============================================================
+   ADMIN — talks to the proxy worker's /admin routes (tools/admin.js). The token lives in localStorage.
+   ============================================================ */
+const WORKER = 'https://waish-proxy.danesh2242.workers.dev';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : Number(n).toLocaleString('en-US');
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const dlabel = d => { const [y, m, dd] = d.split('-').map(Number); return MON[m - 1] + ' ' + dd; };
+let token = null; try { token = localStorage.getItem('waish-admin-token'); } catch (e) {}
+let days = 30, stats = null, packs = [], editing = null;
+
+async function api(path, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {}, token ? { Authorization: 'Bearer ' + token } : {});
+  if (opts.json) { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(opts.json); }
+  const r = await fetch(WORKER + path, { method: opts.method || 'GET', headers, body: opts.body });
+  let d = null; try { d = await r.json(); } catch (e) {}
+  if (r.status === 401 && d && d.login) { logout(false); throw new Error('Session expired — log in again'); }
+  if (!r.ok) throw new Error((d && d.cause) || ('HTTP ' + r.status));
+  return d;
+}
+function show(loggedIn) {
+  $('loginView').classList.toggle('hidden', loggedIn); $('panel').classList.toggle('hidden', !loggedIn); $('who').classList.toggle('hidden', !loggedIn);
+  observeReveals();
+  if (loggedIn) { loadStats(); loadPacks(); }
+}
+function logout(clear = true) { token = null; try { localStorage.removeItem('waish-admin-token'); } catch (e) {} show(false); if (clear) $('loginMsg').textContent = ''; }
+
+/* ---------- login ---------- */
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault(); const btn = $('loginBtn'), msg = $('loginMsg'); btn.disabled = true; msg.className = 'msg'; msg.textContent = 'checking…';
+  try {
+    const d = await api('/admin/login', { method: 'POST', json: { password: $('pw').value } });
+    token = d.token; try { localStorage.setItem('waish-admin-token', token); } catch (e) {}
+    $('pw').value = ''; msg.textContent = ''; show(true);
+  } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
+  btn.disabled = false;
+});
+$('logout').addEventListener('click', () => logout());
+
+/* ---------- stats ---------- */
+$('range').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; days = +b.dataset.days; [...$('range').children].forEach(x => x.classList.toggle('on', x === b)); loadStats(); });
+$('refresh').addEventListener('click', loadStats);
+async function loadStats() {
+  const msg = $('statsMsg'); msg.className = 'msg'; msg.textContent = 'loading…';
+  try { stats = await api('/admin/stats?days=' + days); msg.textContent = 'updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); render(); }
+  catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
+}
+function render() {
+  const s = stats, t = s.totals, series = s.series;
+  $('liveN').textContent = fmt(t.live);
+  const y = series.length > 1 ? series[series.length - 2] : null;
+  const delta = (a, b) => b == null ? '' : a === b ? `<div class="delta">same as yesterday</div>` : `<div class="delta ${a > b ? 'up' : 'down'}">${a > b ? '▲' : '▼'} ${fmt(Math.abs(a - b))} vs yesterday</div>`;
+  $('tiles').innerHTML = `
+    <div class="tile hero"><div class="lbl">Visitors today</div><div class="val">${fmt(t.today.visitors)}</div>${delta(t.today.visitors, y && y.visitors)}</div>
+    <div class="tile"><div class="lbl">Views today</div><div class="val">${fmt(t.today.views)}</div>${delta(t.today.views, y && y.views)}</div>
+    <div class="tile"><div class="lbl">Last 7 days</div><div class="val">${fmt(t.d7.visitors)}</div><div class="sub">${fmt(t.d7.views)} views</div></div>
+    <div class="tile"><div class="lbl">Last 30 days</div><div class="val">${fmt(t.d30.visitors)}</div><div class="sub">${fmt(t.d30.views)} views</div></div>
+    <div class="tile"><div class="lbl">All time</div><div class="val">${fmt(t.all.visitors)}</div><div class="sub">${fmt(t.all.views)} views${t.firstDay ? ' · since ' + dlabel(t.firstDay) : ''}</div></div>`;
+  $('chartSub').textContent = `${series[0] ? dlabel(series[0].day) : ''} → ${dlabel(s.today)} · Asia/Tehran days · a visitor is counted once per day`;
+  drawChart(series);
+  $('tbl').innerHTML = `<tr><th>day</th><th>visitors</th><th>views</th></tr>` + series.slice().reverse().map(r => `<tr><td>${r.day}</td><td>${r.visitors.toLocaleString()}</td><td>${r.views.toLocaleString()}</td></tr>`).join('');
+  const rows = (el, list, label) => {
+    if (!list.length) { el.innerHTML = '<div class="empty">// nothing yet</div>'; return; }
+    const max = Math.max(...list.map(r => r.visitors)) || 1;
+    el.innerHTML = list.map(r => `<div class="row" style="--w:${Math.round(r.visitors / max * 100)}"><div class="k">${label(r.k)}</div><div class="n">${fmt(r.visitors)}<small>${fmt(r.views)} views</small></div></div>`).join('');
+  };
+  const names = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch (e) { return null; } })();
+  const flag = c => /^[A-Z]{2}$/.test(c) ? String.fromCodePoint(...[...c].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)) : '🌐';
+  rows($('pages'), s.pages, k => esc(k));
+  rows($('countries'), s.countries, k => `${flag(k)} ${esc(/^[A-Z]{2}$/.test(k) && names ? (names.of(k) || k) : k === '??' ? 'unknown' : k)}<small>${esc(k)}</small>`);
+  rows($('referrers'), s.referrers, k => esc(k));
+  rows($('devices'), s.devices.concat(s.languages.map(l => ({ ...l, k: 'lang · ' + l.k }))), k => esc(k));
+}
+
+/* ---------- chart: two lines (visitors, views), crosshair tooltip, keyboard, table view ---------- */
+const SER = [['visitors', 'Visitors', 'var(--c-visitors)'], ['views', 'Views', 'var(--c-views)']];
+let chartData = null;
+function drawChart(series) {
+  chartData = series;
+  const host = $('chart'); host.innerHTML = '';
+  const W = host.clientWidth || 800, H = host.clientHeight || 280, L = 44, R = 18, T = 14, B = 26;
+  const iw = W - L - R, ih = H - T - B, n = series.length;
+  const max = Math.max(1, ...series.map(r => r.views));
+  const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000].find(s => max / s <= 4) || Math.pow(10, Math.ceil(Math.log10(max / 4)));
+  const ymax = Math.ceil(max / step) * step;
+  const x = i => L + (n === 1 ? iw / 2 : i / (n - 1) * iw), y = v => T + ih - v / ymax * ih;
+  const ns = 'http://www.w3.org/2000/svg', el = (t, a) => { const e = document.createElementNS(ns, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H });
+  const grid = el('g', { class: 'grid' }), axis = el('g', { class: 'axis' });
+  for (let v = 0; v <= ymax; v += step) { grid.appendChild(el('line', { x1: L, x2: W - R, y1: y(v), y2: y(v) })); const tx = el('text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end' }); tx.textContent = fmt(v); axis.appendChild(tx); }
+  const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 70))));
+  series.forEach((r, i) => { if ((n - 1 - i) % every) return; const tx = el('text', { x: x(i), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle' }); tx.textContent = dlabel(r.day); axis.appendChild(tx); });
+  svg.appendChild(grid); svg.appendChild(axis);
+  const sg = el('g', { class: 'series' }), endg = el('g', { class: 'end' });
+  const ends = [];
+  SER.forEach(([key, , color]) => {
+    const pts = series.map((r, i) => `${x(i)},${y(r[key])}`);
+    if (n > 1) {
+      sg.appendChild(el('path', { class: 'area', d: `M${pts[0]}L${pts.join('L')}L${x(n - 1)},${y(0)}L${x(0)},${y(0)}Z`, fill: color }));
+      sg.appendChild(el('path', { class: 'line', d: 'M' + pts.join('L'), stroke: color }));
+    }
+    const last = series[n - 1];
+    endg.appendChild(el('circle', { cx: x(n - 1), cy: y(last[key]), r: 6, fill: 'var(--card)' }));
+    endg.appendChild(el('circle', { cx: x(n - 1), cy: y(last[key]), r: 4, fill: color }));
+    ends.push({ v: last[key], yy: y(last[key]) });
+  });
+  // direct end labels only when they don't collide — the tooltip and table carry the rest
+  if (Math.abs(ends[0].yy - ends[1].yy) > 14) ends.forEach(e => { const tx = el('text', { x: W - R + 10, y: e.yy + 4, 'text-anchor': 'start' }); tx.textContent = fmt(e.v); endg.appendChild(tx); });
+  else { const tx = el('text', { x: W - R + 10, y: ends[0].yy + 4 }); tx.textContent = fmt(ends[0].v); endg.appendChild(tx); }
+  svg.appendChild(sg); svg.appendChild(endg);
+  // hover layer
+  const cross = el('g', { class: 'cross', style: 'display:none' });
+  const cl = el('line', { y1: T, y2: T + ih }); cross.appendChild(cl);
+  const dots = SER.map(([, , color]) => { const ring = el('circle', { r: 6, fill: 'var(--card)' }), dot = el('circle', { r: 4, fill: color }); cross.appendChild(ring); cross.appendChild(dot); return [ring, dot]; });
+  svg.appendChild(cross);
+  const hit = el('rect', { x: L, y: T, width: iw, height: ih, fill: 'transparent' }); svg.appendChild(hit);
+  const tip = document.createElement('div'); tip.className = 'tip hidden';
+  host.appendChild(svg); host.appendChild(tip);
+  let idx = -1;
+  const showAt = i => {
+    idx = i; const r = series[i]; if (!r) return;
+    cross.style.display = ''; cl.setAttribute('x1', x(i)); cl.setAttribute('x2', x(i));
+    dots.forEach(([ring, dot], k) => { const yy = y(r[SER[k][0]]); ring.setAttribute('cx', x(i)); ring.setAttribute('cy', yy); dot.setAttribute('cx', x(i)); dot.setAttribute('cy', yy); });
+    tip.innerHTML = ''; const d = document.createElement('div'); d.className = 'd'; d.textContent = r.day; tip.appendChild(d);
+    SER.forEach(([key, name, color]) => { const row = document.createElement('div'); row.className = 'r'; const b = document.createElement('b'); b.textContent = r[key].toLocaleString(); const i2 = document.createElement('i'); i2.style.background = color; const sp = document.createElement('span'); sp.textContent = name; row.append(b, i2, sp); tip.appendChild(row); });
+    tip.classList.remove('hidden');
+    const px = x(i) / W * host.clientWidth, left = px + 14 + 170 > host.clientWidth ? px - 14 - tip.offsetWidth : px + 14;
+    tip.style.left = left + 'px'; tip.style.top = (T + 6) + 'px';
+  };
+  const hide = () => { idx = -1; cross.style.display = 'none'; tip.classList.add('hidden'); };
+  hit.addEventListener('pointermove', e => { const rect = svg.getBoundingClientRect(); const px = (e.clientX - rect.left) / rect.width * W; showAt(Math.max(0, Math.min(n - 1, Math.round((px - L) / (iw || 1) * (n - 1))))); });
+  hit.addEventListener('pointerleave', hide);
+  host.onkeydown = e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); showAt(Math.max(0, Math.min(n - 1, (idx < 0 ? n - 1 : idx) + (e.key === 'ArrowLeft' ? -1 : 1)))); } else if (e.key === 'Escape') hide(); };
+  host.onblur = hide;
+}
+new ResizeObserver(() => { if (chartData && !$('panel').classList.contains('hidden')) drawChart(chartData); }).observe($('chart'));
+
+/* ---------- packs ---------- */
+async function loadPacks() {
+  try { packs = (await api('/admin/packs')).packs; renderPacks(); }
+  catch (err) { $('packList').innerHTML = `<div class="empty">// ${esc(err.message)}</div>`; }
+}
+function renderPacks() {
+  const el = $('packList');
+  if (!packs.length) { el.innerHTML = '<div class="empty">// no packs yet — add the first one on the left</div>'; return; }
+  el.innerHTML = packs.map(p => `<div class="pack-row" data-id="${esc(p.id)}">
+      <div class="thumb">${p.img ? `<img src="../${esc(p.img)}?v=${encodeURIComponent(p.added || '')}" alt="">` : '▦'}</div>
+      <div style="min-width:0"><h4>${esc(p.name)}</h4><p>${esc(p.desc) || '<span style="color:var(--term-dim)">no description</span>'}</p>
+        <div class="meta">${(p.meta || []).map(m => '#' + esc(m)).join(' ')}${p.size ? `<span>${fmtSize(p.size)}</span>` : ''}${p.dl ? `<a href="${esc(p.dl)}" target="_blank" rel="noopener">link ↗</a>` : ''}<span>${esc(p.added || '')}</span></div></div>
+      <div class="acts"><button class="btn btn-ghost sm" data-act="edit">Edit</button><button class="btn btn-ghost sm danger" data-act="del">Delete</button></div>
+    </div>`).join('');
+}
+$('packList').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const id = b.closest('.pack-row').dataset.id, p = packs.find(x => x.id === id); if (!p) return;
+  if (b.dataset.act === 'edit') {
+    editing = id; $('formTitle').textContent = 'Edit “' + p.name + '”'; $('pName').value = p.name; $('pDesc').value = p.desc || ''; $('pMeta').value = (p.meta || []).join(', '); $('pLink').value = p.dl || '';
+    $('fileFields').classList.add('hidden'); $('cancelEdit').classList.remove('hidden'); $('packBtn').textContent = 'Save changes'; $('packForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (!confirm(`Delete “${p.name}” from the site and the repo?`)) return;
+  b.disabled = true; setMsg($('packMsg'), 'deleting…');
+  try { const d = await api('/admin/packs?id=' + encodeURIComponent(id), { method: 'DELETE' }); packs = d.packs; renderPacks(); setMsg($('packMsg'), `removed · commit ${d.commit.slice(0, 7)} — live in about a minute`, 'ok'); }
+  catch (err) { b.disabled = false; setMsg($('packMsg'), err.message, 'err'); }
+});
+function setMsg(el, text, cls) { el.className = 'msg ' + (cls || ''); el.textContent = text; }
+function resetForm() {
+  editing = null; $('packForm').reset(); $('fileName').textContent = 'choose .zip'; $('imgName').textContent = 'choose image';
+  $('formTitle').textContent = 'Add a pack'; $('fileFields').classList.remove('hidden'); $('cancelEdit').classList.add('hidden'); $('packBtn').textContent = 'Add pack';
+}
+$('cancelEdit').addEventListener('click', () => { resetForm(); setMsg($('packMsg'), ''); });
+[['pFile', 'fileName', 'fileDrop'], ['pImg', 'imgName', 'imgDrop']].forEach(([inp, lbl, drop]) => {
+  $(inp).addEventListener('change', () => { const f = $(inp).files[0]; $(lbl).textContent = f ? `${f.name} · ${fmtSize(f.size)}` : (inp === 'pFile' ? 'choose .zip' : 'choose image'); });
+  const d = $(drop); ['dragenter', 'dragover'].forEach(ev => d.addEventListener(ev, e => { e.preventDefault(); d.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => d.addEventListener(ev, e => { e.preventDefault(); d.classList.remove('drag'); if (ev === 'drop' && e.dataTransfer.files[0]) { $(inp).files = e.dataTransfer.files; $(inp).dispatchEvent(new Event('change')); } }));
+});
+$('packForm').addEventListener('submit', e => {
+  e.preventDefault(); const msg = $('packMsg'), btn = $('packBtn');
+  const name = $('pName').value.trim(), desc = $('pDesc').value.trim(), meta = $('pMeta').value, link = $('pLink').value.trim();
+  if (editing) {
+    btn.disabled = true; setMsg(msg, 'saving…');
+    api('/admin/packs', { method: 'PATCH', json: { id: editing, name, desc, meta, link } })
+      .then(d => { packs = d.packs; renderPacks(); resetForm(); setMsg(msg, `saved · commit ${d.commit.slice(0, 7)} — live in about a minute`, 'ok'); })
+      .catch(err => setMsg(msg, err.message, 'err')).finally(() => { btn.disabled = false; });
+    return;
+  }
+  const file = $('pFile').files[0], img = $('pImg').files[0];
+  if (!file && !link) return setMsg(msg, 'Upload the .zip or give a download link', 'err');
+  if (file && file.size > 40 * 1048576) return setMsg(msg, 'That zip is over 40 MB — use a download link instead', 'err');
+  if (img && img.size > 3 * 1048576) return setMsg(msg, 'Cover image is over 3 MB', 'err');
+  const fd = new FormData(); fd.append('name', name); fd.append('desc', desc); fd.append('meta', meta); fd.append('link', link);
+  if (file) fd.append('file', file, file.name); if (img) fd.append('img', img, img.name);
+  const xhr = new XMLHttpRequest(); xhr.open('POST', WORKER + '/admin/packs'); xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+  const prog = $('prog'), bar = prog.querySelector('i'); prog.classList.remove('hidden'); bar.style.width = '0'; btn.disabled = true; setMsg(msg, 'uploading…');
+  xhr.upload.onprogress = ev => { if (ev.lengthComputable) { const pc = Math.round(ev.loaded / ev.total * 100); bar.style.width = pc + '%'; setMsg(msg, pc < 100 ? `uploading… ${pc}%` : 'committing to GitHub…'); } };
+  xhr.onerror = () => { btn.disabled = false; prog.classList.add('hidden'); setMsg(msg, 'Upload failed — network error', 'err'); };
+  xhr.onload = () => {
+    btn.disabled = false; prog.classList.add('hidden');
+    let d = null; try { d = JSON.parse(xhr.responseText); } catch (e) {}
+    if (xhr.status === 401 && d && d.login) { logout(false); return; }
+    if (xhr.status !== 200 || !d || !d.ok) return setMsg(msg, (d && d.cause) || ('HTTP ' + xhr.status), 'err');
+    packs = d.packs; renderPacks(); resetForm(); setMsg(msg, `added “${d.pack.name}” · commit ${d.commit.slice(0, 7)} — live on About Me in about a minute`, 'ok');
+  };
+  xhr.send(fd);
+});
+
+show(!!token);
+</script>
+</body>
+</html>
