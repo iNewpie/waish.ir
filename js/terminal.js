@@ -67,6 +67,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
         ['/lunamc', 'the Minecraft server'],
         ['/ip', 'copy the LunaMC server IP'],
         ['/clutchping', 'the ping-reduction service'],
+        ['/wbio', 'the bio-link page service'],
         ['/story', 'the full Waish story (/story fa for Persian)'],
         ['/setup', 'PC / stream setup'],
         ['/aboutme', 'open the About Me page (setup, packs, settings)'],
@@ -86,6 +87,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       const list = window.PROJECTS || [
         { name: 'LunaMC', desc: 'Persian-language Minecraft server.' },
         { name: 'ClutchPing', desc: 'Ping reduction for gamers — clutchping.com' },
+        { name: 'wbio.ir', desc: 'Bio-link pages — one link for every social.' },
         { name: 'Content', desc: 'Streams & videos on Aparat and YouTube.' },
         { name: 'This terminal', desc: 'Offline assistant on a local knowledge base.' },
       ];
@@ -95,6 +97,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
     lunamc() { print(`<span class="out-cyan">LunaMC</span> — Persian-language Minecraft server.`); print(`Bedwars, custom plugins, active community.`, 'out-dim'); print(`IP: <span class="out-cyan">Play.LunaMC.iR</span>  <span class="out-dim">(type /ip to copy)</span>`); },
     ip() { navigator.clipboard?.writeText('Play.LunaMC.iR'); print(`<span class="out-green">✔</span> copied <span class="out-cyan">Play.LunaMC.iR</span> to clipboard`); },
     clutchping() { print(`<span class="out-cyan">⚡ ClutchPing</span> — lower ping for gamers.`); print(`Relay-based network optimization. Started with LunaMC, expanding to every game.`, 'out-dim'); print(`<span class="out-blue">→ clutchping.com</span>`); },
+    wbio() { print(`<span class="out-cyan">🐰 wbio.ir</span> — bio-link pages, made for Iran.`); print(`One link for every social: 20 themes, live Valorant / Minecraft / Discord cards, effects, music, your own domain. Free to start, Plus / Pro / Enterprise plans, runs on Cloudflare Workers.`, 'out-dim'); print(`<span class="out-blue">→ wbio.ir</span>`); },
     setup() {
       print(`<span class="out-yellow">${T('Stream / recording setup')}</span>`);
       [
@@ -211,6 +214,7 @@ window.initTerminal = function ({ body, input, mode = 'mini' }) {
       print(`discord    ${L('discord.gg/8HVsMqucZ2', 'https://discord.gg/8HVsMqucZ2')} <span class="out-dim">(10k+ members)</span>`);
       print(`lunamc     ${L('play.lunamc.ir', 'https://play.lunamc.ir')}`);
       print(`clutchping ${L('clutchping.com', 'https://clutchping.com')}`);
+      print(`wbio       ${L('wbio.ir', 'https://wbio.ir')}`);
     },
     // the Discord server (live counts from Discord's public invite endpoint, which sends CORS headers) and the bot that lives there
     async discord() {

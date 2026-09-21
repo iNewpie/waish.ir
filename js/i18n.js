@@ -13,7 +13,7 @@ window.I18N = (function () {
   const FA = {
     /* nav / shared */
     'Computer': 'کامپیوتر', 'Projects': 'پروژه‌ها', 'About Me': 'درباره من', 'About me': 'درباره من', 'Contact': 'تماس',
-    'aparat': 'آپارات', 'youtube': 'یوتیوب', 'lunamc': 'لونا ام‌سی', 'clutchping': 'کلاچ‌پینگ', 'contact': 'تماس',
+    'aparat': 'آپارات', 'youtube': 'یوتیوب', 'lunamc': 'لونا ام‌سی', 'clutchping': 'کلاچ‌پینگ', 'wbio': 'دبلیوبایو', 'contact': 'تماس',
     'Waish.ir — Built and hosted by Hossein Danesh.': 'Waish.ir — ساخته و میزبانی‌شده توسط حسین دانش.', 'donate': 'حمایت', 'Donate ♥': 'حمایت ♥', 'nairoshop': 'نایروشاپ',
     'Home': 'خانه', 'Projects page': 'صفحهٔ پروژه‌ها', 'About me page': 'صفحهٔ درباره من',
     'EN': 'EN', 'FA': 'فا',
