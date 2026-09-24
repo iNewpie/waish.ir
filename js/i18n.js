@@ -95,6 +95,8 @@ window.I18N = (function () {
     'Who I am, LunaMC, ClutchPing, my content, my full PC setup, and a set of computer-science basics — TCP, UDP, HTTP, DNS, ping, RAM, processes vs threads, Big-O.': 'اینکه کی‌ام، لونا ام‌سی، کلاچ‌پینگ، محتوام، ستاپ کامل کامپیوترم و یه سری مبانی علوم کامپیوتر — TCP، UDP، HTTP، DNS، پینگ، RAM، پروسس و ترد، Big-O.',
     'Placeholder — write about what you want to add: a bigger knowledge base, a real language model behind it, voice, whatever is on the roadmap.': 'موقت — دربارهٔ چیزهایی که می‌خوای اضافه کنی بنویس: پایگاه دانش بزرگ‌تر، یه مدل زبانی واقعی پشتش، صدا، هر چی توی نقشهٔ راهه.',
     'English, فارسی': 'انگلیسی، فارسی', 'Open the terminal': 'باز کردن ترمینال',
+    'Bio-link pages for Iran: one link for every social, 20 themes, live game cards, your own domain — free to start.': 'صفحه‌های لینک بایو برای ایران: یه لینک برای همهٔ سوشال‌ها، ۲۰ تم، کارت‌های زندهٔ بازی، دامنهٔ خودت — شروعش رایگانه.',
+    'Founder': 'بنیان‌گذار', '· bio-link pages with themes, live cards and custom domains': '· صفحه‌های لینک بایو با تم‌ها، کارت‌های زنده و دامنهٔ اختصاصی',
     'wbio.ir — Waish': 'wbio.ir — ویش', '// bio-link service': '// سرویس لینک بایو',
     'One link for every social. A bio-link page builder made for Iran — themes, live game cards, effects, music and your own domain, running entirely on Cloudflare Workers.': 'یه لینک برای همهٔ سوشال‌ها. صفحه‌ساز لینک بایو که برای ایران ساخته شده — تم‌ها، کارت‌های زندهٔ بازی، افکت‌ها، موزیک و دامنهٔ اختصاصی خودت، که کاملاً روی Cloudflare Workers اجرا می‌شه.',
     'Why': 'چرا', 'What you get': 'چی می‌گیری', 'Your own domain': 'دامنهٔ خودت', 'How it is built': 'چطور ساخته شده',
