@@ -18,9 +18,12 @@ window.DESKTOP = (function () {
     pc: '<svg viewBox="0 0 24 24"><path d="M3 4h18a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7v2h3v2H7v-2h3v-2H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v9h16V6H4z"/></svg>',
   };
 
+  // real app / game icons (Papirus icon theme, assets/icons/CREDITS.txt)
+  const pic = n => `<img class="pic" src="assets/icons/${n}.svg" alt="">`;
+
   /* ---------- app definitions ---------- */
   const APPS = {
-    terminal:   { title: 'Terminal', tile: 'term', icon: '➜', kind: 'terminal', w: .66, h: .72 },
+    terminal:   { title: 'Terminal', tile: 'term pic', icon: pic('terminal'), kind: 'terminal', w: .66, h: .72 },
     projects:   { title: 'All projects', tile: 'projects', icon: ICONS.grid, kind: 'page', src: 'projects.html?embed=1', w: .78, h: .82 },
     // desktop folders: open one → pick an app inside
     projectsFolder: { title: 'Projects', tile: 'folder', icon: '📁', kind: 'folder', items: ['lunamc', 'clutchping', 'projects'], w: .46, h: .46, minW: 420 },
@@ -33,13 +36,13 @@ window.DESKTOP = (function () {
     aboutme:    { title: 'About me', tile: 'aboutme', icon: ICONS.user, kind: 'page', src: 'about-me.html?embed=1', w: .78, h: .82 },
     thispc:     { title: 'This PC', tile: 'thispc', icon: ICONS.pc, kind: 'explorer', w: .7, h: .68 },
     bin:        { title: 'Recycle Bin', tile: 'bin', icon: '🗑️', kind: 'bin', w: .46, h: .5, minW: 420 },
-    music:      { title: 'Music', tile: 'music', icon: '🎵', kind: 'page', src: 'apps/music.html?v=20260917i', w: .4, h: .8, minW: 400 },
+    music:      { title: 'Music', tile: 'music pic', icon: pic('music'), kind: 'page', src: 'apps/music.html?v=20260917i', w: .4, h: .8, minW: 400 },
     // games + small apps: each one is a standalone page in apps/ shown inside a window
-    snake:      { title: 'Snake', tile: 'snake', icon: '🐍', kind: 'page', src: 'apps/snake.html?v=20260916b', w: .38, h: .78, minW: 380 },
-    tetris:     { title: 'Tetris', tile: 'tetris', icon: '🧱', kind: 'page', src: 'apps/tetris.html?v=20260916b', w: .36, h: .84, minW: 380 },
-    minicraft:  { title: 'Mini Minecraft', tile: 'minicraft', icon: '⛏️', kind: 'page', src: 'apps/minicraft.html?v=20260916b', w: .72, h: .8 },
-    calculator: { title: 'Calculator', tile: 'calc', icon: '🧮', kind: 'page', src: 'apps/calculator.html?v=20260916b', w: .26, h: .74, minW: 340 },
-    calendar:   { title: 'Calendar', tile: 'calendar', icon: '📅', kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
+    snake:      { title: 'Snake', tile: 'snake pic', icon: pic('snake'), kind: 'page', src: 'apps/snake.html?v=20260916b', w: .38, h: .78, minW: 380 },
+    tetris:     { title: 'Tetris', tile: 'tetris pic', icon: pic('tetris'), kind: 'page', src: 'apps/tetris.html?v=20260916b', w: .36, h: .84, minW: 380 },
+    minicraft:  { title: 'Mini Minecraft', tile: 'minicraft pic', icon: pic('minecraft'), kind: 'page', src: 'apps/minicraft.html?v=20260916b', w: .72, h: .8 },
+    calculator: { title: 'Calculator', tile: 'calc pic', icon: pic('calculator'), kind: 'page', src: 'apps/calculator.html?v=20260916b', w: .26, h: .74, minW: 340 },
+    calendar:   { title: 'Calendar', tile: 'calendar pic', icon: pic('calendar'), kind: 'page', src: 'apps/calendar.html?v=20260916b', w: .44, h: .74, minW: 420 },
     userlookup: { title: 'User Lookup', tile: 'skin', icon: '🔍', kind: 'page', src: 'apps/lookup.html?v=20260919b', w: .58, h: .88, minW: 520 },
     // Hypixel Tools folder (apps/*.html, all sharing apps/tools.js)
     hyptools:   { title: 'Hypixel Tools', tile: 'hyp', icon: ICONS.hypixel, kind: 'folder', items: ['prestige', 'ratio', 'compare', 'guildboard'], w: .5, h: .5, minW: 440 },
@@ -49,7 +52,7 @@ window.DESKTOP = (function () {
     serverstatus: { title: 'Server Status', tile: 'status', icon: '📡', kind: 'page', src: 'apps/server-status.html?v=20260919a', w: .5, h: .84, minW: 440 },
     guildboard: { title: 'Guild Leaderboard', tile: 'guildboard', icon: '🏆', kind: 'page', src: 'apps/guild-leaderboard.html?v=20260919a', w: .52, h: .88, minW: 460 },
     cpstest:    { title: 'CPS Test', tile: 'cps', icon: '🖱️', kind: 'page', src: 'apps/cps-test.html?v=20260919a', w: .42, h: .74, minW: 380 },
-    notepad:    { title: 'Notepad', tile: 'notepad', icon: '📝', kind: 'page', src: 'apps/notepad.html?v=20260919a', w: .58, h: .78, minW: 460 },
+    notepad:    { title: 'Notepad', tile: 'notepad pic', icon: pic('notepad'), kind: 'page', src: 'apps/notepad.html?v=20260919a', w: .58, h: .78, minW: 460 },
     skineditor: { title: 'Skin Editor', tile: 'skined', icon: '🎨', kind: 'page', src: 'apps/skin-editor.html?v=20260917d', w: .72, h: .88, minW: 560 },
   };
   const ORDER = ['thispc', 'bin', 'terminal', 'projectsFolder', 'gamesFolder', 'hyptools', 'social', 'aboutme', 'music', 'calculator', 'calendar', 'userlookup', 'skineditor', 'serverstatus', 'cpstest', 'notepad']; // desktop icons, top-left down
@@ -69,28 +72,28 @@ window.DESKTOP = (function () {
       { type: 'img', name: 'terminal-bg.jpg', src: 'assets/terminal-bg.jpg' },
     ] },
     { letter: 'D', name: 'Useful apps', icon: '🧰', used: .41, size: '512 GB', items: [
-      { type: 'run', name: 'Calculator', icon: '🧮', app: 'calculator' },
-      { type: 'run', name: 'Calendar', icon: '📅', sub: 'Persian · Gregorian', app: 'calendar' },
+      { type: 'run', name: 'Calculator', icon: pic('calculator'), app: 'calculator' },
+      { type: 'run', name: 'Calendar', icon: pic('calendar'), sub: 'Persian · Gregorian', app: 'calendar' },
       { type: 'run', name: 'User Lookup', icon: '🔍', sub: 'Minecraft · Hypixel · Seraph · Urchin', app: 'userlookup' },
       { type: 'run', name: 'Skin Editor', icon: '🎨', sub: 'paint & preview skins', app: 'skineditor' },
-      { type: 'run', name: 'Music', icon: '🎵', sub: 'mp3 player', app: 'music' },
-      { type: 'run', name: 'Notepad', icon: '📝', sub: 'notes, saved in your browser', app: 'notepad' },
+      { type: 'run', name: 'Music', icon: pic('music'), sub: 'mp3 player', app: 'music' },
+      { type: 'run', name: 'Notepad', icon: pic('notepad'), sub: 'notes, saved in your browser', app: 'notepad' },
       { type: 'run', name: 'CPS Test', icon: '🖱️', sub: 'clicks per second', app: 'cpstest' },
       { type: 'run', name: 'Prestige Calculator', icon: '✫', sub: 'BedWars stars & XP', app: 'prestige' },
       { type: 'run', name: 'Ratio Calculator', icon: '÷', sub: 'FKDR · WLR · BBLR · KDR', app: 'ratio' },
       { type: 'run', name: 'Compare Players', icon: '⚔️', sub: 'two players side by side', app: 'compare' },
       { type: 'run', name: 'Server Status', icon: '📡', sub: 'any Minecraft server', app: 'serverstatus' },
       { type: 'run', name: 'Guild Leaderboard', icon: '🏆', sub: 'weekly XP ranking', app: 'guildboard' },
-      { type: 'app', name: 'Cinema 4D', icon: '🎬', sub: '3D · ~6 years' },
-      { type: 'app', name: 'Blender', icon: '🧊', sub: '3D' },
-      { type: 'app', name: 'Python', icon: '🐍', sub: 'scripts' },
-      { type: 'app', name: 'MySQL', icon: '🗄️', sub: 'databases' },
+      { type: 'app', name: 'Cinema 4D', icon: pic('cinema4d'), sub: '3D · ~6 years' },
+      { type: 'app', name: 'Blender', icon: pic('blender'), sub: '3D' },
+      { type: 'app', name: 'Python', icon: pic('python'), sub: 'scripts' },
+      { type: 'app', name: 'MySQL', icon: pic('mysql'), sub: 'databases' },
       { type: 'txt', name: 'readme.txt', icon: '📄', text: 'Apps Waish actually uses. Add or rename them in js/desktop.js → DRIVES → D:// Useful apps.' },
     ] },
     { letter: 'G', name: 'Games', icon: '🎮', used: .33, size: '1 TB', items: [
-      { type: 'run', name: 'Snake', icon: '🐍', app: 'snake' },
-      { type: 'run', name: 'Tetris', icon: '🧱', app: 'tetris' },
-      { type: 'run', name: 'Mini Minecraft', icon: '⛏️', sub: 'build & mine', app: 'minicraft' },
+      { type: 'run', name: 'Snake', icon: pic('snake'), app: 'snake' },
+      { type: 'run', name: 'Tetris', icon: pic('tetris'), app: 'tetris' },
+      { type: 'run', name: 'Mini Minecraft', icon: pic('minecraft'), sub: 'build & mine', app: 'minicraft' },
       { type: 'txt', name: 'readme.txt', icon: '📄', text: 'Small games made for this computer. Scores and worlds are saved in your browser.' },
     ] },
     { letter: 'F', name: 'Editing', icon: '✂️', used: .77, size: '1 TB', items: [
