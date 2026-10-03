@@ -159,6 +159,11 @@
   .proj-media.cp { background: radial-gradient(circle at 50% 60%, rgba(46,230,255,.16), transparent 62%); }
   .proj-media.wbio { background: radial-gradient(circle at 50% 60%, rgba(155,123,255,.2), transparent 62%); }
   .proj-media.wbio img { max-height: 58%; }
+  .proj-media.fps { background: radial-gradient(circle at 50% 60%, rgba(255,106,61,.18), transparent 62%); }
+  .proj-media.fps img { max-height: 56%; filter: saturate(.55) opacity(.85); }
+  .proj-tag.discontinued { background: rgba(255,106,61,.12); color: #ff9a7a; }
+  .stack-box .v .disc { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 6px; background: rgba(255,106,61,.12); color: #ff9a7a; margin-inline-start: 6px; vertical-align: 1px; }
+  .stack-box .k a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--term-dim); } .stack-box .k a:hover { color: var(--accent-soft); }
   .proj-body { padding: 22px 24px 24px; }
   .proj-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .proj-tag { font-family: var(--mono); font-size: 11px; padding: 4px 9px; border-radius: 6px; background: #161b26; color: var(--term-blue); }

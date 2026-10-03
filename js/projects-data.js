@@ -10,6 +10,8 @@ window.PROJECTS = [
     desc: "Ping-reduction and network optimization for gamers. Launched through LunaMC, expanding to every game.", meta: ["network", "relay", "latency"] },
   { slug: "wbio", name: "wbio.ir", tag: "violet", tagText: "wbio.ir", img: "assets/wbio-logo.png", media: "wbio",
     desc: "Bio-link pages for Iran: one link for every social, 20 themes, live game cards, your own domain — free to start.", meta: ["saas", "cloudflare", "workers"] },
+  { slug: "fpsboost", url: "https://github.com/iNewpie/fpsboost-src", name: "FPS Boost", tag: "discontinued", tagText: "discontinued · open source", img: "assets/fpsboost-logo.png", media: "fps",
+    desc: "fpsboost.ir — a Windows FPS and network optimizer: 61 revertible tweaks, a background Guard, a DNS finder, game presets, a Cloudflare Worker site with accounts and payments. Discontinued in 2026 and open-sourced under MIT.", meta: ["go", "webview2", "cloudflare"] },
   { slug: "content-creator", name: "Content Creator", tag: "live", tagText: "aparat · youtube", video: "assets/avatar.mp4", img: "assets/avatar.jpg", media: "cover",
     desc: "I stream and make videos — Persian Bedwars gameplay and tutorials on Aparat and YouTube.", meta: ["stream", "video", "editing"] },
   { slug: "offline-terminal", name: "Computer & Terminal", tag: "live", tagText: "this site", img: "", media: "term",
