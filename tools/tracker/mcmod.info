@@ -1,0 +1,11 @@
+[
+  {
+    "modid": "waishtracker",
+    "name": "Waish Tracker",
+    "description": "Reports your current Hypixel instance to the local Waish Companion. No account credentials are read.",
+    "version": "0.1.0",
+    "mcversion": "1.8.9",
+    "authorList": ["Waish"],
+    "clientSideOnly": true
+  }
+]

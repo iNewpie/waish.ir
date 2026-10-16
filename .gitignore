@@ -9,3 +9,9 @@ debug*.png
 node_modules/
 # wrangler dev local state
 tools/.wrangler/
+
+# Companion builds and local development state
+tools/companion/*.exe
+tools/companion/runtime/
+tools/tracker/build/
+
