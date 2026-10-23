@@ -3,6 +3,10 @@
 .bot-grid { display:grid; grid-template-columns:minmax(260px,360px) minmax(0,1fr); gap:16px; align-items:start; }
 .bot-stack { display:grid; gap:16px; }
 .bot-form { display:grid; gap:14px; margin-top:18px; }
+.bot-access { display:grid; gap:10px; margin-top:18px; }
+.bot-access summary { cursor:pointer; color:var(--ink); }
+.bot-access details p { margin-top:8px; }
+.bot-access [role=status]:empty { display:none; }
 .bot-head { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
 .bot-head h2 { margin:0; }
 .bot-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }

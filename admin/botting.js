@@ -7,6 +7,7 @@
   function stored(name) { try { return sessionStorage.getItem(name) || ''; } catch { return ''; } }
   function remember(name, value) { try { if (value) sessionStorage.setItem(name, value); else sessionStorage.removeItem(name); } catch {} }
   let pairingKey = stored(pairingStorage), poll = null, busy = false, data = null, generation = 0, active = false, messageUntil = 0;
+  let accessRequest = null;
   if (!/^[a-f0-9]{64}$/.test(pairingKey)) { pairingKey = ''; remember(pairingStorage, ''); }
   el('botLeader').value = stored(leaderStorage);
   el('botLeader').addEventListener('input', () => remember(leaderStorage, el('botLeader').value.trim()));
@@ -16,8 +17,8 @@
     const headers = { 'X-Waish-Key': pairingKey };
     if (body) headers['Content-Type'] = 'application/json';
     let r;
-    try { r = await fetch(endpoint + path, { method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(12000), cache: 'no-store' }); }
-    catch { throw new Error('App unreachable. Open Waish Companion on this PC and allow this website’s local-network access in your browser.'); }
+    try { r = await fetch(endpoint + path, { method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(12000), cache: 'no-store', credentials:'omit', redirect:'error', targetAddressSpace:'loopback' }); }
+    catch { el('botAccessSettings').open = true; throw new Error('App unreachable. Open Waish Companion on this PC, then click Allow local connection above. If access was blocked, follow No permission popup?'); }
     const d = await r.json();
     if (!r.ok) throw Object.assign(new Error(d.cause || 'The app could not complete this request.'), { status:r.status });
     return d;
@@ -60,7 +61,7 @@
     }
   }
   async function refresh() {
-    if (!pairingKey || busy || !active || document.hidden) return;
+    if (!pairingKey || busy || accessRequest || !active || document.hidden) return;
     const g = generation;
     try { const d = await call('/status'); if (g === generation && !busy) { remember(pairingStorage, pairingKey); render(d); if (Date.now() > messageUntil) message('Status updated ' + new Date().toLocaleTimeString()); } }
     catch (e) { if (g === generation && !busy) {
@@ -89,10 +90,51 @@
     catch (e) { if (g === generation) message(e.message, true); }
     finally { busy = false; if (g === generation && data) render(data); }
   });
+  async function requestLocalAccess() {
+    if (accessRequest || busy) return;
+    const request = {}; accessRequest = request;
+    const g = ++generation, button = el('botAllowLocal'), note = el('botAccessMsg');
+    button.disabled = true; button.textContent = 'Waiting for browser…';
+    note.textContent = 'Choose Allow in the browser prompt. Waish Companion must be open on this PC.';
+    try {
+      // Start fetch directly in the click handler, before any await, to retain user activation.
+      // A readable 401 confirms access to the app; account data still requires its pairing key.
+      const r = await fetch(endpoint + '/status', {
+        method:'GET', headers:pairingKey ? { 'X-Waish-Key':pairingKey } : {},
+        cache:'no-store', credentials:'omit', redirect:'error', targetAddressSpace:'loopback', signal:AbortSignal.timeout(60000)
+      });
+      if (g !== generation) return;
+      if (r.status === 401) {
+        pairingKey = ''; remember(pairingStorage, ''); offline();
+        note.textContent = '✅ Local connection works. Paste the current pairing code below and click Connect app.';
+      } else if (r.ok) {
+        const d = await r.json();
+        if (g !== generation) return;
+        render(d); remember(pairingStorage, pairingKey);
+        note.textContent = '✅ Local connection works. The companion is connected.';
+      } else throw new Error('The app refused the local request.');
+      el('botAccessSettings').open = false;
+      message('Local connection checked.');
+    } catch {
+      if (g !== generation) return;
+      let denied = false;
+      for (const name of ['loopback-network', 'local-network-access']) {
+        try { const p = await navigator.permissions.query({ name }); denied = p.state === 'denied'; break; } catch {}
+      }
+      if (g !== generation) return;
+      note.textContent = denied
+        ? 'Browser access is blocked. Follow No permission popup? to allow it in this site’s permissions, then retry.'
+        : 'Could not reach the app. Keep Waish Companion open and retry. If no popup appears, follow No permission popup? below.';
+      el('botAccessSettings').open = true;
+    } finally {
+      if (accessRequest === request) { accessRequest = null; button.disabled = false; button.textContent = 'Allow local connection'; }
+    }
+  }
+  el('botAllowLocal').addEventListener('click', requestLocalAccess);
   el('botRefresh').addEventListener('click', refresh);
   window.waishBotting = {
     activate(value) { if (active !== value) ++generation; active = value; clearInterval(poll); if (value) { refresh(); poll = setInterval(refresh, 3000); } },
-    logout() { active = false; pairingKey = ''; data = null; ++generation; clearInterval(poll); remember(pairingStorage, ''); remember(leaderStorage, ''); el('botLeader').value = ''; el('botToken').value = ''; el('botPairKey').value = ''; offline(); }
+    logout() { active = false; pairingKey = ''; data = null; ++generation; accessRequest = null; el('botAllowLocal').disabled = false; el('botAllowLocal').textContent = 'Allow local connection'; el('botAccessMsg').textContent = ''; clearInterval(poll); remember(pairingStorage, ''); remember(leaderStorage, ''); el('botLeader').value = ''; el('botToken').value = ''; el('botPairKey').value = ''; offline(); }
   };
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   offline();

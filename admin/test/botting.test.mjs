@@ -19,7 +19,7 @@ class Element {
   async fire(type) { await this.listeners[type]?.({ preventDefault() {} }); }
 }
 
-function page({ storage = new Map(), request, blockedStorage = false } = {}) {
+function page({ storage = new Map(), request, blockedStorage = false, permissionQuery } = {}) {
   const elements = new Map(), timers = new Map(), requests = [];
   const el = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   const sessionStorage = {
@@ -31,6 +31,7 @@ function page({ storage = new Map(), request, blockedStorage = false } = {}) {
     document: { hidden:false, getElementById:el, createElement:() => new Element(), addEventListener() {} },
     window:{}, sessionStorage, localStorage:{ getItem:() => 'fake-admin-session', removeItem() {} },
     AbortSignal, observeReveals() {},
+    navigator:{ permissions:{ query:permissionQuery || (async () => { throw Error('Permission API unsupported'); }) } },
     setInterval(fn) { const id = {}; timers.set(id, fn); return id; },
     clearInterval(id) { timers.delete(id); },
     async fetch(url, options) { requests.push({ url, ...options }); return request(url, options); }
@@ -131,4 +132,74 @@ test('overview does not contact the companion until Botting is opened', async ()
   await flush();
   assert.equal(p.requests.length, 1);
   assert.equal(p.el('botService').textContent, '✅ App running');
+});
+
+test('local access button starts a fresh loopback request on every click without requiring pairing', async () => {
+  const p = page({ request:async () => response({},401) });
+  await p.el('bottingTab').fire('click');
+  const firstClick = p.el('botAllowLocal').fire('click');
+  assert.equal(p.requests.length,1,'fetch starts synchronously in the user gesture');
+  await firstClick;
+  assert.match(p.el('botAccessMsg').textContent,/Local connection works/);
+  assert.match(p.el('botAccessMsg').textContent,/pairing code/);
+  await p.el('botAllowLocal').fire('click');
+  assert.equal(p.requests.length,2);
+  for(const request of p.requests) {
+    assert.equal(request.url,'http://127.0.0.1:47836/status');
+    assert.equal(request.method,'GET');
+    assert.equal(request.targetAddressSpace,'loopback');
+    assert.equal(request.credentials,'omit');
+    assert.equal(request.headers['X-Waish-Key'],undefined);
+    assert.equal(request.body,undefined);
+  }
+  assert.equal(p.el('botAllowLocal').disabled,false);
+});
+
+test('denied browser permission opens site-permission instructions and permits retry', async () => {
+  const queries = [];
+  const p = page({
+    request:async () => { throw Error('Blocked by browser'); },
+    permissionQuery:async ({name}) => { queries.push(name); if(name === 'loopback-network') throw Error('Unsupported name'); return {state:'denied'}; }
+  });
+  await p.el('botAllowLocal').fire('click');
+  assert.deepEqual(queries,['loopback-network','local-network-access']);
+  assert.match(p.el('botAccessMsg').textContent,/Browser access is blocked/);
+  assert.equal(p.el('botAccessSettings').open,true);
+  await p.el('botAllowLocal').fire('click');
+  assert.equal(p.requests.length,2);
+  assert.equal(p.el('botAllowLocal').disabled,false);
+});
+
+test('manual local access reconnects paired accounts and pauses competing status polls while pending', async () => {
+  const storage = new Map([[pairingStorage,key],['waish-admin-section','botting']]);
+  let complete;
+  let manual = false;
+  const p = page({storage,request:async () => {
+    if(!manual) throw Error('Prompt was dismissed');
+    return new Promise(resolve => {complete=resolve;});
+  }});
+  await flush();
+  manual=true;
+  const pending=p.el('botAllowLocal').fire('click');
+  await p.tick();
+  await p.el('botAllowLocal').fire('click');
+  assert.equal(p.requests.length,2,'one initial poll and one manual request');
+  complete(response({...emptyStatus,accounts:[{id:'existing',label:'Existing account',state:'connected'}]}));
+  await pending;
+  assert.equal(p.el('botService').textContent,'✅ App running');
+  assert.equal(p.el('botCount').textContent,'1 / 3 accounts');
+  assert.equal(storage.get(pairingStorage),key);
+  assert.equal(p.el('botAllowLocal').disabled,false);
+});
+
+test('logout ignores a late permission-check response', async () => {
+  let complete;
+  const p=page({request:() => new Promise(resolve => {complete=resolve;})});
+  const pending=p.el('botAllowLocal').fire('click');
+  vm.runInContext('logout()',p.context);
+  complete(response(emptyStatus));
+  await pending;
+  assert.equal(p.el('botAccessMsg').textContent,'');
+  assert.equal(p.el('botService').textContent,'❌ App not connected');
+  assert.equal(p.el('botAllowLocal').disabled,false);
 });
