@@ -2,6 +2,40 @@ import { randomUUID } from 'node:crypto';
 
 export class InputError extends Error {}
 const clean = value => String(value ?? '').replace(/\u00a7./g, '').replace(/[\x00-\x1f]/g, ' ').slice(0, 220);
+// Classify dependency errors without logging request objects, session tokens or stacks.
+export function connectionFailure(error, stage = 'Minecraft login') {
+  const errors = [error, error?.cause, ...(Array.isArray(error?.errors) ? error.errors.slice(0, 8) : [])];
+  const codes = new Set(errors.map(e => e?.code));
+  const has = (...values) => values.some(code => codes.has(code));
+  if (has('ENOTFOUND', 'EAI_AGAIN', 'ESERVFAIL')) return `${stage}: DNS lookup failed. Check this PC's DNS/network connection.`;
+  if (has('ECONNREFUSED')) return `${stage}: connection refused (ECONNREFUSED). The destination or network rejected the connection.`;
+  if (has('ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT') || errors.some(e => e?.name === 'TimeoutError')) return `${stage}: network request timed out (ETIMEDOUT).`;
+  if (has('ENETUNREACH', 'EHOSTUNREACH', 'EADDRNOTAVAIL')) return `${stage}: no network route to the destination.`;
+  if (has('ECONNRESET', 'EPIPE', 'UND_ERR_SOCKET')) return `${stage}: connection closed or reset by the server/network.`;
+  if (has('CERT_HAS_EXPIRED', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN', 'ERR_TLS_CERT_ALTNAME_INVALID')) return `${stage}: HTTPS certificate verification failed. Check the PC clock and HTTPS inspection settings.`;
+  const messages = errors.map(e => typeof e?.message === 'string' ? e.message : '').join(' ');
+  if (/invalid token|invalid session|invalid credentials|forbiddenoperationexception/i.test(messages)) return `${stage}: Minecraft rejected session authorization. The profile check passed, but the session cannot join this server.`;
+  if (/too many requests|rate.limit/i.test(messages)) return `${stage}: session service rate limit reached. Wait before retrying.`;
+  if (/request blocked by cloudflare|ip is banned by cloudflare/i.test(messages)) return `${stage}: the session service blocked this network's request.`;
+  if (/serialization error|deserialization error|partialreaderror|read error for/i.test(messages)) return `${stage}: Minecraft protocol parsing failed. Report this message so the client compatibility can be checked.`;
+  return `${stage}: connection failed without a recognized error code. The profile check passed; token expiry is not confirmed.`;
+}
+
+export function kickReason(reason, tokens = []) {
+  let nodes = 0;
+  const parts = (value, depth = 0) => {
+    if (++nodes > 40 || depth > 6) return '';
+    if (typeof value === 'string') return value.length > 20000 ? '[long message omitted]' : value;
+    if (Array.isArray(value)) return value.map(v => parts(v, depth + 1)).join(' ');
+    if (value && typeof value === 'object') return [parts(value.text, depth + 1), parts(value.translate, depth + 1), parts(value.with, depth + 1), parts(value.extra, depth + 1)].filter(Boolean).join(' ');
+    return '';
+  };
+  if (typeof reason === 'string' && reason.length <= 20000) { try { reason = JSON.parse(reason); } catch {} }
+  let result = parts(reason);
+  for (const token of tokens) if (token) result = result.split(token).join('[redacted]');
+  result = result.replace(/Bearer\s+\S+/gi, 'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?/g, '[redacted]').replace(/https?:\/\/\S+/gi, '[link omitted]');
+  return clean(result).trim();
+}
 export function locationFromText(text) {
   try {
     const d = JSON.parse(text);
@@ -53,6 +87,8 @@ export class Accounts {
         this.fail(r, 'This Minecraft account is already in the list.'); return;
       }
       r.uuid = profile.id; r.username = profile.name; r.state = 'connecting';
+      r.stage = 'Hypixel connection';
+      this.log(`${r.username}: session profile accepted; connecting to Hypixel.`);
       let bot;
       try {
         bot = this.createBot({ host: this.host, ...(this.port ? { port: this.port } : {}), version: this.version,
@@ -64,9 +100,21 @@ export class Accounts {
             client.username = profile.name; client.uuid = profile.id;
             options.connect(client);
           } });
-      } catch { this.fail(r, 'Minecraft client could not start.'); return; }
+      } catch (err) { this.fail(r, connectionFailure(err, 'Minecraft client startup')); return; }
       r.bot = bot;
-      r.connectTimer = setTimeout(() => { if (current()) this.fail(r, 'Connection timed out. Check the network and session.'); }, this.timeout);
+      r.connectTimer = setTimeout(() => { if (current()) this.fail(r, `${r.stage}: timed out waiting for the next login step.`); }, this.timeout);
+      bot.on('connect', () => {
+        if (!current() || r.bot !== bot) return;
+        r.stage = 'Minecraft login'; this.log(`${r.username}: TCP connected; waiting for Minecraft login.`);
+      });
+      bot._client?.on('encryption_begin', () => {
+        if (!current() || r.bot !== bot) return;
+        r.stage = 'Minecraft session authorization'; this.log(`${r.username}: server requested session authorization.`);
+      });
+      bot.on('login', () => {
+        if (!current() || r.bot !== bot) return;
+        r.stage = 'World loading'; this.log(`${r.username}: Minecraft login accepted; waiting for spawn.`);
+      });
       bot.on('spawn', () => {
         if (!current() || r.bot !== bot) return;
         clearTimeout(r.connectTimer); r.state = 'connected'; r.reason = ''; r.connectedAt ??= Date.now(); r.location = null;
@@ -85,13 +133,16 @@ export class Accounts {
           r.location = location;
         }
       });
-      bot.on('kicked', () => { if (current() && r.bot === bot) this.fail(r, 'Hypixel rejected or ended the session. Check the account in Minecraft.'); });
-      bot.on('error', () => { if (current() && r.bot === bot) this.fail(r, 'Connection error. The session may have expired or the server may be unreachable.'); });
+      bot.on('kicked', reason => { if (current() && r.bot === bot) {
+        const detail = kickReason(reason, [...this.#rows.values()].map(row => row.token));
+        this.fail(r, detail ? `Server disconnected the account: ${detail}` : 'Server disconnected the account without a readable reason.');
+      } });
+      bot.on('error', err => { if (current() && r.bot === bot) this.fail(r, connectionFailure(err, r.stage)); });
       bot.on('end', () => {
         if (!current() || r.bot !== bot) return;
         this.clearTimers(r); r.bot = null; r.location = null; r.connectedAt = null;
-        r.state = 'disconnected'; r.reason ||= 'Server connection closed.';
-        this.log(`${r.username || r.label}: disconnected.`);
+        r.state = 'disconnected'; r.reason ||= `Server connection closed during ${r.stage}.`;
+        this.log(`${r.username || r.label}: ${r.reason}`);
       });
     })();
   }

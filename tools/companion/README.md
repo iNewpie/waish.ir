@@ -29,6 +29,12 @@ The tracker's Forge API compilation is checked, but actual behavior inside Lunar
 - Hypixel controls matchmaking. An identifier such as `mini156H` cannot be treated as a direct-join address. Same-instance detection does not make matching possible.
 - This version does not automate movement, combat, block placement, bridging, queue scanning, or retries after a kick. Hypixel prohibits scripting/boosting and may ban accounts.
 
+## Diagnosing a connection failure
+
+The app logs each step: profile accepted, TCP connected, server session authorization, Minecraft login accepted, and spawn. A profile-accepted message means the token passed the profile lookup; a later failure does not establish that the token expired. DNS failures, connection refusals, timeouts, connection resets, certificate errors and session-authorization rejections have separate messages. Readable server disconnect reasons are shown with tokens and credential links redacted. Arbitrary dependency errors and request objects are never printed.
+
+After updating the companion files, close and reopen the app, press Start, pair using its new code, and retry one account. Share the resulting stage/error lines for diagnosis; no access token is needed in chat.
+
 ## Privacy and security
 
 Tokens are retained only in the Node process's memory while accounts are present. They are sent to Minecraft's authentication services and used for the Minecraft connection. The website sends them directly to the loopback companion, not to GitHub or Cloudflare. They are not placed in URLs, browser storage, logs, or files. No automatic token refresh is attempted. Logs hold a bounded list of status events in memory.
@@ -51,7 +57,7 @@ The tracker source is in `../tracker`. Compile it for Java 8 against Forge `1.8.
 
 ## Verification
 
-`npm test` covers async validation/cancellation, duplicate accounts, secret exclusion, connection and stale-location status, origin/key/Host checks, Start/Stop boundaries, and a real local Minecraft 1.8.9 protocol handshake and location response. It uses fake sessions on a local test server; it does not authenticate to Hypixel. Live Hypixel and Lunar validation remain necessary.
+`npm test` covers async validation/cancellation, duplicate accounts, secret exclusion, connection and stale-location status, origin/key/Host checks, Start/Stop boundaries, network error classification and kick-message redaction. Real local Minecraft 1.8.9 protocol tests exercise spawn/location and an encrypted login, including forwarding the fake token/profile to a local session-join service. These tests use fake sessions; they do not authenticate to Hypixel. Live Hypixel and Lunar validation remain necessary.
 
 From the repository root, `node --test admin/test/botting.test.mjs` covers dashboard refresh/reconnection, account restoration without resending tokens, temporary network failures, pairing with a restarted app, logout during a pending response, and unavailable session storage.
 
