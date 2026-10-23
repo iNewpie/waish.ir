@@ -1,8 +1,15 @@
-// Access tokens stay in the companion's memory. No browser storage, cloud proxy, or analytics.
+// Minecraft access tokens stay in the companion's memory. Only pairing and UI preferences
+// use this tab's sessionStorage so a dashboard refresh can reconnect to the running app.
 (() => {
   const el = id => document.getElementById(id);
   const endpoint = 'http://127.0.0.1:47836';
-  let pairingKey = '', poll = null, busy = false, data = null, generation = 0, active = false, messageUntil = 0;
+  const pairingStorage = 'waish-companion-pairing', leaderStorage = 'waish-companion-leader';
+  function stored(name) { try { return sessionStorage.getItem(name) || ''; } catch { return ''; } }
+  function remember(name, value) { try { if (value) sessionStorage.setItem(name, value); else sessionStorage.removeItem(name); } catch {} }
+  let pairingKey = stored(pairingStorage), poll = null, busy = false, data = null, generation = 0, active = false, messageUntil = 0;
+  if (!/^[a-f0-9]{64}$/.test(pairingKey)) { pairingKey = ''; remember(pairingStorage, ''); }
+  el('botLeader').value = stored(leaderStorage);
+  el('botLeader').addEventListener('input', () => remember(leaderStorage, el('botLeader').value.trim()));
   const text = (tag, value, cls) => { const n = document.createElement(tag); n.textContent = value; if (cls) n.className = cls; return n; };
   function message(value, error = false) { el('botMsg').textContent = value; el('botMsg').className = 'msg' + (error ? ' err' : ''); messageUntil = Date.now() + 8000; }
   async function call(path, body) {
@@ -12,13 +19,13 @@
     try { r = await fetch(endpoint + path, { method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(12000), cache: 'no-store' }); }
     catch { throw new Error('App unreachable. Open Waish Companion on this PC and allow this website’s local-network access in your browser.'); }
     const d = await r.json();
-    if (!r.ok) throw new Error(d.cause || 'The app could not complete this request.');
+    if (!r.ok) throw Object.assign(new Error(d.cause || 'The app could not complete this request.'), { status:r.status });
     return d;
   }
   function offline() {
     data = null; el('botService').textContent = '❌ App not connected'; el('botService').className = 'bot-state bot-warn';
     el('botAdd').disabled = true; el('botAccounts').replaceChildren(text('div', 'Connect the companion app to see current account status.', 'bot-empty'));
-    el('botTarget').textContent = 'Waiting for a fresh location from Lunar.'; el('botCount').textContent = '0 / 3 accounts';
+    el('botTarget').textContent = 'Waiting for a fresh location from Lunar.'; el('botCount').textContent = '— / 3 accounts';
   }
   function render(d) {
     data = d;
@@ -55,8 +62,11 @@
   async function refresh() {
     if (!pairingKey || busy || !active || document.hidden) return;
     const g = generation;
-    try { const d = await call('/status'); if (g === generation && !busy) { render(d); if (Date.now() > messageUntil) message('Status updated ' + new Date().toLocaleTimeString()); } }
-    catch (e) { if (g === generation) { offline(); message(e.message, true); } }
+    try { const d = await call('/status'); if (g === generation && !busy) { remember(pairingStorage, pairingKey); render(d); if (Date.now() > messageUntil) message('Status updated ' + new Date().toLocaleTimeString()); } }
+    catch (e) { if (g === generation && !busy) {
+      if (e.status === 401) { pairingKey = ''; remember(pairingStorage, ''); }
+      offline(); message(e.message, true);
+    } }
   }
   async function act(body) {
     if (busy) return; busy = true; if (data) render(data);
@@ -67,7 +77,7 @@
   }
   el('botPairForm').addEventListener('submit', async e => {
     e.preventDefault(); pairingKey = el('botPairKey').value.trim(); el('botPairKey').value = '';
-    ++generation;
+    ++generation; remember(pairingStorage, '');
     if (!/^[a-f0-9]{64}$/.test(pairingKey)) { pairingKey = ''; offline(); message('Copy the complete pairing code from the app.', true); return; }
     message('Connecting to your PC…'); await refresh();
   });
@@ -81,8 +91,8 @@
   });
   el('botRefresh').addEventListener('click', refresh);
   window.waishBotting = {
-    activate(value) { active = value; clearInterval(poll); if (value) { refresh(); poll = setInterval(refresh, 3000); } },
-    logout() { active = false; pairingKey = ''; data = null; ++generation; clearInterval(poll); el('botToken').value = ''; el('botPairKey').value = ''; offline(); }
+    activate(value) { if (active !== value) ++generation; active = value; clearInterval(poll); if (value) { refresh(); poll = setInterval(refresh, 3000); } },
+    logout() { active = false; pairingKey = ''; data = null; ++generation; clearInterval(poll); remember(pairingStorage, ''); remember(leaderStorage, ''); el('botLeader').value = ''; el('botToken').value = ''; el('botPairKey').value = ''; offline(); }
   };
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   offline();

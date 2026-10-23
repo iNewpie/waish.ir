@@ -9,7 +9,7 @@ The website owns the account controls. The Windows app has Start, Stop, a pairin
 3. Log into `https://waish.ir/admin`, choose **Botting**, paste the pairing code, and press **Connect app**. Allow the website to access the local network if the browser asks. Use current Edge or Chrome; other browsers may block HTTPS-to-loopback requests.
 4. Paste one **Minecraft Java access token** per account. This is not a Microsoft OAuth refresh token, browser cookie, or Cloudflare token. The application accepts only existing sessions and does not obtain or refresh them. Use accounts you control and do not log a test account into another client simultaneously.
 5. Add up to three accounts. A pending state remains pending until it succeeds or fails. **Connected** requires a Minecraft spawn event. Same-instance status requires fresh matching location reports.
-6. Stop or close the app to disconnect every test account and erase its tokens from memory. Reopening the app creates a new pairing key. Reloading the dashboard requires pairing again. Closing the website alone does not stop the accounts.
+6. Stop or close the app to disconnect every test account and erase its tokens from memory. Reopening the app creates a new pairing key. Reloading the dashboard in the same tab automatically reconnects and reloads the current accounts from the running app. The tab also remembers the selected section and party username. Logging out clears the tab's saved pairing. Closing the website alone does not stop the accounts.
 
 ## Automatic tracking with Lunar 1.8.9
 
@@ -33,7 +33,7 @@ The tracker's Forge API compilation is checked, but actual behavior inside Lunar
 
 Tokens are retained only in the Node process's memory while accounts are present. They are sent to Minecraft's authentication services and used for the Minecraft connection. The website sends them directly to the loopback companion, not to GitHub or Cloudflare. They are not placed in URLs, browser storage, logs, or files. No automatic token refresh is attempted. Logs hold a bounded list of status events in memory.
 
-Only `https://waish.ir` and `https://www.waish.ir` are permitted website origins. Requests must include the per-launch key, and unexpected Host headers are rejected. Start and Stop are desktop-only endpoints. Closing the app terminates the service; a parent-process check also exits if the launcher disappears unexpectedly.
+Only `https://waish.ir` and `https://www.waish.ir` are permitted website origins. Requests must include the per-launch key, and unexpected Host headers are rejected. The website keeps the pairing key in this tab's `sessionStorage` to survive refreshes; Minecraft tokens and account lists are never saved in browser storage. An unreachable app retains the pairing for retries, while an incorrect key is cleared so you can pair with a restarted app. Start and Stop are desktop-only endpoints. Closing the app terminates the service; a parent-process check also exits if the launcher disappears unexpectedly.
 
 ## Build from source (Windows)
 
@@ -52,5 +52,7 @@ The tracker source is in `../tracker`. Compile it for Java 8 against Forge `1.8.
 ## Verification
 
 `npm test` covers async validation/cancellation, duplicate accounts, secret exclusion, connection and stale-location status, origin/key/Host checks, Start/Stop boundaries, and a real local Minecraft 1.8.9 protocol handshake and location response. It uses fake sessions on a local test server; it does not authenticate to Hypixel. Live Hypixel and Lunar validation remain necessary.
+
+From the repository root, `node --test admin/test/botting.test.mjs` covers dashboard refresh/reconnection, account restoration without resending tokens, temporary network failures, pairing with a restarted app, logout during a pending response, and unavailable session storage.
 
 The `uuid` override pins the compatible v4/v5 API to 11.1.1 to resolve the dependency audit finding in the upstream authentication dependency tree.

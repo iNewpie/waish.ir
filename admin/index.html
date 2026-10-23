@@ -174,7 +174,7 @@
             <label class="field"><span>Pairing code</span><input id="botPairKey" type="password" maxlength="64" autocomplete="off" spellcheck="false" required></label>
             <button class="btn btn-ghost" type="submit">Connect app</button>
           </form>
-          <p class="bot-note" style="margin-top:12px">Use this website on the same PC as the app. Allow local-network access if your browser asks. No port forwarding is needed.</p>
+          <p class="bot-note" style="margin-top:12px">Use this website on the same PC as the app. Pairing is remembered in this browser tab across refreshes. Restarting the app requires a new pairing code. Allow local-network access if your browser asks.</p>
         </div>
         <div class="card">
           <h3>Add an account</h3>
@@ -284,7 +284,7 @@
 <script src="../js/i18n.js?v=20260922a"></script>
 <script src="../js/layout.js?v=20260917e"></script>
 <script src="../js/fx.js?v=20260917a"></script>
-<script src="botting.js?v=20261016a"></script>
+<script src="botting.js?v=20261023a"></script>
 <script>
 /* ============================================================
    ADMIN — talks to the proxy worker's /admin routes (tools/admin.js). The token lives in localStorage.
@@ -299,8 +299,10 @@ const dlabel = d => { const [y, m, dd] = d.split('-').map(Number); return MON[m 
 let token = null; try { token = localStorage.getItem('waish-admin-token'); } catch (e) {}
 let days = 30, stats = null, packs = [], editing = null;
 let bottingSelected = false;
+try { bottingSelected = sessionStorage.getItem('waish-admin-section') === 'botting'; } catch (e) {}
 function selectSection(botting) {
   bottingSelected = botting;
+  try { sessionStorage.setItem('waish-admin-section', botting ? 'botting' : 'overview'); } catch (e) {}
   $('botting').classList.toggle('hidden', !botting);
   $('visitors').classList.toggle('hidden', botting); $('packs').classList.toggle('hidden', botting);
   $('overviewTab').classList.toggle('on', !botting); $('bottingTab').classList.toggle('on', botting);
@@ -324,10 +326,10 @@ function show(loggedIn) {
   $('loginView').classList.toggle('hidden', loggedIn); $('panel').classList.toggle('hidden', !loggedIn); $('who').classList.toggle('hidden', !loggedIn);
   observeReveals();
   if (loggedIn) { loadStats(); loadPacks(); }
-  if (loggedIn) window.waishBotting.activate(bottingSelected);
+  if (loggedIn) selectSection(bottingSelected);
   else window.waishBotting.logout();
 }
-function logout(clear = true) { token = null; try { localStorage.removeItem('waish-admin-token'); } catch (e) {} show(false); if (clear) $('loginMsg').textContent = ''; }
+function logout(clear = true) { token = null; try { localStorage.removeItem('waish-admin-token'); sessionStorage.removeItem('waish-admin-section'); } catch (e) {} bottingSelected = false; show(false); if (clear) $('loginMsg').textContent = ''; }
 
 /* ---------- login ---------- */
 $('loginForm').addEventListener('submit', async e => {
