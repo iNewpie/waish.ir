@@ -185,7 +185,9 @@ window.I18N = (function () {
       const raw = node.nodeValue, key = norm(raw);
       if (key && key in FA) {
         const p = node.parentElement; if (p && p.closest('[data-i18n-skip], script, style, .term-body, .assistant')) return;
-        node.nodeValue = raw.replace(key, FA[key]).replace(raw.trim(), FA[key]);
+        const translated = raw.replace(key, FA[key]).replace(raw.trim(), FA[key]);
+        // Identity translations must not retrigger the characterData observer forever.
+        if (translated !== raw) node.nodeValue = translated;
       }
       return;
     }

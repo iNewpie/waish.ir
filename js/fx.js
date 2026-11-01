@@ -63,18 +63,25 @@ async function scramble(el) {
 })();
 
 // scroll reveal + text triggers (call after dynamic content is rendered)
+let revealObserver;
 function observeReveals() {
-  const io = new IntersectionObserver(entries => {
+  const reveal = el => {
+    el.classList.add('in');
+    el.querySelectorAll('[data-type]').forEach(typeKicker);
+    el.querySelectorAll('[data-scramble]').forEach(scramble);
+  };
+  const pending = document.querySelectorAll('.reveal:not(.in)');
+  if (reduce || typeof IntersectionObserver !== 'function') { pending.forEach(reveal); return; }
+  if (!revealObserver) revealObserver = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (!e.isIntersecting) return;
-      e.target.classList.add('in');
-      e.target.querySelectorAll('[data-type]').forEach(typeKicker);
-      e.target.querySelectorAll('[data-scramble]').forEach(scramble);
-      io.unobserve(e.target);
+      reveal(e.target); revealObserver.unobserve(e.target);
     });
   }, { threshold: .12 });
-  document.querySelectorAll('.reveal:not(.in)').forEach(el => io.observe(el));
+  pending.forEach(el => revealObserver.observe(el));
 }
+// Run independently of optional page features such as the assistant/terminal.
+observeReveals();
 
 const yr = document.getElementById('yr'); if (yr) yr.textContent = new Date().getFullYear();
 
